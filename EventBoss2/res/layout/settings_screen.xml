@@ -60,7 +60,7 @@
            android:textSize="16sp" />
        </RadioGroup>
        
-   
+<!--    
        <Button
            android:id="@+id/readRss"
            android:layout_width="wrap_content"
@@ -68,7 +68,7 @@
            android:layout_alignLeft="@+id/selectFeed"
            android:layout_centerVertical="true"
            android:text="@string/Read_selected_Feed_now" />
-       
+-->       
        
        <Button
            android:id="@+id/idDone"

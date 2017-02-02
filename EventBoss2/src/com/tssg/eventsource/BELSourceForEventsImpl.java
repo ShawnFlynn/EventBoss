@@ -27,7 +27,11 @@ import android.util.Xml;
 
 abstract class BaseFeedParser implements BELSourceForEvents {
 	
-	boolean bLOGGING = false;						// enable/disable logging
+	static final Integer CONNECT_TIMEOUT = 15;	// seconds
+	static final Integer READ_TIMEOUT    = 15;	// seconds
+	
+	boolean bLOGGING = false;	// enable/disable logging
+	
 	static final String TAG = "BELSourceForEventsimpl";	// log's tag
 	static final String ITEM = "item";
 	static final String GUID = "guid";
@@ -36,13 +40,13 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	static final  String DESCRIPTION = "description";
 	static final  String LINK = "link";
 	static final  String TITLE = "title";
-	static final  String newline = System.getProperty("line.separator");
-	/** matches the content p's in the item description */
-	static final  Pattern P_MASTER = Pattern.compile("<p class=\"(\\w+)\">(.*?)</p>", // want non-greedy
-			Pattern.DOTALL);
 	
-	static final  Pattern DIV_MASTER = Pattern.compile("<div class = '(\\w+)'>(.*?)</div>", // want non-greedy
-			Pattern.DOTALL);
+	static final  String newline = System.getProperty("line.separator");
+	
+	/** matches the content p's in the item description */
+	static final  Pattern P_MASTER = Pattern.compile("<p class=\"(\\w+)\">(.*?)</p>", Pattern.DOTALL);
+	static final  Pattern DIV_MASTER = Pattern.compile("<div class = '(\\w+)'>(.*?)</div>", Pattern.DOTALL);
+	
 	private final URL feedUrl;
 
 	/**
@@ -73,8 +77,8 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 			else{
 				URL url = getFeedUrl( );
 				connection = (HttpURLConnection) url.openConnection();
-				connection.setConnectTimeout(5000);
-				connection.setReadTimeout(5000);
+				connection.setConnectTimeout(CONNECT_TIMEOUT * 1000);
+				connection.setReadTimeout(READ_TIMEOUT * 1000);
 				connection.setRequestMethod("GET");
 				connection.setRequestProperty("Accept", "application/xml");
 				connection.setRequestProperty("Connection", "close");

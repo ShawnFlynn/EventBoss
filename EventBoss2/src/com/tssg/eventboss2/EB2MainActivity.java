@@ -60,7 +60,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	public static final boolean bLOGGING = true;	// enable/disable logging
 	public static final String TAG = "EBMainAct";	// log's tag
 	public static boolean bTRACE = false;			// en/disable tracing to device SD
-    boolean bDEVELOPER_MODE = false;				    // controls strictMode	set to false for release
+    boolean bDEVELOPER_MODE = false;				// controls strictMode set to false for release
     private static ActionBar m_actionBar;
 
 	public static String statusMessage = null;		// status line content
@@ -71,8 +71,10 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	// static volatile public String mURLString = "http://www.bostoneventslist.com/us/nh/events/rss.rxml";
 	static volatile public String mURLString = "http://www.nheventslist.com/rss.xml";
 	static volatile public String mRSSString = "New Hampshire";
+	
 	volatile static int mFeedId= 1;	// start with New Hampshire, it's a short list
 	int oldFeedId = mFeedId;	// backup copy
+	
 	// this is a bit klugey. OK if date is near-enough
 	static volatile Date m_channelDate = new Date(System.currentTimeMillis());
 	static public String m_mainEventText;			// RSS data as saved text; use for debugging
@@ -678,6 +680,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 				int kk = 0, len = m_webEventsList.size();
 				for (BELEvent next : m_webEventsList) {
 					try {
+						next.setFeed(mFeedId);
 						dataStore.saveWebEvent( next );
 						publicProgressCallback(++kk, len, 3);
 					} catch (DatastoreException dataExp) {

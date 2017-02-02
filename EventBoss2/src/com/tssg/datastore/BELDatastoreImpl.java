@@ -4,6 +4,7 @@ import java.util.List;
 
 import android.content.ContentValues;
 import android.content.Context;
+//import android.content.SharedPreferences;
 import android.database.SQLException;
 import android.util.Log;
 
@@ -63,32 +64,26 @@ public class BELDatastoreImpl implements BELDatastore
 		 ContentValues initialValues = new ContentValues();
 //		 initialValues.put(DatabaseHelper.KEY_EVENTID, newEventID);
 		 initialValues.put(DatabaseHelper.KEY_EVENTID, belEvent.getId() );
+		 
+		 initialValues.put(DatabaseHelper.KEY_FEEDID, belEvent.getFeed() );
 
-		 initialValues.put(DatabaseHelper.KEY_TITLE,
-					 belEvent.getTitle() );
+		 initialValues.put(DatabaseHelper.KEY_TITLE, belEvent.getTitle() );
 
 		 initialValues.put(DatabaseHelper.KEY_TYPE, belEvent.getEventType() );
 
-		 initialValues.put(DatabaseHelper.KEY_STARTTIME,
-					 belEvent.getStartTime() );
+		 initialValues.put(DatabaseHelper.KEY_STARTTIME, belEvent.getStartTime() );
 
-		 initialValues.put(DatabaseHelper.KEY_ENDTIME,
-					 belEvent.getEndTime() );
+		 initialValues.put(DatabaseHelper.KEY_ENDTIME, belEvent.getEndTime() );
 
-		 initialValues.put(DatabaseHelper.KEY_LINK,
-					 belEvent.getLinkToGroup() );
+		 initialValues.put(DatabaseHelper.KEY_LINK, belEvent.getLinkToGroup() );
 
-		 initialValues.put(DatabaseHelper.KEY_ORGANIZER,
-					 belEvent.getOrganizer() );
+		 initialValues.put(DatabaseHelper.KEY_ORGANIZER, belEvent.getOrganizer() );
 
-		 initialValues.put(DatabaseHelper.KEY_LOCATION,
-					 belEvent.getLocation() );
+		 initialValues.put(DatabaseHelper.KEY_LOCATION, belEvent.getLocation() );
 
-		 initialValues.put(DatabaseHelper.KEY_DESCRIPTION,
-					 belEvent.getDescription() );
+		 initialValues.put(DatabaseHelper.KEY_DESCRIPTION, belEvent.getDescription() );
 
-		 initialValues.put(DatabaseHelper.KEY_LONGDESCRIPTION,
-					 belEvent.getLongDescription() );
+		 initialValues.put(DatabaseHelper.KEY_LONGDESCRIPTION, belEvent.getLongDescription() );
 
 		 mDbHelper.insert(DatabaseHelper.DATABASE_SAVED, initialValues);
 	 }
@@ -147,32 +142,27 @@ public class BELDatastoreImpl implements BELDatastore
 ///					 belEvent.getId() );
 		 initialValues.put(DatabaseHelper.KEY_EVENTID, belEvent.getId() );
 		 
+		 initialValues.put(DatabaseHelper.KEY_FEEDID, belEvent.getFeed() );
+		 
 		 initialValues.put(DatabaseHelper.KEY_TYPE, belEvent.getEventType() );
 
 		 initialValues.put(DatabaseHelper.KEY_TITLE, belEvent.getTitle() );
 
 		 initialValues.put(DatabaseHelper.KEY_TYPE, belEvent.getEventType() );
 
-		 initialValues.put(DatabaseHelper.KEY_STARTTIME,
-					 belEvent.getStartTime() );
+		 initialValues.put(DatabaseHelper.KEY_STARTTIME, belEvent.getStartTime() );
 
-		 initialValues.put(DatabaseHelper.KEY_ENDTIME,
-					 belEvent.getEndTime() );
+		 initialValues.put(DatabaseHelper.KEY_ENDTIME, belEvent.getEndTime() );
 
-		 initialValues.put(DatabaseHelper.KEY_LINK,
-					 belEvent.getLinkToGroup() );
+		 initialValues.put(DatabaseHelper.KEY_LINK, belEvent.getLinkToGroup() );
 
-		 initialValues.put(DatabaseHelper.KEY_ORGANIZER,
-					 belEvent.getOrganizer() );
+		 initialValues.put(DatabaseHelper.KEY_ORGANIZER, belEvent.getOrganizer() );
 
-		 initialValues.put(DatabaseHelper.KEY_LOCATION,
-					 belEvent.getLocation() );
+		 initialValues.put(DatabaseHelper.KEY_LOCATION, belEvent.getLocation() );
 
-		 initialValues.put(DatabaseHelper.KEY_DESCRIPTION,
-					 belEvent.getDescription() );
+		 initialValues.put(DatabaseHelper.KEY_DESCRIPTION, belEvent.getDescription() );
 
-		 initialValues.put(DatabaseHelper.KEY_LONGDESCRIPTION,
-					 belEvent.getLongDescription() );
+		 initialValues.put(DatabaseHelper.KEY_LONGDESCRIPTION, belEvent.getLongDescription() );
 
 		 mDbHelper.insert(DatabaseHelper.DATABASE_WEB, initialValues);
 	 }

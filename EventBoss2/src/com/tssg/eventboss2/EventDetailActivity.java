@@ -1,19 +1,19 @@
 package com.tssg.eventboss2;
 
-import com.tssg.datastore.DatabaseHelper;
+//import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
-import android.content.Intent;
+//import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.NavUtils;
-import android.support.v4.widget.SimpleCursorAdapter;
+//import android.support.v4.app.NavUtils;
+//import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
-import android.view.LayoutInflater;
+//import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.EditText;
+//import android.view.View;
+//import android.view.ViewGroup;
+//import android.widget.EditText;
 
 /**
  * An activity representing a single Event detail screen. This activity is only

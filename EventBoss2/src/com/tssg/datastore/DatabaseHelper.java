@@ -38,6 +38,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	static final String KEY_ROWID 			= "_id";		// database row_id
 
 	public static final String KEY_EVENTID         = "eventId";	// event fields
+	public static final String KEY_FEEDID          = "feedId";
 	public static final String KEY_TITLE           = "title";
 	public static final String KEY_STARTTIME       = "startTime";
 	public static final String KEY_ENDTIME         = "endTime";
@@ -55,13 +56,14 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	static final String DATABASE_WEB   	 = "webEvents";		//m_webEventsList
 	static final String DATABASE_SAVED   = "savedEvents";	//m_savedEventsList
 	
-	static final String DATABASE_NAME   = "EventStore";  // *** use better names
-//	static final String DATABASE_TABLE  = "events";   //*** should be the above
+	static final String DATABASE_NAME    = "EventStore";    // *** use better names
+//	static final String DATABASE_TABLE   = "events";        //*** should be the above
 
 // 
 	static final String TABLE_DEF  = 
 			 "( " + KEY_ROWID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "eventId Integer ,"
+			+ "feedId Integer,"
 			+ "title TEXT NOT NULL,"
 			+ "startTime TEXT , "
 			+ "endTime TEXT , "
@@ -73,7 +75,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			+ "longDescription TEXT );";
 	
 // the web events table 
-	String CREATE_WEB_TABLE = "CREATE TABLE " +  DATABASE_WEB + " " + TABLE_DEF;
+	String CREATE_WEB_TABLE   = "CREATE TABLE " +  DATABASE_WEB + " " + TABLE_DEF;
 // the saved events table
 	String CREATE_SAVED_TABLE = "CREATE TABLE " +  DATABASE_SAVED + " " + TABLE_DEF;
 	
@@ -95,7 +97,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			+ "description TEXT ,"
 			+ "longDescription TEXT );";
 	*/
-	static final String DROP_WEB_TABLE = "DROP TABLE IF EXISTS " + DATABASE_WEB + ";"; 
+	static final String DROP_WEB_TABLE   = "DROP TABLE IF EXISTS " + DATABASE_WEB + ";"; 
 	static final String DROP_SAVED_TABLE = "DROP TABLE IF EXISTS " + DATABASE_SAVED + ";"; 
 	
 	
@@ -151,7 +153,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	 */
 	SQLiteDatabase getDatabase() throws DatastoreException {
 			
-		//Create or open the database for read+write. The database is cached,
+		// Create or open the database for read+write. The database is cached,
 		// when it is opened.
 		// It may fail to open or to write to database, but with retry
 		// it may succeed.
@@ -216,6 +218,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	{
 	    // Find out what column hold what data
 		int eventIdId         = cursor.getColumnIndex(KEY_EVENTID);
+		int feedIdId		  = cursor.getColumnIndex(KEY_FEEDID);
 		int titleId           = cursor.getColumnIndex(KEY_TITLE);
 		int startTimeId       = cursor.getColumnIndex(KEY_STARTTIME);
 		int endTimeId         = cursor.getColumnIndex(KEY_ENDTIME);
@@ -229,6 +232,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		
 		BELEvent belEvent = new BELEvent(
 						cursor.getInt(eventIdId),
+						cursor.getInt(feedIdId),
 						cursor.getString(titleId),
 						cursor.getString(startTimeId),
 						cursor.getString(endTimeId),
@@ -293,8 +297,6 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		// ajl 09aug2011
 		// first stab at implementing delete of a single event from the SQLite db.
 		SQLiteDatabase db = getDatabase();
-
-		
 		
 		List<BELEvent> eventList = null;
 		eventList = getAllStoredEvents();		
@@ -309,17 +311,17 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		Log.v(DatabaseHelper.LOG_TAG, "@@@@ after printing all event id's");
 		try
 		{
-//
+
 			//long newRowID = 002;
 			if (bLOGGING)  Log.v(DatabaseHelper.LOG_TAG, "@@@@  before db.delete ");
 			numDelRows = db.delete( DATABASE_SAVED, KEY_EVENTID+"=?", new String [] { rowID } );
 			if (bLOGGING)  Log.v(DatabaseHelper.LOG_TAG, "@@@@  after db.delete ");
 			//numDelRows = db.delete( DATABASE_TABLE, KEY_ROWID+"="+rowID, null);
-//			numDelRows = db.delete( DATABASE_TABLE, KEY_EVENTID+"=?", new String[] { eventID } );
+			//numDelRows = db.delete( DATABASE_TABLE, KEY_EVENTID+"=?", new String[] { eventID } );
 			//numDelRows = db.delete( DATABASE_TABLE, KEY_EVENTID+"=Event002", null);
 			//numDelRows = db.delete( DATABASE_TABLE, "_id=" + newRowID, null);
 			//numDelRows = db.delete( DATABASE_TABLE, "_id=2", null);
-// andy's
+			// andy's
 			//db.delete( DATABASE_TABLE, KEY_ROWID + "=" + rowID, null);
 			
 		}
@@ -351,7 +353,6 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			Log.v(DatabaseHelper.LOG_TAG, "Added saved value from Database id="+id);
 			cursor.close();
 		} catch (DatastoreException dataExcp) {
-
 			Log.e(DatabaseHelper.LOG_TAG, ">>>>>  saveEvent: failed to retrieve the database", dataExcp);
 		}
 	}
@@ -363,7 +364,6 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			SQLiteDatabase db = getDatabase();
 			db.delete(DATABASE_SAVED, KEY_ROWID+" = ?", new String[]{id});
 		} catch (DatastoreException dataExcp) {
-
 			Log.e(DatabaseHelper.LOG_TAG, ">>>>>  deleteSavedEvent: failed to purge the database", dataExcp);
 		}
 	}
@@ -390,8 +390,6 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			return null;
 		}
 	}
-	
-
 	
 	public Cursor getCursorSearchEvents(String keyword) {
 		try {
@@ -429,8 +427,6 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			return null;
 		}
 	}
-	
-
 	
 	public BELEvent getSavedEventById(String id) {
 		try {
@@ -473,6 +469,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				{
 					KEY_ROWID,
 					KEY_EVENTID,
+					KEY_FEEDID,
 					KEY_TITLE,
 					KEY_STARTTIME,
 					KEY_ENDTIME, 
@@ -534,6 +531,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 					{
 						KEY_ROWID,
 						KEY_EVENTID,
+						KEY_FEEDID,
 						KEY_TITLE,
 						KEY_STARTTIME,
 						KEY_ENDTIME, 
@@ -569,6 +567,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 					{
 						KEY_ROWID,
 						KEY_EVENTID,
+						KEY_FEEDID,
 						KEY_TITLE,
 						KEY_STARTTIME,
 						KEY_ENDTIME, 
@@ -629,6 +628,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				{
 					KEY_ROWID,
 					KEY_EVENTID,
+					KEY_FEEDID,
 					KEY_TITLE,
 					KEY_STARTTIME,
 					KEY_ENDTIME, 

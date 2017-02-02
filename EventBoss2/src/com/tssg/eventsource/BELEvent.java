@@ -20,7 +20,8 @@ public class BELEvent  implements Comparable<BELEvent>
 	//  until they do.
 	//TODO make up an identifier to use whenever the constructor is
 	// passed a null
-	Integer m_id = null;	
+	Integer m_id = null;
+	Integer m_feed = null;
 	String m_title = null;
 	String m_startTime = null;	// confusing name just a string date
 	String m_endTime = null;	// confusing name just a string date
@@ -42,9 +43,10 @@ public class BELEvent  implements Comparable<BELEvent>
 	 * Class constructor
 	 * TODO: should we change constructor to create a Date and URL
 	 * from the times and linkToGroup fields?  If so, make sure the
-	 * constructor throws error of the input strings are not valid.
+	 * constructor throws error if the input strings are not valid.
 	 * 
 	 * @param id Event identifier
+	 * @param feed Feed identifier
 	 * @param title Event title
 	 * @param startDate start {@link Date}
 	 * @param endDate end {@link Date}
@@ -57,13 +59,14 @@ public class BELEvent  implements Comparable<BELEvent>
 	 * @param description Event (short) description
 	 * @param longDescription Event long description
 	 */
-	public BELEvent( Integer id, String title, 
-			Date startDate, Date endDate, String startTime, String endTime,
-			String type,
-			String linkToGroup, String org, String loc,
-			String description, String longDescription )
+	public BELEvent(Integer id, Integer feed, String title, 
+					Date startDate, Date endDate, String startTime, String endTime,
+					String type,
+					String linkToGroup, String org, String loc,
+					String description, String longDescription )
 	{   
 		m_id = id;
+		m_feed = feed;
 		m_title = title;
 		m_startTime = startTime;
 		m_endTime = endTime;
@@ -84,8 +87,8 @@ public class BELEvent  implements Comparable<BELEvent>
 	 * constructor throws error of the input strings are not valid.
 	 * 
 	 * @param id Event identifier
+	 * @param feed Feed identifier
 	 * @param title Event title
-
 	 * @param startTime Event start time
 	 * @param endTime Event end time
 	 * @param type Event type
@@ -95,13 +98,14 @@ public class BELEvent  implements Comparable<BELEvent>
 	 * @param description Event (short) description
 	 * @param longDescription Event long description
 	 */
-	public BELEvent( Integer id, String title, 
-			String startTime, String endTime,
-			String type,
-			String linkToGroup, String org, String loc,
-			String description, String longDescription )
+	public BELEvent( Integer id, Integer feed, String title, 
+					 String startTime, String endTime,
+					 String type,
+					 String linkToGroup, String org, String loc,
+					 String description, String longDescription )
 	{   
 		m_id = id;
+		m_feed = feed;
 		m_title = title;
 		m_startTime = startTime;
 		m_endTime = endTime;
@@ -129,6 +133,22 @@ public class BELEvent  implements Comparable<BELEvent>
 	 */
 	public void setId( Integer id ) { 
 		m_id = id; 
+	}
+	
+	/**
+	 * Gets the feed Id
+	 * @return feed Id
+	 */
+	public Integer getFeed() { 
+		return m_feed; 
+	}
+	
+	/**
+	 * Set the feed Id 
+	 * @param id the feed Id
+	 */
+	public void setFeed( Integer feed ) { 
+		m_feed = feed; 
 	}
 	
 	/** since id is based on hashcode, it should not be set until other fields are set */
@@ -433,4 +453,5 @@ public class BELEvent  implements Comparable<BELEvent>
 		// sb.append('\n');
 		return sb.toString();
 	}
+
 }
