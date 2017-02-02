@@ -20,26 +20,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.tssg.datastore.DatabaseHelper;
-import com.tssg.eventsource.BELEvent;
 
 /*
  * A fragment for the view of the current list display.
- * Warning: I am not a Fragment.
  * ======================================================================================
  */
 public class CurrentSectionFragment extends EventBossListFragment {
-	// List
 	Cursor mCursor;
 	SimpleCursorAdapter mAdapter;
 	DatabaseHelper dbh;
 	LayoutInflater mLayoutInflater;
 	ViewGroup mViewGroup;
+//	TextView mHeader;
 	ListView mLV;
 	public static TextView mListHeader;  //
-	
-	// Events
-	BELEvent mEvent;		// Keep a copy of the active (selected) Event
-	//EventItemFragment.EVENTITEM_POS
+
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -61,7 +56,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location};
 		// Create an empty adapter we will use to display the loaded data.
 		// We pass null for the cursor, then update it in onLoadFinished()
-		SimpleCursorAdapter adapter = new SimpleCursorAdapter(getActivity(),			
+		SimpleCursorAdapter adapter = new SimpleCursorAdapter(getActivity(),
 				R.layout.eventlist_row, mCursor, fromColumns, toViews, 0);
 		mAdapter = adapter;
 		

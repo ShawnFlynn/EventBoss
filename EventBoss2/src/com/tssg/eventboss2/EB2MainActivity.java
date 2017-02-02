@@ -63,7 +63,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     boolean bDEVELOPER_MODE = false;				    // controls strictMode	set to false for release
     private static ActionBar m_actionBar;
 
-	public static String statusMessage = null;		// status line content  //**** does not exist anymore in Views
+	public static String statusMessage = null;		// status line content
 	public static TextView m_statusView = null;		// view for status line
 
 	// the URL selected in SettingsActivity can change mURLString and mRSSString
@@ -111,7 +111,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     ViewPager mViewPager;
 //	private static boolean mDualPane;
 	static boolean mDualPane;				// not public?
-//	public static EventItemFragment mEventFragment;
+	public static EventItemFragment mEventFragment;
 	
 	public static boolean readingFromInternalFile = false;
 	public static String internalFilePath = null;
@@ -344,7 +344,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             final String ARG_SECTION_NUMBER1 = "Current";
             final String ARG_SECTION_NUMBER2 = "Saved";
             final String ARG_SECTION_NUMBER3 = "Search";
-        	Fragment fragment = null;
+        	Fragment fragment;
         	Bundle args;
 
         	switch (i) {
@@ -376,10 +376,20 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER3, 3);
                     fragment.setArguments(args);
-                    return fragment;           
+                    return fragment;
+                    
+                default:
+                	if (mDualPane) {
+                		fragment = savedData;
+                	} else {
+	                	Log.v("MainActivity:", "--- Event: tab/3 *");
+	         			mEventFragment = new EventItemFragment();
+	                    fragment = mEventFragment;
+	                    Log.v("MainActivity:", "--- Event: tab/3 **");
+                	}
+                    return fragment;
                     
         	}   // end switch()
-			return fragment;
         	
         }		// --- Fragment getItem()
 
@@ -388,8 +398,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         	if (mDualPane) {
         		return 3;
         	} else {
-        		return 4;			//***  this was the event details, which should now be 
-        							//***  implemented as List/Event fragments (in one of the tabs!!!)
+        		return 4;
         	}
         }
 
@@ -417,15 +426,14 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 //	}
 	
 	public static void updateListHeader( String extraText )  {
-		/*
-		 * This routine sets the list header of the lists (which are implemented
-		 * in each tab). The header is not fixed at the top of the view! it scrolls
-		 * with the list.
-		 * use: <xxx>SectionFragment.updateListHeader( extraText );
-		 *      Create a list-header (TextView) and add it to the list like this:
-		 *	    mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
-		 *   mLV.addHeaderView(mListHeader);
-		 */
+		
+		//CurrentSectionFragment.updateListHeader( extraText );
+		
+
+			// Create a list-header (TextView) and add it to the list like this:
+//			mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
+//			mLV.addHeaderView(mListHeader);
+			
  
 			SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US );
 			String channelDate = EB2MainActivity.m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
@@ -443,15 +451,14 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	@Override
 	public boolean onCreateOptionsMenu(Menu main_activity_action) {
 	  MenuInflater inflater = getMenuInflater();   // 
-		// these 'options' are elements on the action bar
+		// TODO Name???
 	  inflater.inflate(R.menu.listdisplay_activity_action, main_activity_action);         // 
 	  return true; // 
 	}
 
-	/*
-	 * ** Called when an options item is clicked.
-	 * Handles  itemPrefs, ... 
-	 *         punts on idDeleteSelected, idSaveSelected, or anything else.
+	
+	/** Called when an options item is clicked.
+	 * Handles  itemPrefs, punts on idDeleteSelected, idSaveSelected, or anything else.
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -713,7 +720,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	* 
 	* @return m_mainEventText
 	* 
-	* There is somewhere another read (text) routine (from Jeremy)   <---
+	* There is somewhere another read (text) routine (from Jeremy)
 	* to be manually inserted (I don't remember where).
 	* 
 	* Note: these routines are intended to provide input to EventBoss2
@@ -810,6 +817,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	 **      Implements interface {@link EventFragmentCoordinator}, displays the event details (fragment) 
 	 **/
 	public void displayEventDetails(String eventID, boolean isSavedEvent) {
+	//		EventItemFragment mEventItem = null;
 			Bundle args = new Bundle();
 			args.putString(com.tssg.eventboss2.EventItemFragment.SAVED_KEY, String.valueOf(isSavedEvent));
 			EventItemFragment mEventItem = new EventItemFragment();
@@ -818,40 +826,32 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 			Log.i("displayEventDetails begin: ", "w/EventId: "+eventID);
 	
 		if (mDualPane) {
-			Log.i("displayEventDetails begin: ", "w/EventId: "+eventID);
 			Log.i("displayEventDetails: ", "DualPane,"+eventID);
 			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-			transaction.replace(R.id.eventData, mEventItem);		// eventData is used layout-large/activity_main.xml
-///			transaction.replace(R.id.activity_event_detail, mEventItem);				
-
-			Integer i = R.id.eventData; 
-			Log.i("id.eventData: ", " "+Integer.toHexString(i)+", EventItem "+mEventItem);
+			transaction.replace(R.id.eventData, mEventItem);				// eventData is used layout-large/activity_main.xml
+		Integer i = R.id.eventData;    
+		Log.i("id.eventData: ", " "+Integer.toHexString(i));
+		Log.i("eventItem ", " "+mEventItem);
 			//transaction.addToBackStack(null);
 			transaction.commit();
 			
 		} else {
 			
-			Log.i("displayEventDetails begin: ", "w/EventId: "+eventID);
 			Log.i("displayEventDetails: ", "|DualPane,"+eventID);
 			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 			transaction.replace(R.id.eventData_s, mEventItem);    // eventData_s is used layout/activity_main.xml
 //																  //  work not, crash not	
-			transaction.addToBackStack(null);
+//			//transaction.addToBackStack(null);
 			transaction.commit();
 			
-////		Log.i("eventItem ", " "+mEventItem);
+		Log.i("eventItem ", " "+mEventItem);
 		Log.i("displayEventDetails: ", "start EventDetailActivity "+eventID);
-////			// In single-pane mode, start the detail event activity for the selected item ID:
+			// In single-pane mode, start the detail event activity for the selected item ID:
 			Intent detailIntent = new Intent(this, EventItemFragment.class);
 			detailIntent.putExtra(EventItemFragment.EVENTITEM_POS, eventID);
-			startActivity(detailIntent);
-///		Log.i("displayEventDetails: ", "w/intent: "+detailIntent.toString());
-///		Log.i("displayEventDetails: ", "w/EventItem "+mEventItem.toString());
-			
-//		    java.lang.RuntimeException: Unable to instantiate activity
-//			  ComponentInfo{com.tssg.eventboss2/com.tssg.eventboss2.EventItemFragment}:
-//			  java.lang.ClassCastException: com.tssg.eventboss2.EventItemFragment cannot be cast to android.app.Activity
-//			  at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:1879)
+
+		Log.i("displayEventDetails: ", "w/intent: "+detailIntent.toString());
+		Log.i("displayEventDetails: ", "w/EventItem "+mEventItem.toString());
 
 		}
 	}

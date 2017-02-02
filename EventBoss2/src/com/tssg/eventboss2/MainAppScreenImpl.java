@@ -6,7 +6,6 @@ package com.tssg.eventboss2;
 import java.util.List;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -41,12 +40,8 @@ public class MainAppScreenImpl implements MainAppScreen {
 		// so, this could be helpful for setting up launch configurations so
 		// that, for example, you could use a mock object instead of the real
 		// deal.
-Log.e("MainAppScreenImpl", "XXXXXXX   we should not be using this !!!!!  XXXXXXXX");
-Log.e("MainAppScreenImpl", "XXXXXXX if you never see this message !!!!!  XXXXXXXX");
-Log.e("MainAppScreenImpl", "XXXXXXX remove MainAppScreen< ,Impl>  !!!!!  XXXXXXXX");
-		
 
-		m_adapter = null;    //new EventListAdapter();
+		m_adapter = new EventListAdapter();
 		m_context = context;
 
 		// set up the window to have no title bar, add the action bar and a
