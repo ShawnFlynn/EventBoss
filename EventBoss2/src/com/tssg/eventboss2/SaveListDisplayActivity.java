@@ -1,7 +1,6 @@
 package com.tssg.eventboss2;
 
 import java.util.ArrayList;
-
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
 
 /** The SaveList is the list of saved events seen on the Saved tab */

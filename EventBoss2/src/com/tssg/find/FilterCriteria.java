@@ -26,10 +26,10 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.tssg.eventboss2.Constants;
-import com.tssg.eventboss2.MakeToast;
 import com.tssg.eventboss2.R;
 //import android.app.Application;
+import com.tssg.eventboss2.utils.misc.Constants;
+import com.tssg.eventboss2.utils.misc.MakeToast;
 
 /**
  * @author rjd

@@ -1,6 +1,7 @@
 package com.tssg.eventboss2;
 
 import com.tssg.datastore.DatabaseHelper;
+import com.tssg.eventboss2.utils.misc.MakeToast;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -51,14 +52,14 @@ public class EventDetailActivity extends FragmentActivity {
 			// Create the detail fragment and add it to the activity
 			// using a fragment transaction.
 
-			Log.e("enter EventDetailActivity: ", "EventItemFragment = "+EventItemFragment.EVENTITEM_POS);
+			Log.e("enter EventDetailActivity: ", "EventItemFragment = "+EventDetailFragment.ARG_ITEM_ID);
 
 			Bundle arguments = new Bundle();
-			arguments.putString(EventItemFragment.EVENTITEM_POS, getIntent()
-					.getStringExtra(EventItemFragment.EVENTITEM_POS));
+			arguments.putString(EventDetailFragment.ARG_ITEM_ID, getIntent()
+					.getStringExtra(EventDetailFragment.ARG_ITEM_ID));
 			Log.e("enter EventDetailActivity: ", "savedInstanceState (null) ");
 
-			EventItemFragment fragment = new EventItemFragment();   //???
+			EventDetailFragment fragment = new EventDetailFragment();   //???							// ##########  use 
 			Log.e("enter EventDetailActivity.onCreate ", "EventItemFragment = "+fragment);
 			// any init ??
 

@@ -13,8 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.tssg.eventboss2.MakeToast;
 import com.tssg.eventboss2.R;
+import com.tssg.eventboss2.utils.misc.MakeToast;
 
 /*
  * Displays a list of the type that exist in the list subject to the Find.

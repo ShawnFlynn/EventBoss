@@ -401,7 +401,12 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			if ((keyword == null) || (keyword.equals(""))) {
 				cursor = db.query(DATABASE_WEB,null,null,null,null,null,KEY_ROWID+" ASC",null);
 			} else {
-				cursor = db.query(DATABASE_WEB,null,KEY_TITLE+" LIKE ? OR "+KEY_LONGDESCRIPTION+" LIKE ?",new String[]{keyword,keyword},null,null,KEY_ROWID+" ASC",null);
+				cursor = db.query(DATABASE_WEB,null,
+						KEY_TITLE+" LIKE ? OR "+
+						KEY_STARTTIME+" LIKE ? OR "+
+						KEY_ENDTIME+" LIKE ? OR "+
+						KEY_LOCATION+" LIKE ? OR "+
+						KEY_LONGDESCRIPTION+" LIKE ?",new String[]{keyword,keyword,keyword,keyword,keyword},null,null,KEY_ROWID+" ASC",null);
 			}
 			return cursor;
 		} catch (DatastoreException dataExcp) {

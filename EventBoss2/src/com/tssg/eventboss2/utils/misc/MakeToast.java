@@ -1,4 +1,4 @@
-package com.tssg.eventboss2;
+package com.tssg.eventboss2.utils.misc;
 
 import android.content.Context;
 // import android.view.Gravity;
