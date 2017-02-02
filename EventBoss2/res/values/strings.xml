@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">EventBoss2</string>
+    <string name="menu_settings">Settings</string>
+    <string name="feedSource">Select EventsList:</string>
+    <string name="title_current_fragment">Current Fragment</string>
+    <string name="title_activity_event_display">Event_Item</string>
+    <string name="title_activity_eventlist_display">Event_Item</string>
+    <string name="title_activity_savelist_display">Saved Events</string>
+    <string name="no_data">No Events</string>
+    <string name="idCurrentList">idCurrentList</string>
+    <string name="titleCurrent">Current List</string>
+    <string name="idSavedList">idSavedList</string>
+    <string name="titleSaved">Saved List</string>
+    <string name="saveSelected">Save Selected</string>
+    <string name="titleSave">Save Selected</string>
+    <string name="deleteSelected">Delete Selected</string>
+    <string name="titleDelete">Delete Selected</string>
+    <string name="Search">Search</string>
+    <string name="titleSearch">Search</string>
+    <string name="Calendar">Calendar</string>
+    <string name="titleCalendar">Calendar</string>
+    <string name="Share">Share</string>
+    <string name="titleShare">Share</string>
+    <string name="title_activity_search_dlg">SearchDlg</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_do_search">DoSearch</string>
+
+    <string name="dummy_section_text">Section %1d is just a dummy section.</string>
+    <string name="search_section_text">Section %1d is the Search section.</string>
+
+    <string name="titlePrefs">Preferences</string>
+    <string name="titleSettings">Settings</string>
+    <string name="readRSS">ReadRss</string>
+    <string name="titleReadRss">Read selected Feed now</string>
+    <string name="idDone">idDone</string>
+    <string name="title_DoneBtn">Done</string>   
+    
+    <string name="title_SearchDlgActivity">Search Dialog</string>
+    <string name="title_SearchNew">Search new</string>
+    <string name="title_SearchAgain">Search again</string>
+    <string name="title_EndSearch">End search</string>
+    <string name="idSearchNew">Search new</string>
+    <string name="idSearchAgain">Search again</string>
+    <string name="idEndSearch">End search</string>
+    
+    <string name="searchHint">Enter Search</string>
+    <string name="addToCalendar">Add to calendar</string><string name="forward">Forward</string>
+    
+    <string name="eventslist"> Eventslist</string> 
+    <string name="bolist">Boston Eventslist</string>
+    <string name="nhlist">New Hampshire Eventslist</string>
+    <string name="melist">Maine Eventslist</string>
+    <string name="nylist">New York Eventslist</string>
+    <string name="sflist">San Francisco Eventslist</string>
+    <string name="Read_selected_Feed_now">Read selected Feed now</string>
+</resources>
