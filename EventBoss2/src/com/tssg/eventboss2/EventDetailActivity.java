@@ -3,13 +3,11 @@ package com.tssg.eventboss2;
 import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
-
 import android.content.Context;
 //import android.content.Intent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.CalendarContract;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 //import android.support.v4.app.NavUtils;
@@ -20,10 +18,15 @@ import android.view.MenuInflater;
 //import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+
+import java.sql.Date;
+
+import android.provider.CalendarContract;
+import android.provider.CalendarContract.Events;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
-import java.util.Date;
+//import java.util.Date;
 
 /**
  * An activity representing a single Event detail screen. This activity is only
@@ -34,7 +37,6 @@ import java.util.Date;
  * a {@link EventDetailFragment}.
  */
 
-
 public class EventDetailActivity extends FragmentActivity {
 
 	static final String TAG = "EventDetailActivity";  // log's tag
@@ -43,7 +45,7 @@ public class EventDetailActivity extends FragmentActivity {
 	public static long mId;
 	public static int mType;
 	private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity())
-	EventDetailFragment mDetailFragment = new EventDetailFragment();	////
+	EventDetailFragment mDetailFragment = new EventDetailFragment();	////<-----
 
 
 	@Override
@@ -109,7 +111,6 @@ public class EventDetailActivity extends FragmentActivity {
     		inflater.inflate(R.menu.menu_detail_activity_sav, menu);
 			Log.v(TAG, "EventDetailActivity - delete only");
     	}
-    		
     	return super.onCreateOptionsMenu(menu);
     }
 
@@ -159,24 +160,80 @@ public class EventDetailActivity extends FragmentActivity {
         case R.id.idCalendar:
             Log.v(TAG, " Calendar");
             Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
-            // TODO  code to save in fragment - ... an mId
-            break;
             
+            // TODO  code to save in fragment - ... an mId
+            String title = "Boston";						// id.title;
+            String location = "Convention Center";			// id.location;
+            Date start = EB2MainActivity.m_channelDate;	 	// id.start;
+            Date end = EB2MainActivity.m_channelDate;		// id.end;
+            makeAppointment(title, location, start, end );
+
+//            EB2MainActivity.makeAppointment(mId); // can only call it if make Appointment is static
+            										// but if it is static, startActivity() does not work
         case R.id.action_share:
             Log.v(TAG, " - idShare pressed");
             Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
             // TODO  must send an mId to the share
             Log.d(TAG, " item: " +  SavedSectionFragment.mId);  // TODO or from SavedSectionFragment
             ProcessShare(item);
-        return true;
+        	break;
 		}
 		return super.onOptionsItemSelected(item);
 	} //end   onOptionsItemSelected(MenuItem ..)	
+
     
+    // is a duplicate of the version in EB2MainActivity
+	public void makeAppointment(String title, String location, Date start, Date end ) {
+     	Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
+   
+        intent.putExtra(Events.TITLE, title);
+        intent.putExtra(Events.ALL_DAY, false);
+        intent.putExtra(Events.EVENT_LOCATION, location);
+
+    	long startL, endL;
+    	if (null != start) {
+        	startL = start.getTime();
+        	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startL);
+    	}
+        if (null != end) {
+            endL = end.getTime();
+            intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endL);
+        }
+        
+		Log.d("makeAppointment", " " + intent);
+        startActivity(intent);
+	}	//  end makeAppointment
+
+//	void makeAppointment(long mId2) {
+		// TODO Auto-generated method stub
+		
+//	}
+
 	void ProcessShare(MenuItem item) {
 
 		ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
+/*
+ * This class is a mediator for accomplishing a given task, for example sharing a file. It is responsible for creating a view that performs an action that accomplishes the task. This class also implements other functions such a performing a default action. 
 
+An ActionProvider can be optionally specified for a MenuItem and in such a case it will be responsible for creating the action view that appears in the android.app.ActionBar as a substitute for the menu item when the item is displayed as an action item. Also the provider is responsible for performing a default action if a menu item placed on the overflow menu of the ActionBar is selected and none of the menu item callbacks has handled the selection. For this case the provider can also optionally provide a sub-menu for accomplishing the task at hand. 
+
+There are two ways for using an action provider for creating and handling of action views: 
+
+Setting the action provider on a MenuItem directly by calling MenuItem.setActionProvider(ActionProvider). 
+Declaring the action provider in the menu XML resource. For example: 
+ 
+   <item android:id="@+id/my_menu_item"
+     android:title="Title"
+     android:icon="@drawable/my_menu_item_icon"
+     android:showAsAction="ifRoom"
+     android:actionProviderClass="foo.bar.SomeActionProvider" />
+ 
+ 
+
+See Also:
+MenuItem.setActionProvider(ActionProvider)
+MenuItem.getActionProvider()
+ */
 		//Toast.makeText(this, mResources.getString(R.string.doTheShare) + " ", Toast.LENGTH_SHORT).show();
 		Toast.makeText(this, "doTheShare" + " ", Toast.LENGTH_SHORT).show();
 

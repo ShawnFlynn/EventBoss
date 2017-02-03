@@ -21,6 +21,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.content.Context;
 
 import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
@@ -44,7 +46,7 @@ public class EventDetailFragment extends Fragment {
 
 //    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
     private int m_isListType; 		// Current (0), Saved List (1), Saved List (2)
-    private DatabaseHelper dbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
+    private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
     private String mId;             // use ItemId
 
     private BELEvent mEvent;        //
@@ -68,7 +70,7 @@ public class EventDetailFragment extends Fragment {
 
     public void setEventId(String id) {  mId = id;  }
 //    public void setEventId(String id) {  mEvent = mId;  }
-    public void setDBhelper(DatabaseHelper db) { dbh = db; }         // from  displayEventDetails
+    public void setDBhelper(DatabaseHelper db) { mDbh = db; }         // from  displayEventDetails
 
     @Override
     public void onCreate(Bundle savedInstance) {
@@ -80,16 +82,16 @@ public class EventDetailFragment extends Fragment {
         // Get a database handle
         // for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
         // for phone  dhh is set here, because 'EventDetailActivity' creates the EventDetailFragment  
-        if( dbh == null )  {
-        	dbh = new DatabaseHelper(getActivity());
+        if( mDbh == null )  {
+        	mDbh = new DatabaseHelper(getActivity());
         }
         Log.v(TAG, " initialization EventDetailFragment:");
-        Log.v(TAG, "onCreate: type: "+m_isListType+",  mId: "+mId+", db: "+dbh);
+        Log.v(TAG, "onCreate: type: "+m_isListType+",  mId: "+mId+", db: "+mDbh);
 
-        if( m_isListType == 0 ) {    // ----- Current Section
+        if( m_isListType == 0 ) {    // ----- Current Section -----------------
         	// Get the current event
             Log.v(TAG, "*/current Event: "+mEvent+", id = "+mId);
-        	try {mEvent = dbh.getEventById(mId);}
+        	try {mEvent = mDbh.getEventById(mId);}
             catch (android.database.CursorIndexOutOfBoundsException exept ) {
                 if (mEvent == null) {
                     Log.e(TAG, "we have an id, but no Event: " + mEvent);
@@ -101,19 +103,19 @@ public class EventDetailFragment extends Fragment {
             }
             Log.v(TAG, "**/current Event: "+mEvent);
 		}
-        if( m_isListType == 1 ) {	// ----- Saved Section
+        if( m_isListType == 1 ) {	// ----- Saved Section -----------------
             // Get the saved event
-            Log.v(TAG, "saved Event: "+mEvent+", mId: "+mId+", dbh: "+dbh);
+            Log.v(TAG, "saved Event: "+mEvent+", mId: "+mId+", dbh: "+mDbh);
             
             if ( mId.isEmpty() ) 
             	Log.v(TAG, "can not delete: Event is empty");  //
             else 
-            	mEvent = dbh.getSavedEventById(mId);
+            	mEvent = mDbh.getSavedEventById(mId);
             
             Log.v(TAG, "saved Event: "+mEvent);
         }
         
-        if( m_isListType == 2 ) {	// ----- Search section
+        if( m_isListType == 2 ) {	// ----- Search section -----------------
             
             if ( mId.isEmpty() ) 
             	Log.v(TAG, "can not display: Event is empty");  //
@@ -123,7 +125,7 @@ public class EventDetailFragment extends Fragment {
 // - mId - should be the Id from CurrentEventList
 //     also see --> SearchSectionFragment line 97  
             	try {
-            		mEvent = dbh.getEventById(mId);            	} 
+            		mEvent = mDbh.getEventById(mId);            	} 
             	catch ( SQLException exp ) {
             		Log.e( TAG, "caught SQLException: reading this id: "+mId ,exp ); }
             	catch (android.database.CursorIndexOutOfBoundsException exept ) {
@@ -192,7 +194,7 @@ public class EventDetailFragment extends Fragment {
        mTitleText.setText(mEvent.getTitle());
        
        mStartText.setText(mEvent.getStartTime());
-//       if (m_isListType < 2) {
+       if (m_isListType < 2) {
     	   mEndText.setText(mEvent.getEndTime());
     	   mTypeText.setText(mEvent.getEventType());
     	   mLinkText.setText(mEvent.getLinkToGroup());
@@ -201,7 +203,7 @@ public class EventDetailFragment extends Fragment {
     	   	//  <- is full of CSS and HTML codes
        		// mDescriptionText.setText("substitute for LongDescription");
        	   }
-//       }
+       }
             Log.v(TAG, "in refreshView: ");
             Log.v(TAG, " text: " +mTitleText.getText());   // (TextView)
 //            Log.v(TAG, " star: " +mStartText.getText());
@@ -218,9 +220,9 @@ public class EventDetailFragment extends Fragment {
 
 
     /** make calendar appointment. This should be a controller method.
-     */
-    void makeAppointment(String title, String location, Date start, Date end ) {
-        	Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
+
+   void makeAppointment(String title, String location, Date start, Date end ) {
+        Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
 
         long startL, endL;
         if (null != start) {
@@ -231,13 +233,21 @@ public class EventDetailFragment extends Fragment {
             endL = end.getTime();
             intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endL);
         }
+        String strEvent = String.format("%d", CurrentSectionFragment.mId); // number of the id
+//        Toast.makeText(getBaseContext(), TAG + " Calendar "+strEvent, Toast.LENGTH_SHORT).show();
+        BELEvent event = mDbh.getEventById(strEvent);
+        title = event.getTitle();
+        location = event.getLocation();
+        start = (Date) event.getStartDate();
+        end = (Date) event.getEndDate();
 
         intent.putExtra(Events.TITLE, title);
         intent.putExtra(Events.ALL_DAY, false);
         intent.putExtra(Events.EVENT_LOCATION, location);
 
         startActivity(intent);
-    }
+    }	// ---- makeAppointment
+         */
 
 	public int get_isEventType() {
 		return m_isListType;

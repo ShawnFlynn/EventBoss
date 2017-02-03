@@ -47,6 +47,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 		if ( dbh == null ) {
 			dbh = new DatabaseHelper(getActivity());
 		}
+
 	}
 
 	@Override
@@ -63,11 +64,11 @@ public class SavedSectionFragment extends EventBossListFragment {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		Log.v(TAG, "(onActivityCreated: "+"before cursor, dbh:"+dbh);
+		Log.v(TAG, "( CurrentSectionFragment.onActivityCreated: "+"before cursor, dbh:"+dbh);
 		if (mCursor == null) {
 			mCursor = dbh.getCursorSavedEvents();
 		}
-		Log.v(TAG, "(onActivityCreated: "+"after cursor");
+		Log.v(TAG, "( CurrentSectionFragment.onActivityCreated: "+"after cursor");
 		// For the cursor adapter, specify which columns go into which views
 		String[] fromColumns = { DatabaseHelper.KEY_TITLE,
 			    				 DatabaseHelper.KEY_STARTTIME,
@@ -78,7 +79,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 		mEventItemCount = mCursor.getCount();
 		mLV = getListView();
 		mLV.setHeaderDividersEnabled(true); 
-		mLV.setDividerHeight(10);				// = divider between list items
+		mLV.setDividerHeight(5);				// = divider between list items
 		
 		// Create an empty adapter we will use to display the loaded data.		// <------------
 		// We pass null for the cursor, then update it in onLoadFinished()
@@ -123,7 +124,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 			mId = id;
 			Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
 
-			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
+//			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
 		}
 */
         if( position > 0 ) {	// it's using only mId
@@ -141,14 +142,6 @@ public class SavedSectionFragment extends EventBossListFragment {
 		super.onDestroyView();
 	}
 
-	/*
-	/ *  	getActivity()
-	/ *	setListAdapter
-	/ *	error on updateListHeader	*/
-//	public static void updateList() {		// static is bad to call from eventdetail
-	/*
-	 * 
-	 */
 	public void updateList() {
 		Log.v(TAG, "update saved list");
 //		dbh = new DatabaseHelper(getActivity());
@@ -157,8 +150,9 @@ public class SavedSectionFragment extends EventBossListFragment {
 		mAdapter.swapCursor(mCursor);
 		setListAdapter(mAdapter);
 		mEventItemCount = mCursor.getCount();
-		Log.v(TAG, "update saved list-header");
-        updateListHeader("update saved list-header ");
+		Log.v(TAG, "update saved list-header, count: "+mEventItemCount);
+        updateListHeader("update saved list-header");
+// TODO  ---- around here --- clear the old data iff count is zero
 	}
 
      void updateListHeader( String extraText )  {

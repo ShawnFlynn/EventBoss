@@ -24,15 +24,14 @@ import com.tssg.find.SearchActivity;
 /** The SaveList is the list of saved events seen on the Saved tab */
 public class SaveListDisplayActivity extends Activity { // 
 
-	
+		public boolean bLOGGING = true;				// do log
+		public static final String TAG = "SavedListDisplayAct";	// log's tag
+		public static final String INTENT_LOG = "com.tssg.eventboss2.bLOGGING";
+
 		public static MainAppScreen m_mainAppScreen = null;
 		public View m_mainAppView = null;			//	view for find results	
-
-		public static final String INTENT_LOG = "com.tssg.eventboss2.bLOGGING";
 		public static TextView m_statusView = null;
 		public static Context context = null;
-		public boolean bLOGGING = true;				// do log
-		public static final String TAG = "SLDAct";	// log's tag
 
 		/* 
 		 *   Set up the View containing the source list
@@ -89,6 +88,18 @@ public class SaveListDisplayActivity extends Activity { //
 			
 }		// end OnCreate( ... )		
 
+		
+		@Override
+		public boolean onCreateOptionsMenu(Menu menu) {
+			// Inflate the menu; this adds items to the action bar if it is present.
+			// only items : delete and quit (-> go to eventlist ?P)
+			
+			MenuInflater inflater = getMenuInflater();   // 
+			inflater.inflate(R.menu.menu_listdisplay_activity, menu);
+
+			return true;
+		}
+		
 //add events (from save)
 //delete event (or events - if multiple selections)
 
@@ -136,17 +147,6 @@ public class SaveListDisplayActivity extends Activity { //
 			super.onResume();
 
 			MakeToast.makeToast(this, "SaveList onResume", MakeToast.LEVEL_DEBUG);
-		}
-		
-		@Override
-		public boolean onCreateOptionsMenu(Menu menu) {
-			// Inflate the menu; this adds items to the action bar if it is present.
-			// only items : delete and quit (-> go to eventlist ?P)
-			
-			MenuInflater inflater = getMenuInflater();   // 
-			inflater.inflate(R.menu.menu_listdisplay_activity, menu);
-
-			return true;
 		}
 	
 }

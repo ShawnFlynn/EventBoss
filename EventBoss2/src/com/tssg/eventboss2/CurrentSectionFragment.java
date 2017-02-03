@@ -61,24 +61,6 @@ public class CurrentSectionFragment extends EventBossListFragment {
         }
 	}
 
-  @Override
-	public boolean onCreateOptionsMenu(Menu menu ) {
-    	// change/inflate menu items on the action bar
-	  Log.v(TAG,"onCreateOptionsMenu = "+ menu);
-	  /*  
-	   * 
-  		MenuInflater inflater= getMenuInflater();		//
-    	if (mListType == 0) {
-    		inflater.inflate(R.menu.menu_dual_activity_cur, menu);
-			Log.v(TAG, "EventDetailActivity - save only");
-    	} else  {
-    		inflater.inflate(R.menu.menu_dual_activity_sav, menu);
-			Log.v(TAG, "EventDetailActivity - delete only");
-    	} 
-    	*/		
-    	return super.onCreateOptionsMenu(menu);
-    }
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
@@ -89,10 +71,16 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 
+ //   @Override
+ //   public boolean onCreateOptionsMenu(Menu main_activity_action) {
+ //       MenuInflater inflater = getMenuInflater();
+ //   }
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		
+//		invalidateOptionsMenu();
 
 		Log.v(TAG, "( CurrentSectionFragment.onActivityCreated: "+
 						"before cursor: "+ mCursor +", dbh: "+dbh);
@@ -108,7 +96,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 		mLV = getListView();
 		mLV.setHeaderDividersEnabled(true); 
-		mLV.setDividerHeight(10);				// = divider between list items
+		mLV.setDividerHeight(15);				// = divider between list items
 
 		// The TextView in simple_list_item_1
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location};
