@@ -63,6 +63,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public static boolean bTRACE = false;           // en/disable tracing to device SD
     boolean bDEVELOPER_MODE = false;                // controls strictMode set to false for release
     private static ActionBar m_actionBar;
+    public static DatabaseHelper mDbh;
 
     // the URL selected in SettingsActivity can change mURLString and mRSSString
     // volatiles may be changed from doInBackground; don't think we need to synchronize, yet
@@ -158,7 +159,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.i(TAG, "onCreate()");
+        Log.i(TAG, "onCreate()");   // Activity launched or recreated
 
         if( bTRACE ) {
             // trace file is created in SD device
@@ -291,7 +292,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                                 .setTabListener(this));
                         break;
 
-                    case 3:
+                    case 3:  // TODO was used in search - hill have to use the desplay detail
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Event))
                                 .setTabListener(this));
@@ -312,7 +313,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     protected void onStart() {
         super.onStart();
 
-        Log.i(TAG, "onStart()");
+        Log.i(TAG, "onStart()");   // Activity starts (after created)
 
     }   //  end --- onStart
 
@@ -320,32 +321,33 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     protected void onRestart() {
         super.onRestart();
 
-        Log.i(TAG, "onRestart()");
+        Log.i(TAG, "onRestart()");   // Activity re-starts (after it was stopped)
 
     }   //  end --- onRestart
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        Log.i(TAG, "onResume()");
-
-    }   //  end --- onResume
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        Log.i(TAG, "onPause()");
-
+        Log.i(TAG, "onPause()"); // Activity is paused
+                                 //  (because a higher priority activity needs memory)
     }   //  end --- onPause
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Log.i(TAG, "onResume()");   // Activity resumes after being paused
+
+    }   //  end --- onResume
+
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        Log.i(TAG, "onStop()");
-
+        Log.i(TAG, "onStop()");     // Activity is stopped ( it can resume or restart or
+                                    //    it is destroyed
     }   //  end --- onStop
 
     @Override
@@ -371,12 +373,12 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     public void onTabUnselected(ActionBar.Tab tab,
                                 android.app.FragmentTransaction fragmentTransaction) {
+        Log.v(TAG, "onTabUnselected()"+tab.getPosition());
     }
 
     public void onTabSelected(ActionBar.Tab tab,
                               android.app.FragmentTransaction fragmentTransaction) {
-
-        Log.v(TAG, "onTabSelected()");
+        Log.v(TAG, "onTabSelected()"+tab.getPosition());
 
         // When the given tab is selected,
         // switch to the corresponding page in the ViewPager.
@@ -385,9 +387,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             displayEventDetails("", false);
         }
         mViewPager.setCurrentItem(tab.getPosition());
-        Log.v(TAG, "onTabSelected() position = " + tab.getPosition());
+        Log.v(TAG, "onTabSelected() pos = " + tab.getPosition());
         if (tab.getPosition() == 1) {
-            savedData.updateList();
+        //TODO    savedData.updateList();
         }
 
     }
@@ -396,7 +398,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public void onTabReselected(ActionBar.Tab tab,
                                 android.app.FragmentTransaction fragmentTransaction) {
 
-        Log.v(TAG, "onTabReselected() position = " + tab.getPosition());
+        Log.v(TAG, "onTabReselected() pos = " + tab.getPosition());
 
         // here resume activity
         switch (tab.getPosition()) {
@@ -435,37 +437,41 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             final String ARG_SECTION_NUMBER1 = "Current";
             final String ARG_SECTION_NUMBER2 = "Saved";
             final String ARG_SECTION_NUMBER3 = "Search";
+            final String ARG_TAB_ID = "";
             Fragment fragment;
             Bundle args;
 
             switch (i) {
                 case 0:
-                    Log.v(TAG, "---"+ARG_SECTION_NUMBER1+": tab/0 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER1+": tab=0 *");
                     currentData = new CurrentSectionFragment();
                     fragment = currentData;
                     //There are problems when the class is not static!!!
                     Log.v(TAG, "--- Current: tab/0 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER1, 1);
+                    args.putBoolean(ARG_TAB_ID,false);
                     fragment.setArguments(args);
                     return fragment;
 
                 case 1:
-                    Log.v(TAG, "---"+ARG_SECTION_NUMBER2+": tab/1 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER2+": tab=1 *");
                     savedData = new SavedSectionFragment();
                     fragment = savedData;
                     Log.v(TAG, "--- Saved: tab/1 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER2, 2);
+                    args.putBoolean(ARG_TAB_ID, true);
                     fragment.setArguments(args);
                     return fragment;
 
                 case 2:
-                    Log.v(TAG, "---"+ARG_SECTION_NUMBER3+": tab/2 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER3+": tab=2 *");
                     fragment = new SearchSectionFragment();
                     Log.v(TAG, "--- Search: tab/2 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER3, 3);
+                    args.putBoolean(ARG_TAB_ID, false);
                     fragment.setArguments(args);
                     return fragment;
 
@@ -519,8 +525,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
         // this should be the current date or the date when data was saved into the database
         CurrentSectionFragment.mListHeader.setText(extraText + EB2MainActivity.mRSSString
-                                                   + " " + mResources.getString(R.string.ampersand)
-                                                   + " " + channelDate );
+                + " " + mResources.getString(R.string.ampersand)
+                + " " + channelDate);
     }
 
 
@@ -540,8 +546,11 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     /* Called when an options item is clicked.
      * Handles  itemPrefs, punts on idDeleteSelected, idSaveSelected, or anything else.
+     *
+     * 'Save'       only if the CurrentSectionfragment is active (Tab0)
+     * 'Delete'     only if the SavedSectionfragment is active (Tab1)
+     *  currentTab = m_actionBar.getSelectedTab();   <--- could use this
      */
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final int optionSelected = item.getItemId();
@@ -550,29 +559,40 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
         switch (optionSelected) {
             case R.id.itemPrefs:
-                Log.v("Prefs ", "Settings ");
+                Log.v(TAG, "Settings ");
                 startActivity(new Intent(this,SettingsActivity.class));
                 break;
-            case R.id.idDeleteSelected:
-                Log.v("Prefs ", mResources.getString(R.string.idDelete));
-                Toast.makeText(context,  mResources.getString(R.string.idDelete), Toast.LENGTH_SHORT).show();
-                break;
             case R.id.idSaveSelected:
-                Log.v("Prefs ", mResources.getString(R.string.idSave));
-                Toast.makeText(context, mResources.getString(R.string.idSave), Toast.LENGTH_SHORT).show();
+                /* Do this only if in CurrentSectionFragment */
+                Log.v(TAG, "EBMain - Save Selected");
+                Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_SHORT).show();
+                ///CurrentSectionFragment.storeInSaved ( CurrentSectionFragment.mId );    /* can not be referenced from static context */
+                String strEvent = String.format("%d", CurrentSectionFragment.mId); // also "" + long
+                Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
+//                mDbh = new DatabaseHelper(context);
+                mDbh.saveEvent(strEvent);
+                break;
+            case R.id.idDeleteSelected:
+                /* Do this only if in SavedSectionFragment */
+                Log.v(TAG, "EBMain - Delete Selected");
+                Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_SHORT).show();
+                strEvent = String.format("%d", SavedSectionFragment.mId); // also "" + long
+                Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ SavedSectionFragment.mId);
+//                mDbh = new DatabaseHelper(context);
+                mDbh.deleteSavedEvent(strEvent);
                 break;
             case R.id.idCalendar:
-                Log.v("Main menu", mResources.getString(R.string.idCalendar));
-                Toast.makeText(context, mResources.getString(R.string.idCalendar), Toast.LENGTH_SHORT).show();
+                Log.v(TAG, " Calendar");
+                Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.idShare:
-                Log.v("Main menu", " - idShare pressed");
-                Toast.makeText(context,  "", Toast.LENGTH_SHORT).show();
-                Log.d("Main ", " item: " +  item);
+                Log.v(TAG, " - idShare pressed");
+                Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, " item: " +  item);
                 ProcessShare(item);
                 break;
             default:
-                Log.d("Main ", " " + mResources.getString(R.string.unimplemented) + " "
+                Log.d(TAG, " " + mResources.getString(R.string.unimplemented) + " "
                        + Integer.toHexString(optionSelected) + " " + mResources.getString(R.string.pressed));
                 Toast.makeText(context,  " " + Integer.toHexString(optionSelected)
                                + " " + mResources.getString(R.string.pressed), Toast.LENGTH_SHORT).show();
@@ -973,59 +993,57 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     }    // end --- convertStreamToString
 
 
-    /**
-     **      Implements interface {@link EventFragmentCoordinator}, displays the event details (fragment)
+    /** ---------------------------------------------------------------------------------
+     **      Implements interface {@link EventFragmentCoordinator},
+     * *                displays the event details (fragment)
+     **      caller must set 'isSavedEvent' to false (if called from tab current,
+     **                                     to true  (if called from tab saved.
      **/
     public void displayEventDetails(String eventID, boolean isSavedEvent) {
-/*        Bundle args = new Bundle();
-        args.putString(com.tssg.eventboss2.EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
-        EventDetailFragment mEventItem = new EventDetailFragment();  //<----
-        mEventItem.setArguments(args);
-        mEventItem.setId(eventID);
-        Log.i(TAG, "displayEventDetails begin: w/EventId: " + eventID);
-*/
+
+        Log.v(TAG, "displayEventDetails(String eventID, boolean isSavedEvent)");
+        Log.v(TAG, "EventID, isSavedEvent are passed to the EventDetailFragment");
+        Log.v(TAG, "the boolean is passed in as a string value for true/false ");
+        Log.v(TAG, "the translation to string then back to boolean does not work");
+
         if (mDualPane) {
-            Bundle args = new Bundle();
-            args.putString(com.tssg.eventboss2.EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
-//            args.
-            EventDetailFragment mEventItem = new EventDetailFragment();  //<----
-            mEventItem.setArguments(args);
-            mEventItem.setDBhelper (new DatabaseHelper(context));
-            mEventItem.setId(eventID);
-            Log.i(TAG, "displayEventDetails begin: w/EventId: " + eventID);
-            
-           Log.i(TAG, "displayEventDetails: DualPane," + eventID);
+            // for a dual-pane view (tablet) - the fragment implements the detail-view
+
+            EventDetailFragment mEventItemFrag = new EventDetailFragment();
+            mEventItemFrag.setEventId(eventID);
+      //      mEventItemFrag.setListType(isSavedEvent);
+            mEventItemFrag.setDBhelper(new DatabaseHelper(context));
+            Log.i(TAG, "displayEventDetails: DualPane/eventID" + eventID);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.eventData, mEventItem);    // eventData is used layout-large/activity_main.xml
+            transaction.replace(R.id.eventData, mEventItemFrag);    // eventData is used layout-large/activity_main.xml
             Integer i = R.id.eventData;
             Log.i(TAG, "id.eventData: " + Integer.toHexString(i));
-            Log.i(TAG, "eventItem " + mEventItem);
+            Log.i(TAG, "eventItem " + mEventItemFrag);
             //transaction.addToBackStack(null);
             transaction.commit();
 
         } else {
-
+            // for a single-pane view (phone) - Start the detail-view activity which
+            //                                  controlls the detail-view (fragment)
             Log.i(TAG, "displayEventDetails: |DualPane," + eventID);
-//            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-//            transaction.replace(R.id.eventData_s, mEventItem);    // eventData_s is used layout/activity_main.xml//
-//            work not, crash not
-//            transaction.replace(R.id.details_container, mEventItem);    //
-//            transaction.replace(R.id.eventData, mEventItem);
-//            transaction.addToBackStack(null);
-//            transaction.commit();
-
-//            Log.i(TAG, "eventItem " + mEventItem);
             Log.i(TAG, "displayEventDetails: start EventDetailActivity " + eventID);
 
             // In single-pane mode, start the detail event activity for the selected item ID:
             Intent detailIntent = new Intent(this, EventDetailActivity.class);
+//            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
+//            detailIntent.putExtra(EventDetailFragment.DB_HELPER, mDbh);
+            String SorC;
+            if (isSavedEvent)  SorC = "S";
+            else  SorC = "C";
+
+//            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, isSavedEvent); // boolean
+            Log.i(TAG, "displayEventDetails: isSavedEvent: " + SorC);  //the boleamn as string
+            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, SorC); // !boolean
             detailIntent.putExtra(EventDetailFragment.EVENTITEM_POS, eventID);
+            detailIntent.putExtra(EventDetailFragment.DB_HELPER, String.valueOf(mDbh));  // ?works?
 
-            // start the detail activity ??
+
             Log.i(TAG, "displayEventDetails: w/intent: " + detailIntent.toString());
-//            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
-
             startActivity(detailIntent);
 
         }

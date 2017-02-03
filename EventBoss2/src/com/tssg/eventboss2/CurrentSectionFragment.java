@@ -28,14 +28,40 @@ import com.tssg.datastore.DatabaseHelper;
 public class CurrentSectionFragment extends EventBossListFragment {
 
     static final String TAG = "CurrentSectionFragment";  // log's tag
+	public static boolean mListType = false;			 // not the saved list
+	public static TextView mListHeader;
+	public static int mPosition = -1;	// probably not needed
+	public static long mId;
 
     Cursor mCursor;
 	SimpleCursorAdapter mAdapter;
-	DatabaseHelper dbh;
+	DatabaseHelper dbh = null;
 	LayoutInflater mLayoutInflater;
+
 	ViewGroup mViewGroup;
 	ListView mLV;
-	public static TextView mListHeader;
+
+
+
+	// also see eventDetailActivity
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		Log.v(TAG, "OnCreate: --- CurrentSectionFragment");
+		super.onCreate(savedInstanceState);
+        if ( dbh == null ) {
+            dbh = new DatabaseHelper(getActivity());
+        }
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+							 Bundle savedInstanceState) {
+		mViewGroup = container;
+		mLayoutInflater = inflater;
+		// Do we need this?
+		Log.v(TAG, "onCreateView: container" +container);
+		return super.onCreateView(inflater, container, savedInstanceState);
+	}
 
 
 	@Override
@@ -58,9 +84,8 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location};
 		// Create an empty adapter we will use to display the loaded data.
 		// We pass null for the cursor, then update it in onLoadFinished()
-		SimpleCursorAdapter adapter = new SimpleCursorAdapter(getActivity(),
+		mAdapter = new SimpleCursorAdapter(getActivity(),
 				R.layout.eventlist_row, mCursor, fromColumns, toViews, 0);
-		mAdapter = adapter;
 
 		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
 		mLV.addHeaderView(mListHeader);
@@ -71,45 +96,42 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 	@Override
 	public void onDestroyView() {
-		mCursor.close();
+        mCursor.close();
 		super.onDestroyView();
 	}
 
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		Log.v(TAG, "(75)---> eventFragmentCoordinator ->displayEventDetails (false)");
-		Log.v(TAG, "onListItemClick Listview =" + l + ": View=" + v + ":Position=" + position + ":Id=" + id);
-		if( position > 0 ) { 
-			// this happens when clicking on the list header
-			eventFragmentCoordinator.displayEventDetails(Long.toString(id), false);
-		}
+		Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + id);
+        if( position > 0 ) {
+			mPosition = position;
+			mId = id;
+			Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
+
+			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
+        }
 	}
 
-	// also see eventDetailActivity
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "OnCreate: --- CurrentSectionFragment");
-		super.onCreate(savedInstanceState);
-		dbh = new DatabaseHelper(getActivity());
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		mViewGroup = container;
-		mLayoutInflater = inflater;
-		// Do we need this?
-		Log.v(TAG, "onCreateView: container" +container);
-		return super.onCreateView(inflater, container, savedInstanceState);
-	}
 
 	public void updateList() {
 		mCursor.close();
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
         // TODO Do I really need the setListAdapter call???
-		setListAdapter(mAdapter);
+		Log.v(TAG, "getCursorAllEvents //Do I really need the setListAdapter call?");
+ 		setListAdapter(mAdapter);
         EB2MainActivity.setTabLabel(EB2MainActivity.tab0Label);
 	}
 
+	/* save the Event( mId ) into the Saved database */
+	//public void storeInSaved ( long mId )	{
+	public void storeInSaved ()	{
+		String strEvent = String.format("%d", mId); // also "" + long
+
+		Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ mId);
+
+		dbh.saveEvent( strEvent );
+
+	}
 }

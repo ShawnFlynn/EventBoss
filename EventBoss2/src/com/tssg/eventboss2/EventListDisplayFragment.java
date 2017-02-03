@@ -19,11 +19,19 @@ import com.tssg.eventsource.BELEvent;
 //import com.example.android.fragments.HeadlinesFragment.OnHeadlineSelectedListener;
 
 //this fragment implements functions that were in the EventDisplayActivity
-//maybe the code in currenrSection list should be implemented here !!!!
+//maybe the code in currentSection list should be implemented here !!!!
 
-public class EventListDisplayFragment extends ListFragment { 
-	
-	OnListItemSelectedListener mCallback;
+public class EventListDisplayFragment extends ListFragment {
+
+    public static final String TAG = "EventListFrag";   // log's tag
+
+    /**
+     * The current activated item position. Only used on tablets.
+     */
+    private int mActivatedPosition = ListView.INVALID_POSITION;
+
+
+    OnListItemSelectedListener mCallback;
 //	Context context = getBaseContext();
 
 	public static List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();
@@ -41,7 +49,32 @@ public class EventListDisplayFragment extends ListFragment {
 		public void onListItemSelected( int position );
 		
 	}
-	
+
+
+    //////// selecting list item
+    /**
+     * Turns on activate-on-click mode. When this mode is on, list items will be
+     * given the 'activated' state when touched.
+     */
+    public void setActivateOnItemClick(boolean activateOnItemClick) {
+        // When setting CHOICE_MODE_SINGLE, ListView will automatically
+        // give items the 'activated' state when touched.
+        getListView().setChoiceMode(
+                activateOnItemClick ? ListView.CHOICE_MODE_SINGLE
+                        : ListView.CHOICE_MODE_NONE);
+    }
+
+    private void setActivatedPosition(int position) {
+        if (position == ListView.INVALID_POSITION) {
+            getListView().setItemChecked(mActivatedPosition, false);
+        } else {
+            getListView().setItemChecked(position, true);
+        }
+
+        mActivatedPosition = position;
+    }
+
+    //////// end selectingListItem
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +116,7 @@ public class EventListDisplayFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         // Notify the parent activity of selected item
-		Log.i("EventListDisplayFrag", " onListItemSelected "+position);
+		Log.i(TAG, " onListItemSelected "+position);
         mCallback.onListItemSelected(position);
         
         // Set the item as checked to be highlighted when in two-pane layout
@@ -95,7 +128,7 @@ public class EventListDisplayFragment extends ListFragment {
 		// questionable if saving to database should be done here
 
 		m_webEventsList = EB2MainActivity.m_webEventsList;
-		Log.i("->WebEventsList -> q = ", " " + m_webEventsList.size() );
+		Log.i(TAG, "->WebEventsList -> q = " + m_webEventsList.size() );
 	} // -------  end:   showWebEventsList()
 	
 	/**

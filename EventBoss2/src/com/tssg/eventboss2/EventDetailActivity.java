@@ -1,5 +1,6 @@
 package com.tssg.eventboss2;
 
+import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
 
@@ -26,18 +27,38 @@ import java.util.Date;
 /**
  * An activity representing a single Event detail screen. This activity is only
  * used on handset devices. On tablet-size devices, item details are presented
- * side-by-side with a list of items in a {@link EventListActivity}.
+ * side-by-side with a list of items in a {@link EventListDisplayActivity}.
  * <p>
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link EventDetailFragment}.
  */
 public class EventDetailActivity extends FragmentActivity {
 
+	static final String TAG = "EventDetailActivity";  // log's tag
+
+	EventDetailFragment mDetailFragment = new EventDetailFragment();	////
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.activity_event_detail);
-		Log.e("-> EventDetailAct: ", "onCreate (item_frag) "+R.layout.activity_event_detail);
+		Log.e(TAG, "onCreate (contentView) " + R.layout.activity_event_detail);
+		Log.e(TAG, "Fragment = " + mDetailFragment);
+
+		String s = getIntent().getStringExtra(EventDetailFragment.SAVED_KEY); // "C" or "S"
+		Log.e(TAG, "s = " + s);
+		boolean savedValue;
+		/*
+		 this comparison does not work right !!!!!!
+		 */
+//		if (s == "C") savedValue = false; else savedValue = true;        // "false" or "true"
+		savedValue = s.equals("S");
+		Log.e(TAG, "for current / saved list = " + savedValue);
+		mDetailFragment.setListType(savedValue);
+		mDetailFragment.setEventId(getIntent().getStringExtra(EventDetailFragment.EVENTITEM_POS));
+
 
 		// Show the Up button in the action bar.
 		getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -51,35 +72,22 @@ public class EventDetailActivity extends FragmentActivity {
 		//
 		// http://developer.android.com/guide/components/fragments.html
 		//
+
 		
 		if (savedInstanceState == null) {
 			// Create the detail fragment and add it to the activity
 			// using a fragment transaction.
-            Log.e("EventDetailAct", "savedInstanceState");
-			Log.e("EventDetailAct", "EventDetailFragment = "+EventDetailFragment.EVENTITEM_POS);
+			Log.e(TAG, "(savedInstanceState)EventDetailFragment = " + EventDetailFragment.EVENTITEM_POS);
 
-			Bundle arguments = new Bundle();
-			arguments.putString(EventDetailFragment.EVENTITEM_POS, getIntent()
-					.getStringExtra(EventDetailFragment.EVENTITEM_POS));
-			Log.e("EventDetailAct: ", "savedInstanceState (null) ");
-
-			EventDetailFragment fragment = new EventDetailFragment();
-			Log.e("EventDetAct:", "EventItemFragment = "+fragment);
-			// any init ??
-
-			fragment.setArguments(arguments);
-			Log.e("EventDetailActivity: ", " arguments: "+fragment.getArguments());
 			getSupportFragmentManager().beginTransaction()
-					.add(R.id.event_detail_container, fragment).commit();
-
-			Log.e("EventDetAct", "fragment "+ fragment +"+arguments: "+arguments);
+							.add(R.id.event_detail_container, mDetailFragment).commit();
 		}
 	}
 
-    public void onStart() {
-        super.onStart();
+    //public void onStart() {
+    //    super.onStart();
      //   EventDetailFragment:refreshView();
-    }
+    //}
 
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {

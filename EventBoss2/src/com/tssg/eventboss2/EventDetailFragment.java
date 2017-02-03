@@ -24,14 +24,18 @@ import com.tssg.eventsource.BELEvent;
 /** displays and handles the details of an event */
 public class EventDetailFragment extends Fragment {
 
+    public static final String TAG = "EventDetailFragment";   // log's tag
+
     final public static String EVENTITEM_POS = "position"; // compiler suggested taking off 'static'
     public static final String SAVED_KEY = "isSaved";
+    public static final String DB_HELPER = "DBHelper";
 
-//    private DatabaseHelper dbh = new DatabaseHelper(getActivity());
+
+    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
     private DatabaseHelper dbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
-    private String mId;             // ItemId  or position ?
+    private String mId;             // use ItemId
 
-    private BELEvent mEvent;
+    private BELEvent mEvent;        //
     private TextView mTitleText;
     private TextView mStartText;	// start time
     private TextView mEndText;		// end time
@@ -40,38 +44,24 @@ public class EventDetailFragment extends Fragment {
     private TextView mOrganizerText;
     private TextView mLocationText;
     private TextView mDescriptionText;
-    private boolean m_isSavedEvent;
  //   private Button m_forward = null;
  //   private Button m_addToCalendar;
 
-    public EventDetailFragment() {
-		m_isSavedEvent = false;
-	}
-    
-    public void setId(String id) {
-        mId = id;
+ //   public EventDetailFragment() { m_isSavedEvent = false; } // reset in onCreate
+    public void setListType(boolean listType ) {
+        m_isSavedEvent = listType;
+        Log.e(TAG, "onCreate: is ListType = "+listType);
+        Log.e(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent);
     }
 
-    public void setDBhelper(DatabaseHelper db) {
-        dbh = db;
-    }
-
+    public void setEventId(String id) {  mId = id;  }
+    public void setDBhelper(DatabaseHelper db) { dbh = db; }         // from  displayEventDetails
 
     @Override
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        if (null != savedInstance && null != savedInstance.get(SAVED_KEY)
-                    && Boolean.parseBoolean((String)savedInstance.get(SAVED_KEY))) {
-            m_isSavedEvent = true;
-        }
-
-        // Check for event ID
-        if (getArguments().containsKey(EVENTITEM_POS)) {
-            mId = getArguments().getString(EVENTITEM_POS);
-        } else {
-            return;
-        }
+        Log.e(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent+" w/id: "+mId);
 
         // Get a database handle
         // for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
@@ -79,25 +69,42 @@ public class EventDetailFragment extends Fragment {
         if( dbh == null )  {
         	dbh = new DatabaseHelper(getActivity());
         }
+        Log.v(TAG, " initialization EventDetailFragment:");
+        Log.v(TAG, "onCreate: type: "+m_isSavedEvent);
+        Log.v(TAG, "onCreate:  mId: "+mId);
+        Log.v(TAG, "onCreate:   db: "+dbh);
 
-        Log.v("EventDetailFragment:", "onCreate: db: "+dbh);
-        Log.v("EventDetailFragment:", "mId:    "+mId);          //eventItemPos ?
 
-        if( mId != null ) {	
-        	// Get the event
-        	mEvent = dbh.getEventById(mId);
-        	Log.v("EventDetailFragment:", "mEvent: "+mEvent);
+        if( !m_isSavedEvent ) {    //
+        	// Get the current event
+            Log.v(TAG, "1/current Event: "+mEvent+", id = "+mId);
+        	try {mEvent = dbh.getEventById(mId);}
+            catch (android.database.CursorIndexOutOfBoundsException exept ) {
+                if (mEvent == null) {
+                    Log.e(TAG, "we have an id, but no Event: " + mEvent);
+                    Log.e(TAG, "this happens when 'm_isSaved' should befalse but is true ");
+                    Log.e(TAG, "see event EventDetailAactivity near linr 56");
+                    return;
+                }
+                ;
+            }
+             Log.v(TAG, "2/current Event: "+mEvent);
 		}
+        else {
+            // Get the saved event
+            Log.v(TAG, "3/saved Event: "+mEvent);
+            mEvent = dbh.getSavedEventById(mId);
+            Log.v(TAG, "4/saved Event: "+mEvent);
+        }
     }   // end --- onCreate()
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle SavedInstanceState) {
 
-        Log.v("EventDetailFragment:", " inflate: -> fragment_event_detail, container:"+container);
+        Log.v(TAG, " inflate: -> fragment_event_detail, container:" + container);
         View view = inflater.inflate(R.layout.fragment_event_detail, container, false);
-
-        Log.v("EventDetailFragment:", " view: " + view);
+        Log.v(TAG, " view: " + view);
 
         mTitleText = (TextView) view.findViewById(R.id.titleText);
         mStartText = (TextView) view.findViewById(R.id.startText);
@@ -124,11 +131,12 @@ public class EventDetailFragment extends Fragment {
 
     }   //  end --- onCreateView()
 
+    @Override
     public void onStart() {
         super.onStart();
-       Log.i("EventDetailFrag onStart","call refresh view");
-       refreshView();
-        // EGL_emulation﹕ eglSurfaceAttrib not implemented
+        Log.i(TAG, "-> refreshView");
+        refreshView();
+        // note EGL_Emulation  .. eglSurfaceAttribute not Implemented
     }
 
     @Override
@@ -138,14 +146,22 @@ public class EventDetailFragment extends Fragment {
 
 
    public void refreshView() {
-
+       if(mEvent==null ) {
+           mTitleText.setText("have no Event");
+           return;
+       }
+    /*
          // This will reload the data in the view
          if ((mId != null) && (!mId.equals(""))) {
             if (!m_isSavedEvent){
                 mEvent = dbh.getEventById(mId);
+                Log.i("TAG","Refresh current view: mEvent= "+mEvent);
+            } else {
+                mEvent = dbh.getSavedEventById(mId);
+                Log.i("TAG","Refresh saved view: mEvent= "+mEvent);
             }
-
-            Log.i("Refresh view","mEvent: "+mEvent);
+    */
+            Log.i("TAG","Refresh view: mEvent= "+mEvent);
 
             mTitleText.setText(mEvent.getTitle());
             mStartText.setText(mEvent.getStartTime());
@@ -156,15 +172,15 @@ public class EventDetailFragment extends Fragment {
             mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of
 //            mDescriptionText.setText("substitute for LongDescription");
 
-            Log.v("EventDetailFragment:", "in refreshView: ");
-            Log.v("EventDetailFragment:", " text: " +mTitleText.getText());   // (TextView)
-            Log.v("EventDetailFragment:", " star: " +mStartText.getText());
-            Log.v("EventDetailFragment:", " end : " +mEndText.getText());
-            Log.v("EventDetailFragment:", " type: " +mTypeText.getText());
-            Log.v("EventDetailFragment:", " link: " +mLinkText.getText());
-            Log.v("EventDetailFragment:", " org : " +mOrganizerText.getText());
-            Log.v("EventDetailFragment:", " loc: " +mLocationText.getText());
-            Log.v("EventDetailFragment:", " desc: " +mDescriptionText.getText());
+            Log.v("TAG", "in refreshView: ");
+            Log.v("TAG", " text: " +mTitleText.getText());   // (TextView)
+            Log.v("TAG", " star: " +mStartText.getText());
+            Log.v("TAG", " end : " +mEndText.getText());
+            Log.v("TAG", " type: " +mTypeText.getText());
+            Log.v("TAG", " link: " +mLinkText.getText());
+            Log.v("TAG", " org : " +mOrganizerText.getText());
+            Log.v("TAG", " loc:  " +mLocationText.getText());
+            Log.v("TAG", " desc: " +mDescriptionText.getText());
 
 /*            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {	// Intents might not work earlier
                 final EventDetailFragment outerThis = this;
@@ -184,17 +200,11 @@ public class EventDetailFragment extends Fragment {
                             } });
             }   // finished with OnClickListeners
 */
-        }   // end else clause (we have valid mId)
+ //       }   // end else clause (we have valid mId)
 
-        Log.v("EventDetailFragment:", "exit refreshView");
-
-        //java.lang.RuntimeException: Unable to instantiate activity ComponentInfo{
-        //	com.tssg.eventboss2/com.tssg.eventboss2.EventDetailFragment}:
-        //	java.lang.ClassCastException:
-        //	com.tssg.eventboss2.EventDetailFragment cannot be cast to android.app.Activity
-        //at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2121)
-
+        Log.v(TAG, "exit refreshView");
    }    //  end --- refreshView()
+
 
 
     /** make calendar appointment. This should be a controller method.

@@ -98,9 +98,9 @@ public class EventListDisplayActivity extends FragmentActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		EventListAdapter adapter = mainAppScreen.getAdapter();
 		adapter.notifyDataSetInvalidated();
-		String str = "Event select at pos: " + position;// 
+		String str = "Event select at: " + "pos: "+position+",  id: "+id;//
 		Toast.makeText(this, str, Toast.LENGTH_LONG).show();
-        Log.v("Click :","pos: "+position+",  id: "+id);
+        Log.v("Click :",str);
 	}
 	   
     
