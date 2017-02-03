@@ -90,7 +90,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     static volatile List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();    // RSS data from feed
 
     // The use of this is to save the lists in an array indexed by feedId for rapid reload.
-    static private CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA = new CopyOnWriteArrayList<List<BELEvent>>();  // RSS data from feed
+    static public CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA = new CopyOnWriteArrayList<List<BELEvent>>();  // RSS data from feed
 
     static {
         // KLUGE ALERT: hard-coded sizing.

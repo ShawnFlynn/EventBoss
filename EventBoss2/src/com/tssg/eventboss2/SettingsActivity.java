@@ -26,8 +26,8 @@ public class SettingsActivity extends Activity
 
 	View mSettingsView = null;
 
-	private boolean bNewFeed  = false;
-	private Integer mFeedId = 0;
+	private boolean bNewFeed  = true;
+	private Integer mFeedId = EB2MainActivity.mFeedId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,12 +41,19 @@ public class SettingsActivity extends Activity
 			public void onClick(View v) {
 				// Save the selected Feed Id
 				mFeedId = iFeedId;
-				// Check if it is not current
+				// Check if it is not the current feed
 				if (iFeedId != EB2MainActivity.mFeedId) {
-					Log.i(TAG, "New feed selected: " + mFeedId);
-					bNewFeed = true;
+						Log.i(TAG, "New feed selected: " + mFeedId);
+						bNewFeed = true;
 				} else {
-					bNewFeed = false;
+					// Check if the current feed is from the DB
+					if (EB2MainActivity.m_webEventsListA.get(mFeedId).isEmpty()) {
+						Log.i(TAG, "New feed selected: " + mFeedId);
+						bNewFeed = true;
+					} else {
+						// Same as the current feed
+						bNewFeed = false;
+					}
 				}
 			}
 		}
