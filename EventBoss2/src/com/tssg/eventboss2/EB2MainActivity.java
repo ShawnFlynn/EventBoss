@@ -273,29 +273,30 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 // for when this tab is selected.
 
                 switch (i) {
-                    case 0:
+                    case 0:			// "Current Tab"
                         actionBar.addTab(actionBar.newTab()
                                 .setText(tab0Label)
                                 .setTabListener(this));
                         break;
 
-                    case 1:
+                    case 1:			// "Saved Tab"			
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Saved))
                                 .setTabListener(this));
                         break;
 
-                    case 2:
+                    case 2:			// "Search Tab"
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Search))
                                 .setTabListener(this));
                         break;
 
-                    case 3:  // TODO was used in search - hill have to use the desplay detail
+/*                    case 3:  // TODO was used in search - hill have to use the display detail
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Event))
                                 .setTabListener(this));
                         break;
+*/
                 }
             }
         }
@@ -382,8 +383,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // When the given tab is selected,
         // switch to the corresponding page in the ViewPager.
         if (mDualPane){
-            Log.v(TAG, "displayEventDetails() -> false");
-            displayEventDetails("", false);
+            Log.v(TAG, "displayEventDetails() -> int");
+            displayEventDetails("", tab.getPosition());
         }
         mViewPager.setCurrentItem(tab.getPosition());
         Log.v(TAG, "onTabSelected() pos = " + tab.getPosition());
@@ -506,7 +507,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 case 2: return ("Search");
                 case 3: return ("Event");
             }
-            return "Section " + (position + 1);
+            return "Section: " + (position + 1);
         }
     }    // end --- AppSectionsPagerAdapter
 
@@ -540,7 +541,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public boolean onCreateOptionsMenu(Menu main_activity_action) {
         MenuInflater inflater = getMenuInflater();
         // TODO Name???
-        if( !mDualPane ) {
+        if( mDualPane ) {
         	inflater.inflate(R.menu.menu_main_dual_activity, main_activity_action);
         }
         else {
@@ -1004,37 +1005,49 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
 
     /** ---------------------------------------------------------------------------------
+     ** --------------------------------------------------------------------------------- 
      **      Implements interface {@link EventFragmentCoordinator},
      * *                displays the event details (fragment)
      **      caller must set 'isSavedEvent' to false (if called from tab current,
      **                                     to true  (if called from tab saved.
      **/
-    public void displayEventDetails(String eventID, boolean isSavedEvent) {
+    //----------------------------------------------------
+    //                          use int (the Tab number)  |
+    //                                                    V
+//    public void displayEventDetails(String eventID, boolean isSavedEvent) {
+    public void displayEventDetails(String eventID, int EventType) {
 
-        Log.v(TAG, "displayEventDetails(String eventID, boolean isSavedEvent)");
-        Log.v(TAG, "EventID, isSavedEvent are passed to the EventDetailFragment");
-        Log.v(TAG, "the boolean is passed in as a string value for true/false ");
-        Log.v(TAG, "the translation to string then back to boolean does not work");
-
+    	Log.v(TAG, "displayEventDetails(String eventID, int EventType (0(cur), 1(sav), 2(search)");
+//        Log.v(TAG, "displayEventDetails(String eventID, boolean isSavedEvent)");
+//        Log.v(TAG, "EventID, isSavedEvent are passed to the EventDetailFragment");
+//        Log.v(TAG, "the boolean is passed in as a string value for true/false ");
+//        Log.v(TAG, "the translation to string then back to boolean does not work");
+    	String humanReadableType = " ";
+    	if (EventType == 0){humanReadableType = "Current";};
+    	if (EventType == 1){humanReadableType = "Saved";};
+    	if (EventType == 2){humanReadableType = "Search";};
         if (mDualPane) {
             // for a dual-pane view (tablet) - the fragment implements the detail-view
 
             EventDetailFragment mEventItemFrag = new EventDetailFragment();
             mEventItemFrag.setEventId(eventID);
-      //      mEventItemFrag.setListType(isSavedEvent);
+            mEventItemFrag.setListType(EventType);
             mEventItemFrag.setDBhelper(new DatabaseHelper(context));
-            Log.i(TAG, "displayEventDetails: DualPane/eventID" + eventID);
+            Log.i(TAG, "displayEventDetails: DualPane:"
+            		+ " eventID: " + eventID + " +eventType: " + EventType + humanReadableType);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.eventData, mEventItemFrag);    // eventData is used layout-large/activity_main.xml
+            transaction.replace(R.id.eventData, mEventItemFrag); // eventData, layout-large/activity_main.xml 
             Integer i = R.id.eventData;
             Log.i(TAG, "id.eventData: " + Integer.toHexString(i));
             Log.i(TAG, "eventItem " + mEventItemFrag);
             //transaction.addToBackStack(null);
             transaction.commit();
+            
+            //TODO write the event's data into 
 
         } else {
             // for a single-pane view (phone) - Start the detail-view activity which
-            //                                  controlls the detail-view (fragment)
+            //                                  controls the detail-view (fragment)
             Log.i(TAG, "displayEventDetails: |DualPane," + eventID);
             Log.i(TAG, "displayEventDetails: start EventDetailActivity " + eventID);
 
@@ -1042,13 +1055,15 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             Intent detailIntent = new Intent(this, EventDetailActivity.class);
 //            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
 //            detailIntent.putExtra(EventDetailFragment.DB_HELPER, mDbh);
-            String SorC;
-            if (isSavedEvent)  SorC = "S";
-            else  SorC = "C";
+//            String SorC;
+//            if (isSavedEvent)  SorC = "S";
+//            else  SorC = "C";
 
 //            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, isSavedEvent); // boolean
-            Log.i(TAG, "displayEventDetails: isSavedEvent: " + SorC);  //the boleamn as string
-            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, SorC); // !boolean
+//            Log.i(TAG, "displayEventDetails: EventType: " + SorC);  //the boolean as string
+//            detailIntent.putExtra(EventDetailFragment.SAVED_KEY, SorC); // !boolean
+            Log.i(TAG, "displayEventDetails: EventType: " + EventType);  //the boolean as string
+            detailIntent.putExtra(EventDetailFragment.LIST_TYPE, EventType); // !boolean
             detailIntent.putExtra(EventDetailFragment.EVENTITEM_POS, eventID);
             detailIntent.putExtra(EventDetailFragment.DB_HELPER, String.valueOf(mDbh));  // ?works?
 
@@ -1058,5 +1073,11 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
         }
     }    // end --- displayEventDetails
+
+//	@Override
+//	public void displayEventDetails(String eventID, int listType) {
+//		// TODO Auto-generated method stub
+		
+//	}
 
 }    // end ---- MainActivity

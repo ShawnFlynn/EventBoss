@@ -61,11 +61,16 @@ public class EventDetailActivity extends FragmentActivity {
 
 		mDbh = new DatabaseHelper(this);
 		
-		String s = getIntent().getStringExtra(EventDetailFragment.SAVED_KEY); // "C" or "S"
+//		String s = getIntent().getStringExtra(EventDetailFragment.SAVED_KEY); // "C" or "S"
+//		Log.v(TAG, "s = " + s);
+//		boolean savedValue = s.equals("S");
+//		Log.v(TAG, "for current / saved list = " + savedValue);
+///		int s = getIntent().getStringExtra(EventDetailFragment.LIST_TYPE); // 0, 1, 2
+
+		int s = getIntent().getIntExtra(EventDetailFragment.LIST_TYPE, 0); // 0, 1, 2
 		Log.v(TAG, "s = " + s);
-		boolean savedValue = s.equals("S");
-		Log.v(TAG, "for current / saved list = " + savedValue);
-		mDetailFragment.setListType(savedValue);		// the type (current or saved) List to use
+		Log.v(TAG, "for current / saved list = " + s);
+			mDetailFragment.setListType(s);		// the type (current, saved, search) List to use
 		mDetailFragment.setEventId(getIntent().getStringExtra(EventDetailFragment.EVENTITEM_POS));
 
 

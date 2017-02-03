@@ -21,9 +21,12 @@ import com.tssg.datastore.DatabaseHelper;
  */
 public class SearchSectionFragment extends EventBossListFragment implements TextWatcher{
 
+    static final String TAG = "SearchSectionFragment";  // log's tag
 	public static final String ARG_SECTION_NUMBER = "section_number";
+	public static int mListType = 2;			 	 	// -> SearchList
 	private EditText mSearchText;
 	private String mSearch= "";
+	public static long mId;
 	private DatabaseHelper dbh;
 	private Cursor mCursor;
 	private SimpleCursorAdapter mAdapter;
@@ -38,10 +41,9 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		Log.e("MainActivity: ", "---in Search");
+		Log.e("onCreateView: ", "--- in Search");
 		View rootView = inflater.inflate(R.layout.fragment_section_launchpad,
 				container, false);
-		// TODO make a fragment for search
 //		Bundle args = getArguments();
 		mSearchText = (EditText) rootView.findViewById(R.id.searchText);
 		mSearchText.addTextChangedListener(this);
@@ -50,11 +52,15 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 		// view =/= context
 		Log.v("SearchSectionFragment:search_section_text:layout", " "
 				+ rootView);
-		
+
+		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+" string:"+mSearch);
 		mCursor = dbh.getCursorSearchEvents(mSearch);
+		Log.v(TAG, "( SearchSectionFragment.onActivityCreated: "+"after, mCursor: "+mCursor);
+
 		// For the cursor adapter, specify which columns go into which views
 		String[] fromColumns = { DatabaseHelper.KEY_TITLE,
-				DatabaseHelper.KEY_DESCRIPTION };
+								 DatabaseHelper.KEY_DESCRIPTION,
+								 DatabaseHelper.KEY_EVENTID};
 		int[] toViews = { R.id.title, R.id.description }; // The TextView in
 															// simple_list_item_1
 
@@ -72,24 +78,31 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		// do something with the data
-		Log.v("SearchdSectionFragment (60):", "---> eventFragmentCoordinator ->displayEventDetails (false)");
+		Log.v("SearchdSectionFragment (60):", "---> eventFragmentCoordinator ->displayEventDetails (2)");
 		Log.v("SearchSectionFragment", "Listview=" + l
 				+ ":View=" + v + ":Position=" + position + ":Id=" + id);
-		eventFragmentCoordinator.displayEventDetails(Long.toString(id), false);
+		
+		// here we need to get the Id of the original record
+		// id is selection in the now updated list (search result)
+		// it contains the id of the event in the saved list
+		
+		mId = mCursor.getInt((int) id);					
+		//<------  Failed to read row 0, column 4994 from a CursorWindow which has 12 rows, 12 columns.
+		Log.v("SearchSectionFragment", "onListItemClick:Id=" + id+" mId"+ mId);
+		String idStr = Long.toString(mId);	
+		dbh.getSavedEventById( idStr );
+		
+		eventFragmentCoordinator.displayEventDetails(Long.toString(id), 2);
 	}
-
-	@Override
-	public void onDestroyView() {
-		mCursor.close();
-		super.onDestroyView();
-	}
-
 	
 	public void updateSearch() {
 		mCursor.close();
 		mCursor = dbh.getCursorSearchEvents(mSearch);
+		Log.v(TAG, "( SearchSectionFragment.updateSearch: "+"before cursor, dbh:"+dbh);
 		mAdapter.swapCursor(mCursor);
+		Log.v(TAG, "( SearchSectionFragment.updateSearch: "+"after cursor swap");
 		setListAdapter(mAdapter);
+
 	}
 	
 	public void afterTextChanged(Editable text) {
@@ -108,5 +121,14 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 		// TODO Auto-generated method stub
 		
 	}
+	
+
+	@Override
+	public void onDestroyView() {
+		mCursor.close();
+		Log.v(TAG, "( SearchSectionFragment.onDestroyView: "+"cursor close, dbh:"+dbh);
+		super.onDestroyView();
+	}
+
 } // ------- end SearchSectionFragment
 

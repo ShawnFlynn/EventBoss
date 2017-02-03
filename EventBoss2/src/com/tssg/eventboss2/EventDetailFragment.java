@@ -34,16 +34,19 @@ public class EventDetailFragment extends Fragment {
     public static final String TAG = "EventDetailFragment";   // log's tag
 
     final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
-    public static final String SAVED_KEY = "isSaved";		// 
+//    public static final String SAVED_KEY = "isSaved";		// ****************************
     public static final String DB_HELPER = "DBHelper";
 
+	public static final String LIST_TYPE = null;
 
-    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
+
+//    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
+    private int m_isListType; 		// Current (0), Saved List (1), Saved List (2)
     private DatabaseHelper dbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
     private String mId;             // use ItemId
 
     private BELEvent mEvent;        //
-    private TextView mTitleText;
+    private TextView mTitleText;	// title
     private TextView mStartText;	// start time
     private TextView mEndText;		// end time
     private TextView mTypeText;
@@ -55,19 +58,22 @@ public class EventDetailFragment extends Fragment {
  //   private Button m_addToCalendar;
 
  //   public EventDetailFragment() { m_isSavedEvent = false; } // is set in onCreate
-    public void setListType(boolean listType ) {
-        m_isSavedEvent = listType;
-        Log.e(TAG, "onCreate: ListType = "+listType+", isSavedEvent = "+m_isSavedEvent);
+ //   public void setListType(boolean listType ) {
+    public void setListType(int listType ) {
+    	  m_isListType = listType;
+    	  Log.e(TAG, "onCreate: ListType = "+m_isListType);
     }
 
     public void setEventId(String id) {  mId = id;  }
+//    public void setEventId(String id) {  mEvent = mId;  }
     public void setDBhelper(DatabaseHelper db) { dbh = db; }         // from  displayEventDetails
 
     @Override
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
-
-        Log.v(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent+" w/id: "+mId);
+        Log.v(TAG, "onCreate: EventDetailFragment:");
+        Log.v(TAG, "onCreate: List Type = "+m_isListType+" w/id: "+mId);
+        String key = "";
 
         // Get a database handle
         // for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
@@ -76,12 +82,9 @@ public class EventDetailFragment extends Fragment {
         	dbh = new DatabaseHelper(getActivity());
         }
         Log.v(TAG, " initialization EventDetailFragment:");
-        Log.v(TAG, "onCreate: type: "+m_isSavedEvent);
-        Log.v(TAG, "onCreate:  mId: "+mId);
-        Log.v(TAG, "onCreate:   db: "+dbh);
+        Log.v(TAG, "onCreate: type: "+m_isListType+",  mId: "+mId+", db: "+dbh);
 
-
-        if( !m_isSavedEvent ) {    //
+        if( m_isListType == 0 ) {    //
         	// Get the current event
             Log.v(TAG, "1/current Event: "+mEvent+", id = "+mId);
         	try {mEvent = dbh.getEventById(mId);}
@@ -96,19 +99,39 @@ public class EventDetailFragment extends Fragment {
             }
             Log.v(TAG, "2/current Event: "+mEvent);
 		}
-        else {
+        if( m_isListType == 1 ) {
             // Get the saved event
-            Log.v(TAG, "3/saved Event: "+mEvent+", mId: "+mId+", dbh: "+dbh);
+            Log.v(TAG, "saved Event: "+mEvent+", mId: "+mId+", dbh: "+dbh);
             
             if ( mId.isEmpty() ) 
             	Log.v(TAG, "can not delete: Event is empty");  //
             else 
             	mEvent = dbh.getSavedEventById(mId);
             
-            Log.v(TAG, "4/saved Event: "+mEvent);
+            Log.v(TAG, "saved Event: "+mEvent);
+        }
+        if( m_isListType == 2 ) {
+            // Get from the saved event
+//        	mEvent = dbh.getAllWebEventById(arg);	// arg == string
+        	Log.v(TAG, "before getEventById "+mId);        	
+        	mEvent = dbh.getEventById(mId);
+//        	mEvent = dbh.buildBELEvent( cursor );
+            Log.v(TAG, "Search results: "+mEvent+", mId: "+mId+", dbh: "+dbh);
+            /////// mEvent is on the search list
+//********
+//  08-11 14:55:27.739: V/EventDetailFragment(841): 
+//                      Search Event: null, mId: 2714, dbh: com.tssg.datastore.DatabaseHelper@b3eeeba8
+            
+            if ( mId.isEmpty() ) 
+            	Log.v(TAG, "can not delete: Event is empty");  //
+            else 
+            	mEvent = dbh.getSavedEventById(mId);    //<<<<<<<<  search / use Current >>>>>>>>>
+//            	BELEvent mEvent1;
+//            	mEvent1 = dbh.getCursorSearchEvents(key);            
+            Log.v(TAG, "search Event: "+mEvent);
         }
     }   // end --- onCreate()
-
+ 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle SavedInstanceState) {
@@ -137,7 +160,7 @@ public class EventDetailFragment extends Fragment {
 //        Log.v(TAG, " link: " +mLinkText);
 //        Log.v(TAG, " org : " +mOrganizerText);
 //        Log.v(TAG, " loc: " +mLocationText);
-        Log.v(TAG, " desc: " +mDescriptionText);
+//        Log.v(TAG, " desc: " +mDescriptionText);
 
         Log.v(TAG,"exit");
         return view;
@@ -180,7 +203,7 @@ public class EventDetailFragment extends Fragment {
 //            Log.v(TAG, " link: " +mLinkText.getText());
 //            Log.v(TAG, " org : " +mOrganizerText.getText());
 //            Log.v(TAG, " loc : " +mLocationText.getText());
-            Log.v(TAG, " desc: " +mDescriptionText.getText());
+//            Log.v(TAG, " desc: " +mDescriptionText.getText());
 
 /*            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {	// Intents might not work earlier
                 final EventDetailFragment outerThis = this;
@@ -228,6 +251,14 @@ public class EventDetailFragment extends Fragment {
 
         startActivity(intent);
     }
+
+	public int get_isEventType() {
+		return m_isListType;
+	}
+
+	public void set_isEventType(int m_isEventType) {
+		this.m_isListType = m_isEventType;
+	}
 
 //   public static void updateList(){} // seen from 
     /*
