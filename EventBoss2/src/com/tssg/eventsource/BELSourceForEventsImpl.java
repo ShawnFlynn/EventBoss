@@ -70,6 +70,10 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	protected InputStream getInputStream() {
 		HttpURLConnection connection = null;
 		InputStream inputStream = null;
+
+        // Set tab label to "Stored"
+        String tabLabel = EB2MainActivity.mResources.getString(R.string.Stored);
+
 		try {
 			if (EB2MainActivity.readingFromInternalFile){
 				inputStream = readEventsFromFile();
@@ -92,17 +96,17 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 			}
 			return inputStream;
 		} catch (java.net.SocketTimeoutException ste) {
-            EB2MainActivity.setTabLabel("Stored");
-			String message = "timeout opening URL: " + feedUrl + " (firewall issue?)";
+            EB2MainActivity.setTabLabel(tabLabel);
+            String message = "timeout opening URL: " + feedUrl + " (firewall issue?)";
 			Log.e( TAG, message, ste );
 			throw new RuntimeException( message, ste);
 		} catch (FileNotFoundException e) {
-            EB2MainActivity.setTabLabel("Stored");
+            EB2MainActivity.setTabLabel(tabLabel);
 			String message = "Failed to read events from the file: " + EB2MainActivity.internalFilePath;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
 		} catch (IOException e) {
-            EB2MainActivity.setTabLabel("Stored");
+            EB2MainActivity.setTabLabel(tabLabel);
 			String message = "Failed to get input stream from URL: " + feedUrl;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);

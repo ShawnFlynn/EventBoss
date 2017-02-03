@@ -50,45 +50,49 @@ import com.tssg.eventsource.BELEvent;
 import com.tssg.eventsource.BELEventlist;
 
 
-/**	MainActivity  implements
- * 		ActionBar, with 3 Tabs: CurrentList, SavedList & Search
- * 		manages the fragments for the above mentioned entities and
- * 		the other ActionBar items (save, delete, Calendar, search).
- * 		On start up it reads the RSS feed an stores events into list.
- * 		Handles a Settings activity (for any user selections we implement)
+/*   MainActivity  implements
+ *      ActionBar, with 3 Tabs: CurrentList, SavedList & Search
+ *      manages the fragments for the above mentioned entities and
+ *      the other ActionBar items (save, delete, Calendar, search).
+ *      On start up it reads the RSS feed an stores events into list.
+ *      Handles a Settings activity (for any user selections we implement)
  */
-public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabListener, EventFragmentCoordinator  {
+public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabListener, EventFragmentCoordinator {
 
     public Context context = this;
-    public static final boolean bLOGGING = true;	// enable/disable logging
-    public static final String TAG = "EBMainAct";	// log's tag
-    public static boolean bTRACE = false;			// en/disable tracing to device SD
-    boolean bDEVELOPER_MODE = false;				// controls strictMode set to false for release
+    public static final boolean bLOGGING = true;    // enable/disable logging
+    public static final String TAG = "EBMainAct";   // log's tag
+    public static boolean bTRACE = false;           // en/disable tracing to device SD
+    boolean bDEVELOPER_MODE = false;                // controls strictMode set to false for release
     private static ActionBar m_actionBar;
 
-    public static String statusMessage = null;		// status line content
-    public static TextView m_statusView = null;		// view for status line
+    public static String statusMessage = null;      // status line content
+    public static TextView m_statusView = null;     // view for status line
 
     // the URL selected in SettingsActivity can change mURLString and mRSSString
-    // volatiles may be changed from doInBackground; doin't think we need to synchronize, yet
-    // static volatile public String mURLString = "http://www.bostoneventslist.com/us/nh/events/rss.rxml";
+    // volatiles may be changed from doInBackground; don't think we need to synchronize, yet
+    // static volatile public String mURLString = "http://www.bostoneventslist.com/us/nh/events/rss.xml";
     static volatile public String mURLString = "http://www.nheventslist.com/rss.xml";
     static volatile public String mRSSString = "New Hampshire";
 
-    volatile static int mFeedId = 1;	// start with New Hampshire, it's a short list
-    int oldFeedId = mFeedId;	// backup copy
+    // String to hold Current/Stored for tab 0 label
+    static volatile public String tab0Label;
+
+//    static volatile int mFeedId = 1;    // start with New Hampshire, it's a short list
+    static volatile int mFeedId = 0;    // start with Boston it has list items
+    int oldFeedId = mFeedId;            // backup copy
 
     // this is a bit klugey. OK if date is near-enough
     static volatile Date m_channelDate = new Date(System.currentTimeMillis());
-    static public String m_mainEventText;			// RSS data as saved text; use for debugging
+    static public String m_mainEventText;            // RSS data as saved text; use for debugging
     // note: this string can not be passed in to our DOM parser, it fails
     // maybe because the parser expects an other access to the Internet for parameters.
     // -> check what the DOM parser needs.
 
-    static volatile List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();	// RSS data from feed
-    /** The intent of this is to save the lists in an array indexed by feedId for rapid reload.
-     * Should we just save to DB? */
-    static private CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA = new CopyOnWriteArrayList<List<BELEvent>>();	// RSS data from feed
+    static volatile List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();    // RSS data from feed
+
+    // The use of this is to save the lists in an array indexed by feedId for rapid reload.
+    static private CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA = new CopyOnWriteArrayList<List<BELEvent>>();  // RSS data from feed
 
     static {
         // KLUGE ALERT: hard-coded sizing.
@@ -97,11 +101,13 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         m_webEventsListA.addAll(Collections.nCopies(SettingsActivity.RBG_CHOICES, Collections.<BELEvent>emptyList()));
     }
 
-    com.tssg.datastore.BELDatastore dataStore = new com.tssg.datastore.BELDatastoreImpl( this );          												// DB store for LastGoodRead, SavedList etc
     // DB store for LastGoodRead, SavedList etc
+    com.tssg.datastore.BELDatastore dataStore = new com.tssg.datastore.BELDatastoreImpl( this );
+
     public static CurrentSectionFragment currentData = null;
     public static SavedSectionFragment savedData = null;
-    /**
+
+    /*
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
      * three primary sections of the app. We use a {@link android.support.v4.app.FragmentPagerAdapter}
      * derivative, which will keep every loaded fragment in memory. If this becomes too memory
@@ -109,25 +115,27 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      */
     private AppSectionsPagerAdapter mAppSectionsPagerAdapter;
 
-    /**
+    /*
      * The {@link ViewPager} that will display the three primary sections
      * of the app, one at a time.
      */
     ViewPager mViewPager;
 
-    //	private static boolean mDualPane;
-    static boolean mDualPane;				// not public?
+    //  private static boolean mDualPane;
+    static boolean mDualPane;               // not public?
 
-    public static EventItemFragment mEventFragment;
+    public static EventDetailFragment mEventFragment;
 
     public static boolean readingFromInternalFile = false;
     public static String internalFilePath = null;
 
     // Note: The file specified below must exist on the device's internal storage.
     private String eventListFileName = "your_file_name";
-    private Resources mResources= null;     // data to be set into the spinner
-    private String[] mRSSsources = null;    // for user: name
-    private String[] mRSSnames = null;      // for computer: URL
+
+    // resources
+    public static Resources mResources = null;      // data to be set into the spinner
+    private String[] mRSSname = null;       // for user: name
+    private String[] mRSSURL  = null;       // for computer: URL
 
     /*
      * setTabLabel
@@ -136,18 +144,19 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // Set up the action bar.
         Tab currentTab = m_actionBar.getSelectedTab();
         currentTab.setText(labelText);
+
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-//	  setContentView(R.layout.newLayout);
+        // setContentView(R.layout.newLayout);
         // need to reuse the view which is currently shown: current, saved or search.
         // it might switch between portrait and landscape format
         // (phone or dual mode)
 
-        Log.v("MainActivity", " detected Configurationchange");
-        Toast.makeText(context,  "Detect Configuration change", Toast.LENGTH_SHORT).show();
+        Log.v(TAG, mResources.getString(R.string.DetectedConfig));
+        Toast.makeText(context, mResources.getString(R.string.DetectedConfig) + " ", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -157,7 +166,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         if( bTRACE ) {
             // trace file is created in SD device
             Debug.startMethodTracing("trace.file");
-            MakeToast.makeToast(this, "onCreate, start trace", MakeToast.LEVEL_DEBUG);
+            MakeToast.makeToast(this, mResources.getString(R.string.startTrace) + " ", MakeToast.LEVEL_DEBUG);
         }
 
         // setContentView
@@ -168,6 +177,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
             // problem: getInt returns 0 if key is absent, but key is a valid feed#
+//            int arg = extras.getInt("feedId", mFeedId);
             int arg = extras.getInt("feedId", mFeedId);
             Log.i(TAG, "start up, change feedId from " + mFeedId + " to " + arg);
             oldFeedId = mFeedId ;
@@ -175,11 +185,14 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         }
 
         // Setup resources
-        mResources = getResources();			// data to be set into the spinner
-        mRSSsources = mResources.getStringArray(R.array.rss_src_names); // for user: name
-        mRSSnames = mResources.getStringArray(R.array.eventslists);		// for computer: URL
-        EB2MainActivity.mURLString = mRSSsources[mFeedId];
-        EB2MainActivity.mRSSString = mRSSnames[mFeedId];
+        mResources = getResources();            // data to be set into the spinner
+        mRSSname = mResources.getStringArray(R.array.rss_src_names); // for user: name
+        mRSSURL  = mResources.getStringArray(R.array.eventslists);   // for computer: URL
+        EB2MainActivity.mURLString = mRSSname[mFeedId];
+        EB2MainActivity.mRSSString = mRSSURL[mFeedId];
+
+        // Initialize tab 0 label
+        tab0Label = mResources.getString(R.string.Current);
 
         // StrictMode is a developer tool which detects things you might be doing
         // but not intentionally
@@ -198,25 +211,25 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                     .build());
         }
 
-        Log.v("MainActivity:", "-> EventsListReader");
+        Log.v(TAG, "-> EventsListReader");
         if (savedInstanceState == null) {
             try {
                 Log.v(TAG, "URL: " + mURLString);
                 // EventsListReader(URL) does the reading using the AsyncTask
                 EventsListReader(new URL(mURLString));
             } catch (MalformedURLException e) {
-                Log.e("MainActivity invalid URL: ", mURLString);
+                Log.e(TAG, "Invalid URL: " + mURLString);
                 e.printStackTrace();
             }
         }
-        //
+
         // need a mechanism to signal valid data and a fresh read.
         // ********* This test is probably not right:
-        // 			 Both versions (tablet and phone) will use 'event data'
+        //           Both versions (tablet and phone) will use 'event data'
         //           one in a single fragment, the other in separate fragments !!!!!!!
         // it must be like that because the APK file does not know onto what kind of a device it will be loaded!
-        //
-        Log.v("MainActivity:", "EventsListReader-> ");
+
+        Log.v(TAG, "EventsListReader-> ");
         ViewGroup details = (ViewGroup) findViewById(R.id.eventData);
         if (details != null) {
             mDualPane = true;
@@ -229,7 +242,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the action bar.
-        final ActionBar actionBar = getActionBar();		// ok within onCreate???
+        final ActionBar actionBar = getActionBar();     // ok within onCreate???
         m_actionBar = actionBar;
 
         // Specify that the Home/Up button should not be enabled, since there is no hierarchical parent.
@@ -263,27 +276,26 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
             switch (i) {
                 case 0:
-                    actionBar.addTab( actionBar. newTab()
-//                                .setText(mAppSectionsPagerAdapter.getPageTitle(i))
-                            .setText("Current")
-                            .setTabListener(this)); //, true);
-////  --  need to attach the fragment // or not yet
+                    actionBar.addTab(actionBar.newTab()
+                            .setText(tab0Label)
+                            .setTabListener(this));
                     break;
 
                 case 1:
-                    actionBar.addTab( actionBar.newTab()
-                            .setText("Saved")
+                    actionBar.addTab(actionBar.newTab()
+                            .setText(mResources.getString(R.string.Saved))
                             .setTabListener(this));
                     break;
 
                 case 2:
-                    actionBar.addTab( actionBar.newTab()
-                            .setText("Search")
+                    actionBar.addTab(actionBar.newTab()
+                            .setText(mResources.getString(R.string.Search))
                             .setTabListener(this));
                     break;
+
                 case 3:
-                    actionBar.addTab( actionBar.newTab()
-                            .setText("Event")
+                    actionBar.addTab(actionBar.newTab()
+                            .setText(mResources.getString(R.string.Event))
                             .setTabListener(this));
                     break;
             }
@@ -295,7 +307,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 internalFilePath = file.getAbsolutePath();
             }
         }
-    }	// ------- end OnCreate
+    }   //    end --- OnCreate
 
 
     public void onTabUnselected(ActionBar.Tab tab,
@@ -305,9 +317,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public void onTabSelected(ActionBar.Tab tab,
                               android.app.FragmentTransaction fragmentTransaction) {
         // When the given tab is selected,
-        // witch to the corresponding page in the ViewPager.
+        // switch to the corresponding page in the ViewPager.
         if (mDualPane){
-            Log.v("EB2MainActivity.onTabSelected (267):", " ->displayEventDetails (false)");
+            Log.v(TAG, "onTabSelected (267): ->displayEventDetails (false)");
             displayEventDetails("", false);
         }
         mViewPager.setCurrentItem(tab.getPosition());
@@ -321,29 +333,30 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     /** Huh? This doesn't do anything */
     public void onTabReselected(ActionBar.Tab tab,
                                 android.app.FragmentTransaction fragmentTransaction) {
-        Log.v("MainActivity:", "onTabReselected " + tab.getPosition());
+        Log.v(TAG, "onTabReselected " + tab.getPosition());
         // here resume activity
         switch (tab.getPosition()) {
             case 0:
-//           startActivity(new Intent(this, EventListDisplayActivity.class));	// start this in tab
-//        	fragmentTransaction.show(fragment);// shows hidden transaction
-//			transaction = xxx;// transaction of EventListDisplayActivity
+                // startActivity(new Intent(this, EventListDisplayActivity.class));	// start this in tab
+                // fragmentTransaction.show(fragment);// shows hidden transaction
+                // transaction = xxx;// transaction of EventListDisplayActivity
                 break;
             case 1:
-//           startActivity(new Intent(this, SaveListDisplayActivity.class));
+                // startActivity(new Intent(this, SaveListDisplayActivity.class));
                 break;
             case 2:
-//		   startActivity(new Intent(this, SearchActivity.class));
+                // startActivity(new Intent(this, SearchActivity.class));
                 break;
         }
-//    	fragmentTransaction.show(fragment);// shows hidden transaction
+        // fragmentTransaction.show(fragment);// shows hidden transaction
 
     }
 
-    /**
+    /*
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to one of the primary
      * sections of the app.
      */
+
     public static class AppSectionsPagerAdapter extends FragmentPagerAdapter {
 
         public AppSectionsPagerAdapter(FragmentManager fm) {
@@ -352,6 +365,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
         @Override
         public Fragment getItem(int i) {
+
             final String ARG_SECTION_NUMBER1 = "Current";
             final String ARG_SECTION_NUMBER2 = "Saved";
             final String ARG_SECTION_NUMBER3 = "Search";
@@ -360,30 +374,30 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
             switch (i) {
                 case 0:
-                    Log.v("MainActivity:", "---"+ARG_SECTION_NUMBER1+": tab/0 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER1+": tab/0 *");
                     currentData = new CurrentSectionFragment();
                     fragment = currentData;
                     //There are problems when the class is not static!!!
-                    Log.v("MainActivity:", "--- Current: tab/0 **");
+                    Log.v(TAG, "--- Current: tab/0 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER1, 1);
                     fragment.setArguments(args);
                     return fragment;
 
                 case 1:
-                    Log.v("MainActivity:", "---"+ARG_SECTION_NUMBER2+": tab/1 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER2+": tab/1 *");
                     savedData = new SavedSectionFragment();
                     fragment = savedData;
-                    Log.v("MainActivity:", "--- Saved: tab/1 **");
+                    Log.v(TAG, "--- Saved: tab/1 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER2, 2);
                     fragment.setArguments(args);
                     return fragment;
 
                 case 2:
-                    Log.v("MainActivity:", "---"+ARG_SECTION_NUMBER3+": tab/2 *");
+                    Log.v(TAG, "---"+ARG_SECTION_NUMBER3+": tab/2 *");
                     fragment = new SearchSectionFragment();
-                    Log.v("MainActivity:", "--- Search: tab/2 **");
+                    Log.v(TAG, "--- Search: tab/2 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER3, 3);
                     fragment.setArguments(args);
@@ -393,23 +407,23 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                     if (mDualPane) {
                         fragment = savedData;
                     } else {
-                        Log.v("MainActivity:", "--- Event: tab/3 *");
-                        mEventFragment = new EventItemFragment();
+                        Log.v(TAG, "--- Event: tab/3 *");
+                        mEventFragment = new EventDetailFragment();
                         fragment = mEventFragment;
-                        Log.v("MainActivity:", "--- Event: tab/3 **");
+                        Log.v(TAG, "--- Event: tab/3 **");
                     }
                     return fragment;
 
             }   // end switch()
 
-        }		// --- Fragment getItem()
+        }    // end --- getItem
 
         @Override
         public int getCount() {
             if (mDualPane) {
                 return 3;
             } else {
-                return 4;
+                return 3;   /////// <- 3
             }
         }
 
@@ -420,21 +434,22 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 case 1: return ("Saved List");
                 case 2: return ("Search");
                 case 3: return ("Event");
-            };
+            }
             return "Section " + (position + 1);
         }
-    }	// ------- end AppSectionsPagerAdapter
+    }    // end --- AppSectionsPagerAdapter
 
 
-    /**
+    /*
      * Write a message to the status window:	EB2MainActivity has no status view!
      * Does nothing if there is no status window.
      */
-//	static public void showStatus(String statusMessage) {
-//		if (m_statusView != null) {
-//			m_statusView.setText(statusMessage);
-//		}
-//	}
+
+    // static public void showStatus(String statusMessage) {
+    //        if (m_statusView != null) {
+    //            m_statusView.setText(statusMessage);
+    //        }
+    // }
 
     public static void updateListHeader( String extraText )  {
 
@@ -448,7 +463,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         String channelDate = EB2MainActivity.m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
 
         // this should be the current date or the date when data was saved into the database
-        CurrentSectionFragment.mListHeader.setText( extraText + EB2MainActivity.mRSSString +" @ "  + channelDate );
+        CurrentSectionFragment.mListHeader.setText(extraText + EB2MainActivity.mRSSString
+                                                   + " " + mResources.getString(R.string.ampersand)
+                                                   + " " + channelDate );
     }
 
 
@@ -456,18 +473,20 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      * (non-Javadoc)
      * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
      */
+
     @Override
     public boolean onCreateOptionsMenu(Menu main_activity_action) {
-        MenuInflater inflater = getMenuInflater();   //
+        MenuInflater inflater = getMenuInflater();
         // TODO Name???
-        inflater.inflate(R.menu.listdisplay_activity_action, main_activity_action);         //
-        return true; //
+        inflater.inflate(R.menu.listdisplay_activity_action, main_activity_action);
+        return true;
     }
 
 
-    /** Called when an options item is clicked.
+    /* Called when an options item is clicked.
      * Handles  itemPrefs, punts on idDeleteSelected, idSaveSelected, or anything else.
      */
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final int optionSelected = item.getItemId();
@@ -477,37 +496,41 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 startActivity(new Intent(this,SettingsActivity.class));
                 break;
             case R.id.idDeleteSelected:
-                Log.v("Prefs ", "Settings - unimplemented idDeleteSelected pressed");
-                Toast.makeText(context,  "Settings - unimplemented idDeleteSelected pressed", Toast.LENGTH_SHORT).show();
+                Log.v("Prefs ", mResources.getString(R.string.idDelete));
+                Toast.makeText(context,  mResources.getString(R.string.idDelete), Toast.LENGTH_SHORT).show();
                 break;
             case R.id.idSaveSelected:
-                Log.v("Prefs ", "Settings - unimplemented idSaveSelected pressed");
-                Toast.makeText(context,  "Settings - unimplemented idSaveSelected pressed", Toast.LENGTH_SHORT).show();
+                Log.v("Prefs ", mResources.getString(R.string.idSave));
+                Toast.makeText(context, mResources.getString(R.string.idSave), Toast.LENGTH_SHORT).show();
                 break;
             case R.id.idCalendar:
-                Log.v("Main menu", " - unimplemented idCalendar pressed");
-                Toast.makeText(context,  "Settings - unimplemented idCalendar pressed", Toast.LENGTH_SHORT).show();
+                Log.v("Main menu", mResources.getString(R.string.idCalendar));
+                Toast.makeText(context, mResources.getString(R.string.idCalendar), Toast.LENGTH_SHORT).show();
                 break;
             case R.id.idShare:
                 Log.v("Main menu", " - idShare pressed");
-                Toast.makeText(context,  "Main menu - implemented idShare pressed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,  "", Toast.LENGTH_SHORT).show();
                 Log.d("Main ", " item: " +  item);
                 ProcessShare(item.getActionProvider(), item);
                 break;
             default:
-                Log.d("Main ", " - unimplemented " + Integer.toHexString(optionSelected) + " pressed");
-                Toast.makeText(context,  "Settings - unimplemented " + Integer.toHexString(optionSelected) + " pressed", Toast.LENGTH_SHORT).show();
+                Log.d("Main ", " " + mResources.getString(R.string.unimplemented) + " "
+                       + Integer.toHexString(optionSelected) + " " + mResources.getString(R.string.pressed));
+                Toast.makeText(context,  " " + Integer.toHexString(optionSelected)
+                               + " " + mResources.getString(R.string.pressed), Toast.LENGTH_SHORT).show();
                 break;
         }
+
         return true;
-    }
+
+    }    // end --- onOptionsItemSelected
 
 
     void ProcessShare(ActionProvider actionProvider, MenuItem item) {
 
         ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
 
-        Toast.makeText(context, "MainActivity do the Share", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, mResources.getString(R.string.doTheShare) + " ", Toast.LENGTH_SHORT).show();
 
         // collect data for sharing - this sends an MMS  ?????
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -525,32 +548,36 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // send off shared data
         startActivity(Intent.createChooser(shareIntent, "Events List"));
         Log.d("ProcessShare", " after chooser "+shareIntent);
-    }
+
+    }    // end --- ProcessShare
 
 // ==========================================================================
 // PK 11/9/2014   -- EventsListReader contains the code following here, about 180 lines --
 //
-//		This code should contain no references to data belonging to the
-//		current EB2MainActivity (i.e. it is given a URL and it returns
-//		a pointer to a BELEventsList (which can be null if the read fails).
+//      This code should contain no references to data belonging to the
+//      current EB2MainActivity (i.e. it is given a URL and it returns
+//      a pointer to a BELEventsList (which can be null if the read fails).
 //      that is all it needs to do, optionally it could also return some error code.
-// 		It is the callers job to sort out the rest (save successful reads, inform user of result, etc.)
+//      It is the callers job to sort out the rest (save successful reads, inform user of result, etc.)
 //      I would like to take this code out of EB2MainActivity.
 
-    /**	Data handling routines, ExecFeedReader is run asynchronously:
+    /* Data handling routines, ExecFeedReader is run asynchronously:
      * <p>
-     *	 {@link #EventsListReader(URL)}	// Data read from BostonEventsList RSS
-     *   	returns m_webEventsList  (the address of the events array)
-     * 		The code has currently a fixed URL,
-     *   	The Settings activity must be made to select one URL from a list of
-     *   	current BostonEventsList URLs; and to use the one passed in as an argument.
+     *   {@link #EventsListReader(URL)}
+     *      Data read from BostonEventsList RSS
+     *      returns m_webEventsList  (the address of the events array)
+     *      The code has currently a fixed URL,
+     *      The Settings activity must be made to select one URL from a list of
+     *      current BostonEventsList URLs; and to use the one passed in as an argument.
      * <p>
      *   {@link EB2MainActivity#ReadEventsFromText()}	// Data BostonEventsList RSS converted to string
-     *		Retrieve data from a text file, stored in 'Assets', captured from RSS feed.
-     * 		this is for test purposes, it should be feed to the DOM parser (which
-     * 		currently chokes on it).
+     *      Retrieve data from a text file, stored in 'Assets', captured from RSS feed.
+     *      this is for test purposes, it should be feed to the DOM parser (which
+     *      currently chokes on it).
      */
     public class ExecFeedReader extends AsyncTask<URL, Integer, Integer> {
+
+        static final String TAG = "ExFeedRdr";  // log's tag
 
         // Progress Dialog
         private ProgressDialog pDialog = null;
@@ -562,14 +589,15 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             Log.i(TAG, "onPreExecute");
 
             pDialog = new ProgressDialog(EB2MainActivity.this);
-            pDialog.setMessage("Reading RSS feed #" + mFeedId + " " + mRSSString +", Please wait...");
+            pDialog.setMessage(mResources.getString(R.string.ReadingRSSFeed) + mFeedId + " "
+                               + mRSSString + mResources.getString(R.string.PleaseWait));
             pDialog.setIndeterminate(false);
 
             // see http://stackoverflow.com/questions/5253621/android-back-button-and-progress-dialog
             pDialog.setCancelable(true);	// not sure about this
             pDialog.show();
-            
-        }	// end --- onPreExecute
+
+        }   // end --- onPreExecute
 
         @Override
         protected void onProgressUpdate(Integer... progress) {
@@ -578,47 +606,63 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             if (null != pDialog) {
                 switch(progress.length) {
                     case 0:
-                        pDialog.setMessage("getting started");
+                        pDialog.setMessage(mResources.getString(R.string.gettingStarted)
+                                           + " " + progress[0]);
                         break;
                     case 1:
-                        pDialog.setMessage("digesting " + progress[0]);
+                        pDialog.setMessage(mResources.getString(R.string.digesting)
+                                           + " " + progress[0]);
                         break;
                     case 2:
-                        pDialog.setMessage("digesting " + progress[0] + " of " + progress[1]);
+                        pDialog.setMessage(mResources.getString(R.string.digesting)
+                                           + " " +progress[0]+ " " +
+                                           mResources.getString(R.string.of)
+                                           + " " +progress[1]);
                         break;
                     default:
-                    	if (progress[2] == 3) {
-                    		pDialog.setMessage("storing " + progress[0] + " of " + progress[1] + ", phase " + progress[2]);
-                    	} else {
-                    		pDialog.setMessage("digesting " + progress[0] + " of " + progress[1] + ", phase " + progress[2]);
-                    	}
+                        if (progress[2] == 3) {
+                            pDialog.setMessage(mResources.getString(R.string.storing)
+                                               + " " +progress[0]+ " " +
+                                               mResources.getString(R.string.of)
+                                               + " " +progress[1]+
+                                               mResources.getString(R.string.phase)
+                                               + " " +progress[2]);
+                        } else {
+                            pDialog.setMessage(mResources.getString(R.string.digesting)
+                                               + " " +progress[0]+ " " +
+                                               mResources.getString(R.string.of)
+                                               + " " +progress[1]+
+                                               mResources.getString(R.string.phase)
+                                               + " " +progress[2]);
+                        }
                         break;
                 }
 
-            	// attempt early summary update
+                // attempt early summary update
                 if (progress[0] == 15) {
                     currentData.updateList();
                 }
-                
+
             }
-        }	// end onProgressUpdate
+        }   // end --- onProgressUpdate
 
         @Override
         protected void onPostExecute( Integer result ) {
             super.onPostExecute(result);
 
-            MakeToast.makeToast(EB2MainActivity.this, "Main: ReadRSS ", MakeToast.LEVEL_DEBUG);
+            MakeToast.makeToast(EB2MainActivity.this, mResources.getString(R.string.ReadRSS) + " ", MakeToast.LEVEL_DEBUG);
             Log.i(TAG, "onPostExecute, events = " + result );
 
             if (!m_webEventsList.isEmpty() ) {
                 currentData.updateList();
-                String  txt = "RSS " +m_webEventsList.size()+ ": ";
+                String  txt =   mResources.getString(R.string.RSS) + " " +m_webEventsList.size()+ " " +
+                                mResources.getString(R.string.colon) + " ";
                 EB2MainActivity.updateListHeader( txt );
             } else {
                 // What should we say when feed has nothing to show? Could be bad feed,
                 // connectivity issue, or really no events.
                 Log.e(TAG, "No events at selected feed - so not changing view.");
-                Toast.makeText(getApplicationContext(), "No events at selected feed - so not changing view.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), mResources.getString(R.string.NoEvents), Toast.LENGTH_LONG).show();
             }
 
             //  remove progress indicator
@@ -632,36 +676,38 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
 // time to activate the display the List in the fragment (ListDisplayFragment)
 
+//  1) Trying to embed an activity in the fragment is not successful:
+//      EventListDisplayActivity.doDisplayEventList();
 
-////	1) Trying to embed an activity in the fragment is not successful:
-////				EventListDisplayActivity.doDisplayEventList();
+//  2) this way will start ListDisplayFragment all over (of course)
+//      ListDisplayFragment.showWebEventsList();
 
-////    2) this way will start ListDisplayFragment all over (of course)
-////				ListDisplayFragment.showWebEventsList();
-
-////    3) implement the status display
+//  3) implement the status display
 
 
 // TODO   4) activate the list in the fragment
-//           fragment should have a status line and a list (for the events)
+//  fragment should have a status line and a list (for the events)
 //  if the fragment is set-up right this should work:
 //  pass the list of events to the adapter:
-//	files   MainAppScreen and MainAppScreenImpl, EventlistAdapter
-// 			set the list in the adapter to the current values
+//  files   MainAppScreen and MainAppScreenImpl, EventlistAdapter
+//  set the list in the adapter to the current values
 
 
         @Override
         protected Integer doInBackground(URL... params) {
             // TODO Auto-generated method stub
 
-            // Set up connection manager and get network info
+            // Initialize tab 0 label = Current
+            tab0Label = mResources.getString(R.string.Current);
+
+            // Get Connection manager and network info
             ConnectivityManager connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
             // If we have network info and a connection
             if (networkInfo != null && networkInfo.isConnected())
             {
-                // Get a new event list
+                // Get a new empty event list
                 BELEventlist eventSource = new BELEventlist(this);
                 try {
                     // Read from cached feedId
@@ -715,208 +761,219 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 }
                 Log.i(TAG, "stored " +m_webEventsList.size()+ " events into the database feedId " + mFeedId);
             } else {
-            	BELEvent next;
-            	// Get current DB entries
-            	m_webEventsList = dataStore.getAllWebEvents();
-            	// Get the first event record
-            	next = m_webEventsList.get(0);
-            	if (null != next) {
-            		// Get and update the feedId
-            		mFeedId = next.getFeed();
-            		oldFeedId = mFeedId;
-            		EB2MainActivity.mFeedId = mFeedId;
-            		// Update the resources
-            		EB2MainActivity.mURLString = mRSSsources[mFeedId];
-            		EB2MainActivity.mRSSString = mRSSnames[mFeedId];
-            		
-            		Log.i(TAG, "used " +m_webEventsList.size()+ " stored events from database feedId " + mFeedId);
-            		
-            	}
+                BELEvent next;
+                // Get current DB entries
+                m_webEventsList = dataStore.getAllWebEvents();
+                // Check if we received anything
+                if (!m_webEventsList.isEmpty()) {
+                    // Get the first event record
+                    next = m_webEventsList.get(0);
+                    if (null != next) {
+                        // Get and update the feedId
+                        mFeedId = next.getFeed();
+                        oldFeedId = mFeedId;
+                        // Update the resources
+                        EB2MainActivity.mURLString = mRSSname[mFeedId];
+                        EB2MainActivity.mRSSString = mRSSURL[mFeedId];
+
+                        // If this is not a recent database store from cache
+                        if (EB2MainActivity.m_webEventsListA.get(EB2MainActivity.mFeedId ).isEmpty()) {
+                            // Set tab 0 label = Stored
+                            EB2MainActivity.tab0Label = mResources.getString(R.string.Stored);
+                        }
+
+                        Log.i(TAG, "used " +m_webEventsList.size()+ " stored events from database feedId " + mFeedId);
+                    }
+                } else {
+                    Log.i(TAG, "nothing found in the database");
+                }
             }
-            
+
             return m_webEventsList.size();
-            
-        }	// end --- doInBackground
+
+        }   // end --- doInBackground
 
         /** Because {@link AsyncTask#publishProgress} is protected, need a callback to update status. */
         public void publicProgressCallback(Integer... values) {
             this.publishProgress(values);
         }
 
-    }	// end --- ExecFeedReader
+    }   // end --- ExecFeedReader
 
-    /**
- * This is the code  that must be be executed in an AsyncTask
- * (and the code there must be removed from EventListDisplayActivity  done! ).
- * Uses {@link ExecFeedReader}
-*/
-    void EventsListReader(URL url)	{
-    	
-		Log.w(TAG, "before call ExecFeedReader  ");
-	    new ExecFeedReader().execute(url);	
-		Log.w(TAG, "after call ExecFeedReader  ");
+    /*
+     * This is the code  that must be be executed in an AsyncTask
+     * (and the code there must be removed from EventListDisplayActivity  done! ).
+     * Uses {@link ExecFeedReader}
+     */
+    void EventsListReader(URL url)  {
 
-    }	// end --- EventsListReader
+        Log.w(TAG, "before call ExecFeedReader  ");
+        new ExecFeedReader().execute(url);
+        Log.w(TAG, "after call ExecFeedReader  ");
+
+    }   // end --- EventsListReader
     
 // ===================   end of EventsListReader code =========================================
 
 
-	/**
-	* Reading a Text-file which is stored in (android) Assets (directory)
-	* This  file is RSS data, read from the RSS source
-	* Is intended to be feed to the RSS processing procedure at a suitable point
-	* (for decoding the feed data into BELEvents) 
-	* 
-	* @return m_mainEventText
-	* 
-	* There is somewhere another read (text) routine (from Jeremy)
-	* to be manually inserted (I don't remember where).
-	* 
-	* Note: these routines are intended to provide input to EventBoss2
-	*       as if it was coming from the RSS feed. This is suitable to save 
-	*       data from a problem feed for continuous testing.
-	*
-	*/
-	String ReadEventsFromText() {
-	//	if ( m_readEventText == true ) {// begin of  ---- this is for test input
-		// Read a test-file name from  Assets  
-		String [] files;
-		try {
-			files = getAssets().list("");
-		} catch (IOException e) {
-			String message = "Failed to getAssets list";
-			Log.e("EventSource", message, e);
-			throw new RuntimeException( message, e);
-		}
-		InputStream stream = null;
-		String rxmlFile = null;
-		for (String file : files) {
-			Log.i("EventSource", "Found Assets item: " + file);
-			if (file.contains("rxml")) {
-				rxmlFile = file;
-				Log.i("EventSource", "Found rxml file: " + rxmlFile);
-				try {
-					stream = getAssets().open(rxmlFile);
-				} catch (IOException e) {
-					String message = "Failed to open file: " + rxmlFile;
-					Log.e("EventSource", message, e);
-					throw new RuntimeException( message, e);
-				}
-				break;
-			}
-		}
-		// this is just a check that we actually got a stream. Really won't work
-		// for anything because we didn't open the rxmlFile the first time around.
-		if (stream == null) {
-			stream = getInputStream(rxmlFile);
-		}
-	
-		try {
-			m_mainEventText = convertStreamToString(stream);
-		} finally {
-			try {
-				stream.close();
-			} catch (IOException excp) {
-				;	// drop it
-			}
-		}
-	//
-	//	Log.i("EventListDisplay", "rxml file: " + m_mainEventText);
-		return 	m_mainEventText;
-	 }
+    /**
+    * Reading a Text-file which is stored in (android) Assets (directory)
+    * This  file is RSS data, read from the RSS source
+    * Is intended to be feed to the RSS processing procedure at a suitable point
+    * (for decoding the feed data into BELEvents)
+    *
+    * @return m_mainEventText
+    *
+    * There is somewhere another read (text) routine (from Jeremy)
+    * to be manually inserted (I don't remember where).
+    *
+    * Note: these routines are intended to provide input to EventBoss2
+    *       as if it was coming from the RSS feed. This is suitable to save
+    *       data from a problem feed for continuous testing.
+    *
+    */
 
-	//
-	//  eventText is the same as xmlString  in BellSourcedForEvents (lines 101 - 106)
-	//
-	
-	/**
-	 * Opens a file somewhere on the device and returns the InputStream pointer
-	 * @param fileName - the path to the file to be opened
-	 * @return InputStream - the stream that is opened
-	 * @throws RuntimeException in response to IOException
-	 */
- 	protected InputStream getInputStream(String fileName) {
-		try {
-			FileInputStream fileStream = new FileInputStream (fileName);
-			return fileStream;
-		} catch (IOException e) {
-			String message = "Failed to open file: " + fileName;
-			Log.e("EventSource", message);
-			throw new RuntimeException( message, e);
-		}
-	}
+    String ReadEventsFromText() {
+        // Read a test-file name from  Assets
+        String [] files;
+        try {
+            files = getAssets().list("");
+        } catch (IOException e) {
+            String message = "Failed to getAssets list";
+            Log.e(TAG, message, e);
+            throw new RuntimeException( message, e);
+        }
+        InputStream stream = null;
+        String rxmlFile = null;
+        for (String file : files) {
+            Log.i(TAG, "Found Assets item: " + file);
+            if (file.contains("rxml")) {
+                rxmlFile = file;
+                Log.i(TAG, "Found rxml file: " + rxmlFile);
+                try {
+                    stream = getAssets().open(rxmlFile);
+                } catch (IOException e) {
+                    String message = "Failed to open file: " + rxmlFile;
+                    Log.e(TAG, message, e);
+                    throw new RuntimeException( message, e);
+                }
+                break;
+            }
+        }
+        // this is just a check that we actually got a stream. Really won't work
+        // for anything because we didn't open the rxmlFile the first time around.
+        if (stream == null) {
+            stream = getInputStream(rxmlFile);
+        }
+
+        try {
+            m_mainEventText = convertStreamToString(stream);
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException excp) {
+               	   // drop it
+            }
+        }
+
+        //  log.i("EventListDisplay", "rxml file: " + m_mainEventText);
+        return 	m_mainEventText;
+
+    }    // end --- ReadEventsFromText
+
+    //  eventText is the same as xmlString  in BellSourcedForEvents (lines 101 - 106)
+    //
+
+    /*
+     * Opens a file somewhere on the device and returns the InputStream pointer
+     * @param fileName - the path to the file to be opened
+     * @return InputStream - the stream that is opened
+     * @throws RuntimeException in response to IOException
+     */
+    protected InputStream getInputStream(String fileName) {
+        try {
+            FileInputStream fileStream = new FileInputStream (fileName);
+            return fileStream;
+        } catch (IOException e) {
+            String message = "Failed to open file: " + fileName;
+            Log.e(TAG, message);
+            throw new RuntimeException( message, e);
+        }
+    }    // end --- getInputStream
  
- 	/**
-	 * function: convertStreamToString
-	 * This function was found in StackOverflow.com question 309424.
-	 * 
-	 * @param is - an opened InputStream
-	 * @return String - returns a text string
-	 */
-	String convertStreamToString(java.io.InputStream is) {
-		try {
-			return new java.util.Scanner(is).useDelimiter("\\A").next();
-		} catch (java.util.NoSuchElementException e) {
-			return "";
-		}
-	}  // the end of  ReadEventsFromText  ---  this is for test input 
+    /*
+     * function: convertStreamToString
+     * This function was found in StackOverflow.com question 309424.
+     *
+     * @param is - an opened InputStream
+     * @return String - returns a text string
+     */
+    String convertStreamToString(java.io.InputStream is) {
+        try {
+            return new java.util.Scanner(is).useDelimiter("\\A").next();
+        } catch (java.util.NoSuchElementException e) {
+            return "";
+        }
+    }    // end --- convertStreamToString
 
 
-	/**
-	 **      Implements interface {@link EventFragmentCoordinator}, displays the event details (fragment) 
-	 **/
-	public void displayEventDetails(String eventID, boolean isSavedEvent) {
-	//		EventItemFragment mEventItem = null;
-			Bundle args = new Bundle();
-			args.putString(com.tssg.eventboss2.EventItemFragment.SAVED_KEY, String.valueOf(isSavedEvent));
-			EventItemFragment mEventItem = new EventItemFragment();
-			mEventItem.setArguments(args);
-			mEventItem.setId(eventID);
-			Log.i("displayEventDetails begin: ", "w/EventId: "+eventID);
-	
-		if (mDualPane) {
-			Log.i("displayEventDetails: ", "DualPane,"+eventID);
-			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-			transaction.replace(R.id.eventData, mEventItem);				// eventData is used layout-large/activity_main.xml
-		Integer i = R.id.eventData;    
-		Log.i("id.eventData: ", " "+Integer.toHexString(i));
-		Log.i("eventItem ", " "+mEventItem);
-			//transaction.addToBackStack(null);
-			transaction.commit();
-			
-		} else {
-			
-			Log.i("displayEventDetails: ", "|DualPane,"+eventID);
-			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-			transaction.replace(R.id.eventData_s, mEventItem);    // eventData_s is used layout/activity_main.xml
-//																  //  work not, crash not	
-//			//transaction.addToBackStack(null);
-			transaction.commit();
-			
-		Log.i("eventItem ", " "+mEventItem);
-		Log.i("displayEventDetails: ", "start EventDetailActivity "+eventID);
-			// In single-pane mode, start the detail event activity for the selected item ID:
-			Intent detailIntent = new Intent(this, EventItemFragment.class);
-			detailIntent.putExtra(EventItemFragment.EVENTITEM_POS, eventID);
+    /**
+     **      Implements interface {@link EventFragmentCoordinator}, displays the event details (fragment)
+     **/
+    public void displayEventDetails(String eventID, boolean isSavedEvent) {
+        Bundle args = new Bundle();
+        args.putString(com.tssg.eventboss2.EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
+        EventDetailFragment mEventItem = new EventDetailFragment();  //<----
+        mEventItem.setArguments(args);
+        mEventItem.setId(eventID);
+        Log.i(TAG, "displayEventDetails begin: w/EventId: " + eventID);
 
-		Log.i("displayEventDetails: ", "w/intent: "+detailIntent.toString());
-		Log.i("displayEventDetails: ", "w/EventItem "+mEventItem.toString());
+        if (mDualPane) {
+            Log.i(TAG, "displayEventDetails: DualPane," + eventID);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.eventData, mEventItem);    // eventData is used layout-large/activity_main.xml
+            Integer i = R.id.eventData;
+            Log.i(TAG, "id.eventData: " + Integer.toHexString(i));
+            Log.i(TAG, "eventItem " + mEventItem);
+            //transaction.addToBackStack(null);
+            transaction.commit();
 
-		}
-	}
-	
-	@Override 
-	protected void onDestroy() {	// may be superfluous
-		super.onDestroy();
-		for (List<BELEvent> lbel : m_webEventsListA) {
-			if (lbel != Collections.EMPTY_LIST)  {
-				lbel.clear();
-			}
-		}
-			
-		m_webEventsListA.clear();
-	}
-	
-	// Handle Share processing
+        } else {
 
-}	// ------- end MainActivity
+            Log.i(TAG, "displayEventDetails: |DualPane," + eventID);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+//            transaction.replace(R.id.eventData_s, mEventItem);    // eventData_s is used layout/activity_main.xml//
+            //  work not, crash not
+ ///           transaction.replace(R.id.details_container, mEventItem);    //
+//            transaction.replace(R.id.eventData, mEventItem);
+///            transaction.addToBackStack(null);
+///            transaction.commit();
+
+            Log.i(TAG, "eventItem " + mEventItem);
+            Log.i(TAG, "displayEventDetails: start EventDetailActivity " + eventID);
+            // In single-pane mode, start the detail event activity for the selected item ID:
+            Intent detailIntent = new Intent(this, EventDetailActivity.class);
+            detailIntent.putExtra(EventDetailFragment.EVENTITEM_POS, eventID);
+            // start the detail activity ??
+            Log.i(TAG, "displayEventDetails: w/intent: " + detailIntent.toString());
+            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
+            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
+           startActivity(detailIntent);
+
+        }
+    }    // end --- displayEventDetails
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        for (List<BELEvent> lbel : m_webEventsListA) {
+            if (lbel != Collections.EMPTY_LIST)  {
+                lbel.clear();
+            }
+        }
+
+        m_webEventsListA.clear();
+    }
+
+}    // end ---- MainActivity

@@ -83,7 +83,7 @@ public class EventListDisplayFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         // Notify the parent activity of selected item
-		Log.i("EventListDisplayFragment:", " onListItemSelected "+position);
+		Log.i("EventListDisplayFrag", " onListItemSelected "+position);
         mCallback.onListItemSelected(position);
         
         // Set the item as checked to be highlighted when in two-pane layout
@@ -95,7 +95,7 @@ public class EventListDisplayFragment extends ListFragment {
 		// questionable if saving to database should be done here
 
 		m_webEventsList = EB2MainActivity.m_webEventsList;
-		Log.i("showWebEventsList -> q = ", " " + m_webEventsList.size() );
+		Log.i("->WebEventsList -> q = ", " " + m_webEventsList.size() );
 	} // -------  end:   showWebEventsList()
 	
 	/**

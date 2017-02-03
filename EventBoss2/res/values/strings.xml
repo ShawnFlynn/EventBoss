@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="Current">Current</string>
+    <string name="Saved">Saved</string>
+    <string name="Search">Search</string>
+    <string name="Event">Event</string>
+    <string name="Stored">Stored</string>
+    <string name="Reading">Reading: </string>
+
+    <string name="gettingStarted">getting started</string>
+    <string name="digesting">digesting</string>
+    <string name="storing">storing</string>
+    <string name="of">of</string>
+    <string name="phase">,  phase</string>
+
+    <string name="RSS">RSS</string>
+    <string name="colon">:</string>
+
+    <string name="ReadingRSSFeed">Reading RSS feed #</string>
+    <string name="PleaseWait">, Please wait...</string>
+    <string name="NoEvents">"No events at selected feed - so not changing view."</string>
+    <string name="ReadRSS">Main: ReadRSS</string>
+    <string name="DetectedConfig">Detected Configuration change</string>
+    <string name="startTrace">onCreate, start trace</string>
+    <string name="ampersand">\@</string>
+    <string name="idDelete">Settings - unimplemented idDeleteSelected pressed</string>
+    <string name="idSave">Settings - unimplemented idSaveSelected pressed</string>
+    <string name="idCalendar">Settings - unimplemented idCalendar pressed</string>
+    <string name="unimplemented">Settings - unimplemented</string>
+    <string name="pressed">pressed</string>
+    <string name="doTheShare">MainActivity do the Share</string>
+
     <string name="app_name">EventBoss2</string>
     <string name="menu_settings">Settings</string>
     <string name="feedSource">Select EventsList:</string>
@@ -17,7 +47,6 @@
     <string name="titleSave">Save Selected</string>
     <string name="deleteSelected">Delete Selected</string>
     <string name="titleDelete">Delete Selected</string>
-    <string name="Search">Search</string>
     <string name="titleSearch">Search</string>
     <string name="Calendar">Calendar</string>
     <string name="titleCalendar">Calendar</string>

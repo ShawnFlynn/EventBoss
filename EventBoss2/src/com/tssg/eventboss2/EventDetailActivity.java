@@ -1,19 +1,27 @@
 package com.tssg.eventboss2;
 
-//import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
+
+
+
 //import android.content.Intent;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NavUtils;
 //import android.support.v4.app.NavUtils;
 //import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 //import android.view.LayoutInflater;
 import android.view.MenuItem;
-//import android.view.View;
-//import android.view.ViewGroup;
-//import android.widget.EditText;
+import android.view.View;
+
+import java.util.Date;
 
 /**
  * An activity representing a single Event detail screen. This activity is only
@@ -28,13 +36,9 @@ public class EventDetailActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-//		setContentView(R.layout.activity_event_detail);
+		setContentView(R.layout.activity_event_detail);
+		Log.e("-> EventDetailAct: ", "onCreate (item_frag) "+R.layout.activity_event_detail);
 
-//		Log.e("enter EventDetailActivity: ", "onCreate (item_fragment) "+R.layout.eventData);
-		Log.e("enter EventDetailActivity: ", "onCreate (item_fragment) "+R.layout.item_fragment);
-		
-		setContentView(R.layout.item_fragment);
-		
 		// Show the Up button in the action bar.
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -51,29 +55,41 @@ public class EventDetailActivity extends FragmentActivity {
 		if (savedInstanceState == null) {
 			// Create the detail fragment and add it to the activity
 			// using a fragment transaction.
-
-			Log.e("enter EventDetailActivity: ", "EventItemFragment = "+EventItemFragment.EVENTITEM_POS);
+            Log.e("EventDetailAct", "savedInstanceState");
+			Log.e("EventDetailAct", "EventDetailFragment = "+EventDetailFragment.EVENTITEM_POS);
 
 			Bundle arguments = new Bundle();
-			arguments.putString(EventItemFragment.EVENTITEM_POS, getIntent()
-					.getStringExtra(EventItemFragment.EVENTITEM_POS));
-			Log.e("enter EventDetailActivity: ", "savedInstanceState (null) ");
+			arguments.putString(EventDetailFragment.EVENTITEM_POS, getIntent()
+					.getStringExtra(EventDetailFragment.EVENTITEM_POS));
+			Log.e("EventDetailAct: ", "savedInstanceState (null) ");
 
-			EventItemFragment fragment = new EventItemFragment();   //???
-			Log.e("enter EventDetailActivity.onCreate ", "EventItemFragment = "+fragment);
+			EventDetailFragment fragment = new EventDetailFragment();
+			Log.e("EventDetAct:", "EventItemFragment = "+fragment);
 			// any init ??
 
 			fragment.setArguments(arguments);
-			Log.e("enter EventDetailActivity: ", " arguments: "+fragment.getArguments());
+			Log.e("EventDetailActivity: ", " arguments: "+fragment.getArguments());
 			getSupportFragmentManager().beginTransaction()
-					.add(R.id.itemfragment, fragment).commit();
+					.add(R.id.event_detail_container, fragment).commit();
 
-			Log.e("enter EventDetailActivity:onCreate ", "fragment+arguments"+ fragment +" | "+arguments);
-
+			Log.e("EventDetAct", "fragment "+ fragment +"+arguments: "+arguments);
 		}
 	}
 
-	@Override
+    public void onStart() {
+        super.onStart();
+     //   EventDetailFragment:refreshView();
+    }
+
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+    	// inflate menu items for the action bar
+    	MenuInflater inflater= getMenuInflater();
+    	inflater.inflate(R.menu.detail_activity_actions, menu);
+    	return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
@@ -84,9 +100,8 @@ public class EventDetailActivity extends FragmentActivity {
 			//
 			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
 			//
-//			NavUtils.navigateUpTo(this, new Intent(this,
-//					EventListActivity.class));
-			   MakeToast.makeToast(this, "Up Navnot implemented", MakeToast.LEVEL_DEBUG);
+			NavUtils.navigateUpTo(this, new Intent(this, EventDetailActivity.class));
+			   MakeToast.makeToast(this, "Up Nav - not implemented", MakeToast.LEVEL_DEBUG);
 
 			return true;
 		}

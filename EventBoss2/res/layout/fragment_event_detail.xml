@@ -6,72 +6,66 @@
     tools:context=".EventDetailFragment" >
 
   	<TextView
-       android:id="@+id/event_title"
-       style="?android:attr/textAppearanceLarge"
+       android:id="@+id/titleText"
+       style="?android:attr/textAppearanceMedium"
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
        android:padding="16dp"
        android:textIsSelectable="true" />
     
-    
     <ScrollView
       android:layout_width="match_parent"
       android:layout_height="match_parent" 
-      android:layout_below="@id/event_title" >
+      android:layout_below="@id/titleText" >
     
-      <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">      
+    <RelativeLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" >
 	
-	<TextView 
-	    android:id="@+id/titleText"
-      	style="?android:attr/textAppearanceLarge"
+	  <TextView
+	    android:id="@+id/startText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	/>
-		<TextView 
-	    	android:id="@+id/startText"
-    		android:layout_width="match_parent"
-    		android:layout_height="wrap_content"
-    	/>
-	<TextView 
+	  <TextView
 	    android:id="@+id/endText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	/>
-	<TextView 
+	  <TextView
 	    android:id="@+id/typeText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	/>
-	<TextView 
+	  <TextView
 	    android:id="@+id/linkText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	android:autoLink="web"
     	/>
-	<TextView 
+	  <TextView
 	    android:id="@+id/organizerText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	/>
-	<TextView 
+	  <TextView
 	    android:id="@+id/locationText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	android:autoLink="map"
     	/>
-		<TextView 
-	    	android:id="@+id/descriptionText"
-    		android:layout_width="match_parent"
-    		android:layout_height="wrap_content"
-    		/>
+	  <TextView
+	    android:id="@+id/descriptionText"
+    	android:layout_width="match_parent"
+    	android:layout_height="wrap_content"
+    	/>
 	
-		<RelativeLayout
+	  <RelativeLayout
 	    	android:background="?android:attr/dividerVertical"
 	    	android:layout_width="match_parent"
 	    	android:layout_height="wrap_content"
-	    	android:orientation="horizontal" >
+      		android:layout_below="@id/descriptionText" 	    	
+      		android:orientation="horizontal"  >
 	 
 			<Button
 		    	android:background="?android:attr/selectableItemBackground"
@@ -80,7 +74,7 @@
 		    	android:layout_height="wrap_content"
 		    	android:layout_gravity="bottom|left"
 		    	android:layout_marginLeft="10dp"
-		    	android:text="@string/forward" />
+                android:text="@string/forward" />
 	
 			<Button
 		    	android:id="@+id/addtocalendar"

@@ -86,7 +86,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 // questionable if saving to database should be done here
 
 		m_webEventsList = EB2MainActivity.m_webEventsList;
-		Log.i("doDisplayEventList -> q = ", " " + m_webEventsList.size() );
+		Log.i("doDispEventList -> q = ", " " + m_webEventsList.size() );
 
 		showStatus("Showing " + m_webEventsList.size() + " from current Web events");
 	} // -------  end:   doDisplayEventList ()
@@ -100,6 +100,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 		adapter.notifyDataSetInvalidated();
 		String str = "Event select at pos: " + position;// 
 		Toast.makeText(this, str, Toast.LENGTH_LONG).show();
+        Log.v("Click :","pos: "+position+",  id: "+id);
 	}
 	   
     
@@ -138,7 +139,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 			break;
 			
 		case R.id.idShare:
-			Log.i("EventListDisplayActivity", " onOptionsItemSelected idSphare");
+			Log.i("EventListDispActivity", " onOptionsItemSelected idShare");
 			break;
 
 		
@@ -238,18 +239,6 @@ public class EventListDisplayActivity extends FragmentActivity {
 		}
 
 		@Override
-		protected void onDestroy() {
-			// TODO implement onDestroy
-			super.onDestroy();
-
-			MakeToast.makeToast(this, "onDestroy", MakeToast.LEVEL_DEBUG);
-
-//			DatabaseHelper.closeDB();
-			MakeToast.makeToast(this, "closeDB", MakeToast.LEVEL_DEBUG);
-
-		}
-
-		@Override
 		protected void onStop() {
 			// TODO implement onStop
 			super.onStop();
@@ -261,6 +250,18 @@ public class EventListDisplayActivity extends FragmentActivity {
 
 			MakeToast.makeToast(this, "onStop", MakeToast.LEVEL_DEBUG);
 		}
-		
 
-}
+    @Override
+    protected void onDestroy() {
+        // TODO implement onDestroy
+        super.onDestroy();
+
+        MakeToast.makeToast(this, "onDestroy", MakeToast.LEVEL_DEBUG);
+
+//			DatabaseHelper.closeDB();
+        MakeToast.makeToast(this, "closeDB", MakeToast.LEVEL_DEBUG);
+
+    }
+
+
+}   /*  EventListDisplayActivity */

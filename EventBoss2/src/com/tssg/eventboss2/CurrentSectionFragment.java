@@ -26,27 +26,29 @@ import com.tssg.datastore.DatabaseHelper;
  * ======================================================================================
  */
 public class CurrentSectionFragment extends EventBossListFragment {
-	Cursor mCursor;
+
+    static final String TAG = "CurrentSectionFragment";  // log's tag
+
+    Cursor mCursor;
 	SimpleCursorAdapter mAdapter;
 	DatabaseHelper dbh;
 	LayoutInflater mLayoutInflater;
 	ViewGroup mViewGroup;
-//	TextView mHeader;
 	ListView mLV;
-	public static TextView mListHeader;  //
+	public static TextView mListHeader;
 
-	
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
 		mCursor = dbh.getCursorAllEvents();
 		// For the cursor adapter, specify which columns go into which views
-		String[] fromColumns = { DatabaseHelper.KEY_TITLE,
-							DatabaseHelper.KEY_STARTTIME,
-							DatabaseHelper.KEY_ENDTIME,
-							DatabaseHelper.KEY_LOCATION};
-		
+		String[] fromColumns = {DatabaseHelper.KEY_TITLE,
+							    DatabaseHelper.KEY_STARTTIME,
+							    DatabaseHelper.KEY_ENDTIME,
+							    DatabaseHelper.KEY_LOCATION};
+
 		mLV = getListView();
 		mLV.setHeaderDividersEnabled(true); 
 		mLV.setDividerHeight(5);				// = divider between list items
@@ -59,16 +61,13 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		SimpleCursorAdapter adapter = new SimpleCursorAdapter(getActivity(),
 				R.layout.eventlist_row, mCursor, fromColumns, toViews, 0);
 		mAdapter = adapter;
-		
+
 		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
 		mLV.addHeaderView(mListHeader);
 
-		EB2MainActivity.updateListHeader( "Reading: " );
+        EB2MainActivity.updateListHeader(EB2MainActivity.mResources.getString(R.string.Reading));
 
 	}
-	
-
-
 
 	@Override
 	public void onDestroyView() {
@@ -78,15 +77,15 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		Log.v("CurrentSectionFragment: (75)", "---> eventFragmentCoordinator ->displayEventDetails (false)");
-		Log.v("onListItemClick", "Listview=" + l + ": View=" + v + ":Position=" + position + ":Id=" + id);
+		Log.v(TAG, "(75)---> eventFragmentCoordinator ->displayEventDetails (false)");
+		Log.v(TAG, "onListItemClick Listview =" + l + ": View=" + v + ":Position=" + position + ":Id=" + id);
 		eventFragmentCoordinator.displayEventDetails(Long.toString(id), false);
 	}
 
 	// also see eventDetailActivity
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(" OnCreate:", "--- CurrentSectionFragment");
+		Log.v(TAG, "OnCreate: --- CurrentSectionFragment");
 		super.onCreate(savedInstanceState);
 		dbh = new DatabaseHelper(getActivity());
 	}
@@ -97,7 +96,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		mViewGroup = container;
 		mLayoutInflater = inflater;
 		// Do we need this?
-		Log.v("CurrentSectionFragment:onCreateView:", "container"+container);
+		Log.v(TAG, "onCreateView: container" +container);
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 
@@ -105,8 +104,9 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		mCursor.close();
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
+        // TODO Do I really need the setListAdapter call???
 		setListAdapter(mAdapter);
-		// TODO Do I really need the setListAdapter call???
+        EB2MainActivity.setTabLabel(EB2MainActivity.tab0Label);
 	}
 
 }
