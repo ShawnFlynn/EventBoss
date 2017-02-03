@@ -6,6 +6,7 @@ Old/
 EventBoss2/.svn/
 bin/
 tmp/
+gen/*
 *.tmp
 *.bak
 *.swp
