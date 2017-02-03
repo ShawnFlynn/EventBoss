@@ -14,8 +14,8 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.tssg.eventboss2.EB2MainActivity;
 import com.tssg.eventboss2.EB2MainActivity.event_list;
+import com.tssg.eventboss2.RSSFeedReader;
 import com.tssg.eventsource.BELEvent;
 
 /*
@@ -61,10 +61,12 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	// Last database loaded
 	public static event_list LAST_DB = event_list.Current;
 
-	// Overall database name
-	// contains both Current and Saved tables
-	static final String DATABASE_NAME = "EventStore";
+	// Database name
+	// Contains both Current and Saved tables
+	// Internal or on SD card - if mounted
+	static final String DATABASE_NAME = RSSFeedReader.EB2.getDBName();
 
+	// DB table definition
 	static final String TABLE_DEF  = 
 			 "( " + KEY_ROWID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "eventId Integer ,"
@@ -98,24 +100,22 @@ public class DatabaseHelper extends SQLiteOpenHelper
 											+ DATABASE_SAVED + ";"; 
 
 
+	// Constructor
 	public DatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
-		Log.i(LOG_TAG, "DatabaseHelper()");
-}
+		Log.i(LOG_TAG, "DatabaseHelper( " +DATABASE_NAME+ " )");
+	}
 
 
 	@Override
-	public void onCreate(SQLiteDatabase db)
-	{
+	public void onCreate(SQLiteDatabase db) {
 		Log.i(LOG_TAG, "onCreate()");
 		db.execSQL(CREATE_SAVED_TABLE);
 		db.execSQL(CREATE_WEB_TABLE);
 	}
 
 	@Override
-	public void onOpen(SQLiteDatabase db)
-	{
+	public void onOpen(SQLiteDatabase db) {
 		Log.i(LOG_TAG, "onOpen()");
 	}
 
@@ -146,13 +146,16 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	 */
 	SQLiteDatabase getDatabase() throws DatastoreException {
 
+		// Temporary event list
+		event_list last_list = RSSFeedReader.EB2.getLastList();
+
 		// Check if we need a new DB
-		if (EB2MainActivity.getLast_list() != LAST_DB)
+		if (last_list != LAST_DB)
 			if (mDb != null)
 				closeDB();
 
 		// Set the specific database name
-		if (EB2MainActivity.getLast_list() == event_list.Current)
+		if (last_list == event_list.Current)
 			DATABASE_SEARCH = DATABASE_WEB;
 		else
 			DATABASE_SEARCH = DATABASE_SAVED;
@@ -171,7 +174,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				mDb = getWritableDatabase();
 
 				// Save the current database type
-				if (EB2MainActivity.getLast_list() == event_list.Current)
+				if (last_list == event_list.Current)
 					LAST_DB = event_list.Current;
 				else
 					LAST_DB = event_list.Saved;
@@ -192,8 +195,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	/*
 	 * Removes all rows in the Events table.
 	 */
-	void deleteAllSavedEvents() throws DatastoreException
-	{
+	void deleteAllSavedEvents() throws DatastoreException {
 		Log.i(LOG_TAG, "deleteAllSavedEvents()");
 
 		getDatabase().delete( DATABASE_SAVED, null, null );
@@ -201,8 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 
 	
 	//TODO pass database name as an argument
-	public static void deleteDatabase( Context context )
-	{
+	public static void deleteDatabase( Context context ) {
 		Log.i(LOG_TAG, "deleteDatabase(" + DATABASE_NAME + ")");
 
 		boolean bSucceeded = false;
@@ -228,8 +229,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	 * @param int rowId id of event to retrieve
 	 * @return a BELEvent object
 	 */
-	BELEvent buildBELEvent( final Cursor cursor )
-	{
+	BELEvent buildBELEvent( final Cursor cursor ) {
+
 		// Find out what column hold what data
 		int eventIdId         = cursor.getColumnIndex(KEY_EVENTID);
 		int feedIdId		  = cursor.getColumnIndex(KEY_FEEDID);
@@ -262,8 +263,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	}
 
 
-	void insert( String tableName, ContentValues initialValues ) throws DatastoreException
-	{
+	void insert( String tableName, ContentValues initialValues ) throws DatastoreException {
 		SQLiteDatabase db = getDatabase();
 
 		long newRowId=77; // why 77
@@ -298,8 +298,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	}
 	
 
-	void delete( String tableName, String eventID ) throws DatastoreException
-	{
+	void delete( String tableName, String eventID ) throws DatastoreException {
 		int numDelRows = -1;
 
 		Log.i(LOG_TAG, "delete( " +tableName+ ", " +eventID+ " )");
@@ -652,8 +651,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	/*
 	 * Retrieves all rows in the WebEvents table.
 	 */
-	public List<BELEvent> getAllWebEvents() throws SQLException
-	{
+	public List<BELEvent> getAllWebEvents() throws SQLException {
 	
 		Log.i(LOG_TAG, "getAllWebEvents()");
 
@@ -728,8 +726,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	/*
 	 * Removes all rows in the WebEvents table.
 	 */
-	void deleteAllWebEvents() throws DatastoreException
-	{
+	void deleteAllWebEvents() throws DatastoreException {
 		Log.i(LOG_TAG, "deleteAllWebEvents()");
 
 		getDatabase().delete( DATABASE_WEB, null, null );

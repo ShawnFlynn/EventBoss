@@ -16,8 +16,6 @@ import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import android.app.ActionBar;
-import android.app.ProgressDialog;
-import android.app.ActionBar.Tab;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -25,6 +23,7 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Debug;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -59,7 +58,9 @@ import com.tssg.eventsource.BELEvent;
 // TODO: replace ActionBar.Tab functionality with Material Design
 @SuppressWarnings("deprecation")
 public class EB2MainActivity extends FragmentActivity
-							 implements ActionBar.TabListener, EventFragmentCoordinator {
+							 implements ActionBar.TabListener,
+										EventFragmentCoordinator,
+										EB2Interface {
 
 	static final String TAG = "EB2MainActivity";
 
@@ -76,7 +77,7 @@ public class EB2MainActivity extends FragmentActivity
 //	private static final boolean DEBUG = true;
 
 	// Get the DEBUG flag
-	public static boolean DEBUG() {
+	public boolean DEBUG() {
 		return DEBUG;
 	}
 
@@ -87,21 +88,33 @@ public class EB2MainActivity extends FragmentActivity
 	private static final boolean bDEVELOPER_MODE = false;
 
 	// Action bar
-	private static ActionBar m_actionBar;
+	private static ActionBar mActionBar;
 
 	// Get Action Bar
-	public static ActionBar getM_actionBar() {
-		return m_actionBar;
+	public ActionBar getEB2ActionBar() {
+		return mActionBar;
 	}
 
 	// Database helper
 	private static DatabaseHelper mDbh;
 
+	// Database name
+	private final String DATABASE_NAME = "EventStore";
+
+	// Get the DB name
+	// internal or on the SD card - if mounted
+	public String getDBName() {
+		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()))
+			return context.getExternalFilesDir(null).getAbsolutePath() + "/" + DATABASE_NAME;
+		else
+			return DATABASE_NAME;
+	}
+
 	// Resources
 	private static Resources mResources = null;
 
 	// Get Resources
-	public static Resources getmResources() {
+	public Resources getEB2Resources() {
 		return mResources;
 	}
 
@@ -113,42 +126,44 @@ public class EB2MainActivity extends FragmentActivity
 	private static String[] mFeedNameArray = null;	// Feed name string array
 	private static String[] mFeedURLArray  = null;	// Feed URL string array
 
-	// Get the Feed name
-	public static String getFeedName() {
+	// Get Feed Name
+	public String getFeedName() {
 		return mFeedName;
-	}
-
-	// Get the Feed URL
-	public static String getFeedURL() {
-		return mFeedURL;
 	}
 
 	// String to hold Current/Stored string for tab 0 label
 	private static volatile String tab0Label;
 
 	// Get tab 0 label
-	public static String getTab0Label() {
+	public String getTab0Label() {
 		return tab0Label;
 	}
 
 	// Set tab 0 label
-	public static void setTab0Label(String tabString) {
+	public void setTab0Label(String tabString) {
 		tab0Label = tabString;
+	}
+
+	// Set the Current Tab Label in the action bar
+	public void setCurrentTabLabel(String labelText) {
+		Log.i(TAG, "setTabLabel(" + labelText + ")");
+
+		mActionBar.getSelectedTab().setText(labelText);
 	}
 
 	// Current feed ID
 	private static volatile int mFeedId = 1; // start with New Hampshire, it's a short list
 
 	// Get the current feed ID
-	public static int getFeedId() {
+	public int getFeedId() {
 		return mFeedId;
 	}
 
 	// Set the current feed ID
-	public static void setFeedId(int feedId) {
+	public void setFeedId(int feedId) {
 
 		// Check validity
-		if (feedId >= getM_webEventsListA().size())
+		if (feedId >= eventsListCacheSize)
 			return;
 
 		// Set the specified feed ID
@@ -163,80 +178,88 @@ public class EB2MainActivity extends FragmentActivity
 	private static int oldFeedId = mFeedId; // backup copy
 
 	// Get the old feed ID
-	public static int getOldFeedId() {
+	public int getOldFeedId() {
 		return oldFeedId;
 	}
 
 	// Set the old feed ID
-	public static void setOldFeedId(int feedId) {
+	public void setOldFeedId(int feedId) {
 
 		// Check validity
-		if (feedId >= getM_webEventsListA().size())
+		if (feedId >= eventsListCacheSize)
 			return;
 
 		oldFeedId = feedId;
 	}
 
 	// Current date and time
-	private static final Date m_channelDate = new Date(System.currentTimeMillis());
+	private static final Date currentDate = new Date(System.currentTimeMillis());
 
 	// Get Current Date
-	public static Date getM_channelDate() {
-		return m_channelDate;
+	public Date getCurrentDate() {
+		return currentDate;
 	}
 
 	// RSS data as saved text; use for debugging
 	private static String m_mainEventText;
 
 	// Get Main Event Text
-	public static String getM_mainEventText() {
-		return m_mainEventText;
-	}
-
-	// Set Main Event Text
-	public static void setM_mainEventText(String m_mainEventText) {
-		EB2MainActivity.m_mainEventText = m_mainEventText;
-	}
+	public String getMainEventText() {
+	return m_mainEventText;
+}
 
 	// RSS data from feed
-	private static volatile List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();
+	private static volatile List<BELEvent> currentEventsList = new ArrayList<BELEvent>();
 
 	// Get Web Events List
-	public static List<BELEvent> getM_webEventsList() {
-		return m_webEventsList;
+	public List<BELEvent> getCurrentEventsList() {
+		return currentEventsList;
 	}
 
 	// Set Web Events List
-	public static void setM_webEventsList(List<BELEvent> m_webEventsList) {
-		EB2MainActivity.m_webEventsList = m_webEventsList;
+	public void setCurrentEventsList(List<BELEvent> eventsList) {
+		currentEventsList = eventsList;
 	}
 
 	// The use of this is to save the lists in an array indexed by feedId for rapid reload.
-	private static CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA = new CopyOnWriteArrayList<List<BELEvent>>();
+	private static CopyOnWriteArrayList<List<BELEvent>> eventsListCache = new CopyOnWriteArrayList<List<BELEvent>>();
 
 	// Populate Web Events List A = cache
 	static {
 		// KLUGE ALERT: hard-coded sizing.
 		// Maybe m_webEventsListA should not be static
 		// final int n_copies = getResources().getStringArray(R.array.rss_src_names).length;
-		getM_webEventsListA().addAll(Collections.nCopies(SettingsActivity.RBG_CHOICES, Collections.<BELEvent>emptyList()));
+		eventsListCache.addAll(Collections.nCopies(SettingsActivity.RBG_CHOICES, Collections.<BELEvent>emptyList()));
 	}
 
-	// Get Web Events List A = cache
-	public static CopyOnWriteArrayList<List<BELEvent>> getM_webEventsListA() {
-		return m_webEventsListA;
+	// Events List Cache size
+	private static int eventsListCacheSize = eventsListCache.size();
+
+	// Get Events List Cache size
+	public int getEventsListCacheSize() {
+		return eventsListCacheSize;
 	}
 
-	// Set Web Events List A = cache
-	public static void setM_webEventsListA(CopyOnWriteArrayList<List<BELEvent>> m_webEventsListA) {
-		EB2MainActivity.m_webEventsListA = m_webEventsListA;
+	// Events List cache is empty
+	public boolean EventsListCacheIsEmpty(int feedId) {
+		return eventsListCache.get(feedId).isEmpty();
+	}
+
+	// Get Events List cache entry
+	public List<BELEvent> getEventsListCache(int feedId) {
+		return eventsListCache.get(feedId);
+	}
+
+	// Set Events List cache entry
+	public void setEventsListCache(int feedId, List<BELEvent> eventsList) {
+		eventsListCache.set(feedId, eventsList);
 	}
 
 	// Current Section fragment data
 	private static CurrentSectionFragment currentData = null;
 
 	// Get Current Section fragment data
-	public static CurrentSectionFragment getCurrentData() {
+	public CurrentSectionFragment getCurrentData() {
 		return currentData;
 	}
 
@@ -251,7 +274,7 @@ public class EB2MainActivity extends FragmentActivity
 	private static event_list last_list = event_list.Current;
 
 	// Get last events list
-	public static event_list getLast_list() {
+	public event_list getLastList() {
 		return last_list;
 	}
 
@@ -271,27 +294,17 @@ public class EB2MainActivity extends FragmentActivity
 	 */
 	ViewPager mViewPager;
 
-	// Progress Dialog
-	private static ProgressDialog pDialog = null;
-
-	// Get Progress dialog
-	public static ProgressDialog getProgressDialog() {
-		return pDialog;
-	}
-
 	// Dual Pane flag
 	private static boolean mDualPane;
 
 	// Current tab selected index
 	private volatile int mTabSelected = -1;
 
-	// Current event fragment
-	private static EventDetailFragment mEventFragment;
-
 	// Reading from internal file flag
 	private static final boolean readingFromInternalFile = false;
 
-	public static boolean isReadingFromInternalFile() {
+	// Get reading from file flag
+	public boolean ifReadingFromInternalFile() {
 		return readingFromInternalFile;
 	}
 
@@ -299,7 +312,7 @@ public class EB2MainActivity extends FragmentActivity
 	private static String internalFilePath = null;
 
 	// Get internal file path
-	public static String getInternalFilePath() {
+	public String getInternalFilePath() {
 		return internalFilePath;
 	}
 
@@ -315,23 +328,15 @@ public class EB2MainActivity extends FragmentActivity
 		return (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 	}
 
-	// Set Tab 0 Label in the action bar
-	public static void setTabLabel(String labelText) {
-		Log.i(TAG, "setTabLabel(" + labelText + ")");
-
-		Tab currentTab = getM_actionBar().getSelectedTab();
-		currentTab.setText(labelText);
-	}
-
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 
 		Log.i(TAG, "onConfigurationChanged()");
-		Log.d(TAG, getmResources().getString(R.string.DetectedConfig));
+		Log.d(TAG, mResources.getString(R.string.DetectedConfig));
 
 		if (DEBUG) {
-			Toast.makeText(context, getmResources().getString(R.string.DetectedConfig) + " ",
+			Toast.makeText(context, mResources.getString(R.string.DetectedConfig) + " ",
 							Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -348,27 +353,23 @@ public class EB2MainActivity extends FragmentActivity
 		context = this;
 
 		// Get a database helper
-		mDbh = new DatabaseHelper(getContext());
+		mDbh = new DatabaseHelper(context);
 
 		if (bTRACE) {
 			// trace file is created in SD device
 			Debug.startMethodTracing("trace.file");
 			if (DEBUG)
-				MakeToast.makeToast(this, getmResources().getString(R.string.startTrace) + " ",
+				MakeToast.makeToast(this, mResources.getString(R.string.startTrace) + " ",
 									MakeToast.LEVEL_DEBUG);
 		}
 
 		// setContentView
 		setContentView(R.layout.activity_main);
 
-		// Create a Progress dialog
-		pDialog = new ProgressDialog(EB2MainActivity.this);
-
 		// Setup mFeedID using Intent Extras
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {
-			// problem: getInt returns 0 if key is absent, but key is a valid
-			// feed#
+			// problem: getInt returns 0 if key is absent, but 0 key is a valid feed #
 			int arg = extras.getInt("feedId", mFeedId);
 			oldFeedId = mFeedId;
 			setFeedId(arg);
@@ -379,14 +380,14 @@ public class EB2MainActivity extends FragmentActivity
 		mResources = getResources();
 
 		// Get the feed name and URL arrays
-		mFeedNameArray = getmResources().getStringArray(R.array.eventslists);
-		mFeedURLArray  = getmResources().getStringArray(R.array.rss_src_names);
+		mFeedNameArray = mResources.getStringArray(R.array.eventslists);
+		mFeedURLArray  = mResources.getStringArray(R.array.rss_src_names);
 
 		// Set the current Feed ID, name and URL
 		setFeedId(mFeedId);
 
 		// Initialize tab 0 label
-		tab0Label = getmResources().getString(R.string.Current);
+		tab0Label = mResources.getString(R.string.Current);
 
 		// StrictMode is a developer tool which detects things you might be
 		// doing but not intentionally
@@ -412,14 +413,14 @@ public class EB2MainActivity extends FragmentActivity
 		// Get the specified feed data
 		if (savedInstanceState == null) {
 
-			Log.d(TAG, "URL: " + getFeedURL());
+			Log.d(TAG, "URL: " + mFeedURL);
 
 			// Instantiate the asyncTask passing the context
 			RSSFeedReader feedReader = new RSSFeedReader(context);
 
 			// Execute the asyncTask passing the desired feed URL
 			try {
-				feedReader.execute(new URL(getFeedURL()));
+				feedReader.execute(new URL(mFeedURL));
 			} catch (MalformedURLException e) {
 				Log.e(TAG, "feedReader.execute() error");
 				e.printStackTrace();
@@ -440,17 +441,17 @@ public class EB2MainActivity extends FragmentActivity
 		mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
 
 		// Set up the action bar.
-		m_actionBar = getActionBar();
+		mActionBar = getActionBar();
 
 		// Check for valid actionBar
-		if (m_actionBar != null) {
+		if (mActionBar != null) {
 
 			// Specify that the Home/Up button should not be enabled, since
 			// there is no hierarchical parent.
-			m_actionBar.setHomeButtonEnabled(false);
+			mActionBar.setHomeButtonEnabled(false);
 
 			// Specify that we will be displaying tabs in the action bar.
-			m_actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+			mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
 			// Set up the ViewPager, attaching the adapter and setting up a
 			// listener
@@ -466,7 +467,7 @@ public class EB2MainActivity extends FragmentActivity
 					// When swiping between different app sections, select the
 					// corresponding tab. We can also use ActionBar.Tab#select()
 					// to do this if we have a reference to the Tab.
-					m_actionBar.setSelectedNavigationItem(position);
+					mActionBar.setSelectedNavigationItem(position);
 				}
 			});
 
@@ -479,26 +480,27 @@ public class EB2MainActivity extends FragmentActivity
 
 				switch (i) {
 				case 0: // "Current Tab"
-					m_actionBar.addTab(m_actionBar.newTab().setText(tab0Label).setTabListener(this));
+					mActionBar.addTab(mActionBar.newTab()
+							  .setText(tab0Label)
+							  .setTabListener(this));
 					break;
 
 				case 1: // "Saved Tab"
-					m_actionBar.addTab(
-							m_actionBar.newTab().setText(getmResources().getString(R.string.Saved)).setTabListener(this));
+					mActionBar.addTab(mActionBar.newTab()
+							  .setText(mResources.getString(R.string.Saved))
+							  .setTabListener(this));
 					break;
 
 				case 2: // "Search Tab"
-					m_actionBar.addTab(
-							m_actionBar.newTab().setText(getmResources().getString(R.string.Search)).setTabListener(this));
+					mActionBar.addTab(mActionBar.newTab()
+							  .setText(mResources.getString(R.string.Search))
+							  .setTabListener(this));
 					break;
 
-				case 3: // Will have to use the display detail
-					m_actionBar.addTab(
-							m_actionBar.newTab().setText(getmResources().getString(R.string.Event)).setTabListener(this));
-					break;
 				}
-			}
-		} // valid m_actionBar (not null)
+
+			}	//	getCount()
+		}	//	m_actionBar != null
 
 		if (readingFromInternalFile) {
 			File file = getBaseContext().getFileStreamPath(eventListFileName);
@@ -561,14 +563,14 @@ public class EB2MainActivity extends FragmentActivity
 		Log.i(TAG, "onDestroy()");
 
 		// Clear the cache events
-		for (List<BELEvent> lbel : getM_webEventsListA()) {
+		for (List<BELEvent> lbel : eventsListCache) {
 			if (lbel != Collections.EMPTY_LIST) {
 				lbel.clear();
 			}
 		}
 
 		// Clear the cache
-		getM_webEventsListA().clear();
+		eventsListCache.clear();
 
 		super.onDestroy();
 
@@ -609,7 +611,10 @@ public class EB2MainActivity extends FragmentActivity
 			 *    Parameters:	eventID, EventType
 			 *----------------------------------------------------------------*/
 
+			// Display the appropriate actionBar
 			displayEventDetails("", mTabSelected);
+			// Force an actionBar change
+			invalidateOptionsMenu();
 		}
 
 		mViewPager.setCurrentItem(tab.getPosition());
@@ -658,57 +663,50 @@ public class EB2MainActivity extends FragmentActivity
 
 			Log.i(TAG, "getItem(" + i + ")");
 
-			final String ARG_SECTION_NUMBER1 = "Current";
-			final String ARG_SECTION_NUMBER2 = "Saved";
-			final String ARG_SECTION_NUMBER3 = "Search";
+			final String ARG_SECTION_CURRENT = "Current";
+			final String ARG_SECTION_SAVED   = "Saved";
+			final String ARG_SECTION_SEARCH  = "Search";
 			final String ARG_TAB_ID = "";
 			Fragment fragment;
 			Bundle args;
 
 			switch (i) {
 			case 0:
-				Log.d(TAG, "---" + ARG_SECTION_NUMBER1 + ": tab = 0 *");
+				Log.d(TAG, "---" + ARG_SECTION_CURRENT + ": tab = 0 *");
 				currentData = new CurrentSectionFragment();
 				fragment = currentData;
 				args = new Bundle();
-				args.putInt(ARG_SECTION_NUMBER1, 1);
+				args.putInt(ARG_SECTION_CURRENT, 1);
 				args.putBoolean(ARG_TAB_ID, false);
 				fragment.setArguments(args);
 				return fragment;
 
 			case 1:
-				Log.d(TAG, "---" + ARG_SECTION_NUMBER2 + ": tab = 1 *");
+				Log.d(TAG, "---" + ARG_SECTION_SAVED + ": tab = 1 *");
 				savedData = new SavedSectionFragment();
 				fragment = savedData;
 				args = new Bundle();
-				args.putInt(ARG_SECTION_NUMBER2, 2);
+				args.putInt(ARG_SECTION_SAVED, 2);
 				args.putBoolean(ARG_TAB_ID, true);
 				fragment.setArguments(args);
 				return fragment;
 
 			case 2:
-				Log.d(TAG, "---" + ARG_SECTION_NUMBER3 + ": tab = 2 *");
+				Log.d(TAG, "---" + ARG_SECTION_SEARCH + ": tab = 2 *");
 				searchData = new SearchSectionFragment();
 				fragment = searchData;
 				args = new Bundle();
-				args.putInt(ARG_SECTION_NUMBER3, 3);
+				args.putInt(ARG_SECTION_SEARCH, 3);
 				args.putBoolean(ARG_TAB_ID, false);
 				fragment.setArguments(args);
 				return fragment;
 
-			default:
-				if (mDualPane) {
-					fragment = savedData;
-				} else {
-					Log.d(TAG, "--- Single Pane Event: tab = 3 *");
-					mEventFragment = new EventDetailFragment();
-					fragment = mEventFragment;
-				}
-				return fragment;
+			}	// end switch()
 
-			} // end switch()
+			// Default
+			return currentData;
 
-		} // end - getItem()
+		}	// end - getItem()
 
 		@Override
 		public int getCount() {
@@ -719,15 +717,14 @@ public class EB2MainActivity extends FragmentActivity
 		@Override
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
-			case 0:
-				return ("Current List");
-			case 1:
-				return ("Saved List");
-			case 2:
-				return ("Search");
-			case 3:
-				return ("Event");
+				case 0:
+					return ("Current List");
+				case 1:
+					return ("Saved List");
+				case 2:
+					return ("Search");
 			}
+			// Default
 			return "Section: " + (position + 1);
 		}
 
@@ -737,7 +734,8 @@ public class EB2MainActivity extends FragmentActivity
 	// feed name
 	// date
 	// number of events
-	public static void updateListHeader(int EventCount) {
+
+	public void updateListHeader(int EventCount) {
 
 		Log.i(TAG, "updateListHeader(" + EventCount + " Events)");
 
@@ -745,17 +743,16 @@ public class EB2MainActivity extends FragmentActivity
 
 		// This should be the current date or the date when data was saved into the database
 		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault());
-		String channelDate = EB2MainActivity.getM_channelDate() == null ?
-											"--" : simpFormat.format(EB2MainActivity.getM_channelDate());
+		String channelDate = currentDate == null ? "--" : simpFormat.format(currentDate);
 
 		// Get "Event" or "Events" based on event count
 		if (EventCount == 1)
-			tempEvents = getmResources().getString(R.string.Event);
+			tempEvents = mResources.getString(R.string.Event);
 		else
-			tempEvents = getmResources().getString(R.string.Events);
+			tempEvents = mResources.getString(R.string.Events);
 
 		// Set Current Events List header string
-		String tempString = getFeedName() +
+		String tempString = mFeedName +
 							" @ " +
 							channelDate + 
 							": " +
@@ -822,7 +819,7 @@ public class EB2MainActivity extends FragmentActivity
 		}
 
 		try {
-			setM_mainEventText(convertStreamToString(stream));
+			m_mainEventText = convertStreamToString(stream);
 		} finally {
 			try {
 				stream.close();
@@ -832,7 +829,7 @@ public class EB2MainActivity extends FragmentActivity
 		}
 
 		// log.i("EventListDisplay", "rxml file: " + m_mainEventText);
-		return getM_mainEventText();
+		return m_mainEventText;
 
 	} // end - ReadEventsFromText()
 
@@ -1002,7 +999,7 @@ public class EB2MainActivity extends FragmentActivity
 
 			if (tab_2) {
 				// Force a Search tab (2) selection
-				getActionBar().setSelectedNavigationItem(2);
+				mActionBar.setSelectedNavigationItem(2);
 			} else {
 
 				// Get a SearchSectionFragment
@@ -1023,11 +1020,13 @@ public class EB2MainActivity extends FragmentActivity
 			break;
 
 		default:
-			Log.d(TAG, " " + getmResources().getString(R.string.unimplemented) + " " + Integer.toHexString(optionSelected)
-					+ " " + getmResources().getString(R.string.pressed));
+			Log.d(TAG, " " + mResources.getString(R.string.unimplemented) +
+					   " " + Integer.toHexString(optionSelected) +
+					   " " + mResources.getString(R.string.pressed));
 			if (DEBUG) {
 				Toast.makeText(context,
-						" " + Integer.toHexString(optionSelected) + " " + getmResources().getString(R.string.pressed),
+						" " + Integer.toHexString(optionSelected) +
+						" " + mResources.getString(R.string.pressed),
 						Toast.LENGTH_SHORT).show();
 			}
 			break;
@@ -1104,7 +1103,8 @@ public class EB2MainActivity extends FragmentActivity
 		Log.i(TAG, "displayEventDetail(" + eventID + ")");
 
 		String humanReadableType[] = { "Current", "Saved", "Search" };
-		Log.d(TAG, "displayEventDetails(String eventID = " + eventID + ", EventType = " + humanReadableType[EventType]);
+		Log.d(TAG,  "displayEventDetails(String eventID = " + eventID + 
+					", EventType = " + humanReadableType[EventType]);
 
 		if (mDualPane) {
 			// for a dual-pane view (tablet) - the fragment implements the
@@ -1114,13 +1114,15 @@ public class EB2MainActivity extends FragmentActivity
 			mEventItemFrag.setEventId(eventID);
 			mEventItemFrag.setListType(EventType);
 			mEventItemFrag.setDBhelper(new DatabaseHelper(context));
-			Log.d(TAG, "displayEventDetails: DualPane:" + " eventID: " + eventID + " +eventType: " + EventType
-					+ humanReadableType);
+			Log.d(TAG, "displayEventDetails: DualPane:" +
+					   " eventID: " + eventID +
+					   " +eventType: " + EventType +
+					   humanReadableType);
 			FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 			transaction.replace(R.id.eventData, mEventItemFrag);
 			Integer i = R.id.eventData;
-			Log.d(TAG, "id.eventData: " + Integer.toHexString(i) + "," + " eventItem " + mEventItemFrag);
-			// transaction.addToBackStack(null);
+			Log.d(TAG, "id.eventData: " + Integer.toHexString(i) +
+					   "," + " eventItem " + mEventItemFrag);
 			transaction.commit();
 
 		} else {

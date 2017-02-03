@@ -33,10 +33,9 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 	protected final String TAG = getClass().getSimpleName();
 
-	//	public static boolean mListType = false;		// not the saved list
-	public static int mListType = 0;					// -> currentList
+	public static int mListType = 0;	// -> currentList
 	public static TextView mListHeader;
-	public static int mPosition = -1;	// probably not needed
+	public static int mPosition = -1;
 	public static long mId;
 
 	Cursor mCursor = null;
@@ -48,11 +47,17 @@ public class CurrentSectionFragment extends EventBossListFragment {
 	ViewGroup mViewGroup;
 	ListView mLV;
 
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+
 	// also see eventDetailActivity
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.i(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
+
+		Log.i(TAG, "onCreate()");
+
 		if ( dbh == null ) {
 			dbh = new DatabaseHelper(getActivity());
 		}
@@ -92,8 +97,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location};
 
 		// Setup the list header
-		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader,
-														 null);
+		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
 
 		mEventItemCount = mCursor.getCount();
 		mLV = getListView();
@@ -157,15 +161,15 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		Log.i(TAG, "updateList()");
 
 		// Set the proper tab label (Current or Stored)
-		if (EB2MainActivity.getM_actionBar().getSelectedTab().getPosition() == 0)
-			EB2MainActivity.setTabLabel(EB2MainActivity.getTab0Label());
+		if (EB2.getEB2ActionBar().getSelectedTab().getPosition() == 0)
+			EB2.setCurrentTabLabel(EB2.getTab0Label());
 
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
 		mEventItemCount = mCursor.getCount();
 
 		Log.d(TAG, "count: " +mEventItemCount);
-		updateListHeader(EB2MainActivity.getFeedName());
+		updateListHeader(EB2.getFeedName());
 
 		setListAdapter(mAdapter);
 
@@ -173,13 +177,15 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 	void updateListHeader( String extraText )  {
 
+		Log.i(TAG, "updateListHeader()");
+
 		// Create a list-header (TextView) and add it to the list like this:
 
 		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm",
 														Locale.getDefault() );
 		Date m_channelDate = new Date(System.currentTimeMillis());
 		String channelDate = m_channelDate == null?
-					"--" : simpFormat.format(EB2MainActivity.getM_channelDate());
+				"--" : simpFormat.format(EB2.getCurrentDate());
 
 		// This should be the current date or the date when data was saved into the database
 		mListHeader.setText(extraText + " @ " +channelDate+ ": "

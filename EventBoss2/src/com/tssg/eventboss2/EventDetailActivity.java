@@ -25,7 +25,6 @@ import android.provider.CalendarContract.Events;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
-//import java.util.Date;
 
 /**
  * An activity representing a single Event detail screen. This activity is only
@@ -43,8 +42,14 @@ public class EventDetailActivity extends FragmentActivity {
 	public Context context = this;
 	public static long mId;
 	public static int mType;
-	private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity())
-	EventDetailFragment mDetailFragment = new EventDetailFragment();	////<-----
+	private DatabaseHelper mDbh;
+	EventDetailFragment mDetailFragment = new EventDetailFragment();
+
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+	// Local DEBUG flag
+	private final boolean DEBUG = EB2.DEBUG();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +135,7 @@ public class EventDetailActivity extends FragmentActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
-		Log.i(TAG, "onCreateoptionsMenu()");
+		Log.i(TAG, "onCreateOptionsMenu()");
 
 		// inflate menu items for the action bar (will be called every time the activity starts)
 		MenuInflater inflater= getMenuInflater();
@@ -163,7 +168,7 @@ public class EventDetailActivity extends FragmentActivity {
 				//
 				NavUtils.navigateUpTo(this,
 								new Intent(this, EventDetailActivity.class));
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					MakeToast.makeToast(this,
 								"Up Nav - implemented", MakeToast.LEVEL_DEBUG);
 				break;
@@ -172,12 +177,12 @@ public class EventDetailActivity extends FragmentActivity {
 				/* can do this only if in CurrentSectionFragment */
 				Log.d(TAG, "Save Selected - "+CurrentSectionFragment.mId);
 				if(CurrentSectionFragment.mId == 0)  {
-					if (EB2MainActivity.DEBUG())
+					if (DEBUG)
 						Toast.makeText(context,
 									" - Save only from Current Tab",
 									Toast.LENGTH_LONG).show();
 					break;}
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					Toast.makeText(context,
 									" - Save selected event",
 									Toast.LENGTH_LONG).show();
@@ -194,14 +199,14 @@ public class EventDetailActivity extends FragmentActivity {
 			case R.id.idDeleteSelected:
 				/* can do this only if in SavedSectionFragment */
 				if(SavedSectionFragment.mId == 0)  {
-					if (EB2MainActivity.DEBUG())
+					if (DEBUG)
 						Toast.makeText(context,
 										" - Delete only from Saved Tab",
 										Toast.LENGTH_LONG).show();
 					break;
 				}
 				Log.d(TAG, "Delete Selected - " + SavedSectionFragment.mId);
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					Toast.makeText(context,
 									" - Delete Selected Saved",
 									Toast.LENGTH_LONG).show();
@@ -213,7 +218,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 				NavUtils.navigateUpTo(this,
 								new Intent(this, EventDetailActivity.class));
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					MakeToast.makeToast(this,
 										"Up Nav - go back to listview",
 										MakeToast.LEVEL_DEBUG);
@@ -221,7 +226,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 			case R.id.action_calendar:
 				Log.d(TAG, " Calendar" + mDetailFragment.mId);
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					Toast.makeText(context,
 									" Calendar",
 									Toast.LENGTH_SHORT).show();
@@ -235,7 +240,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 			case R.id.action_share:
 				Log.d(TAG, " - idShare pressed");
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					Toast.makeText(context,
 									"Share",
 									Toast.LENGTH_SHORT).show();
@@ -310,13 +315,13 @@ public class EventDetailActivity extends FragmentActivity {
 		android:showAsAction="ifRoom"
 		android:actionProviderClass="foo.bar.SomeActionProvider" />
 
-See Also:
-MenuItem.setActionProvider(ActionProvider)
-MenuItem.getActionProvider()
+	See Also:
+	MenuItem.setActionProvider(ActionProvider)
+	MenuItem.getActionProvider()
 
  */
 
-		if (EB2MainActivity.DEBUG())
+		if (DEBUG)
 			Toast.makeText(this, "doTheShare" + " ",
 								Toast.LENGTH_SHORT).show();
 
@@ -339,4 +344,4 @@ MenuItem.getActionProvider()
 
 	}	//  end - ProcessShare()
 
-}  // end - EventDetailActivity
+}	//	end - EventDetailActivity class

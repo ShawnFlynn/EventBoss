@@ -17,51 +17,58 @@ import android.util.Log;
  */
 public class BELEventlist {
 
-    public static final String TAG = "BELEventsList";   // log's tag
-    private RSSFeedReader currentTask = null;
+	protected final String TAG = getClass().getSimpleName();
 
-    List<BELEvent> rssEventList;
+	private RSSFeedReader currentTask = null;
 
-    /** @param RSSFeedReader is needed to publish progress callback */
-    public BELEventlist( RSSFeedReader currentTask) {
-        super();
-        this.currentTask = currentTask;
-    }
+	List<BELEvent> rssEventList;
 
-    /** Loads the RSS feed
-     * @return EMPTY_LIST on error
-     * @param feed_URL
-     */
-    public List<BELEvent> getBELEventlist( URL[] feed_URL ){
-        // open the RSS feed:
-        // reads, formats Events and returns a list of Events or
-        // (if there were exceptions) it returns an empty list
-        try {
-            return loadFeed(String.valueOf(feed_URL[0]));
-        } catch (RuntimeException e) {
-            Log.e(TAG,e.getMessage(),e);
-            return Collections.<BELEvent>emptyList();   // an empty list
-        }
-    }   // getBELEventList
+	/** @param RSSFeedReader is needed to publish progress callback */
+	public BELEventlist( RSSFeedReader currentTask) {
+		super();
+		Log.i(TAG, "BELEventList()");
+		this.currentTask = currentTask;
+	}
 
-    /**
-     * Load all the events from the RSS feed
-     * @param feedUrl the URL for the RSS feed
-     * @return List<BELEventList> The list of events
-     * @throws RuntimeException on any error
-     */
-    private List<BELEvent> loadFeed( String feedUrl ) {
-        try {
-            BELSourceForEvents eventSource = new BELSourceForEventsImpl(feedUrl, this.currentTask);
-            long start = System.currentTimeMillis();
-            rssEventList = eventSource.getCurrentEventList();   // here the parser makes BELSourcedEvent msg
-            long duration = System.currentTimeMillis() - start;
-            Log.i(TAG, "Parser duration=" + duration + ", size=" + rssEventList.size());
-        } catch (Exception e){
-            Log.e(TAG,e.getMessage(),e);
-            throw new RuntimeException( e );
-        }
-        return rssEventList;
-    }   // loadFeed
+	/** Loads the RSS feed
+	 * @return EMPTY_LIST on error
+	 * @param feed_URL
+	 */
+	public List<BELEvent> getBELEventlist( URL[] feed_URL ){
+		Log.i(TAG, "getBelEventList()");
 
-}
+		// open the RSS feed:
+		// reads, formats Events and returns a list of Events or
+		// (if there were exceptions) it returns an empty list
+		try {
+			return loadFeed(String.valueOf(feed_URL[0]));
+		} catch (RuntimeException e) {
+			Log.e(TAG,e.getMessage(),e);
+			return Collections.<BELEvent>emptyList();   // an empty list
+		}
+	}	//	end - getBELEventList()
+
+	/**
+	 * Load all the events from the RSS feed
+	 * @param feedUrl the URL for the RSS feed
+	 * @return List<BELEventList> The list of events
+	 * @throws RuntimeException on any error
+	 */
+	private List<BELEvent> loadFeed( String feedUrl ) {
+		Log.d(TAG, "loadFeed()");
+
+		try {
+			BELSourceForEvents eventSource = new BELSourceForEventsImpl(feedUrl, this.currentTask);
+			long start = System.currentTimeMillis();
+			rssEventList = eventSource.getCurrentEventList();   // here the parser makes BELSourcedEvent msg
+			long duration = System.currentTimeMillis() - start;
+			Log.i(TAG, "Parser duration=" + duration + ", size=" + rssEventList.size());
+		} catch (Exception e){
+			Log.e(TAG,e.getMessage(),e);
+			throw new RuntimeException( e );
+		}
+		return rssEventList;
+
+	}	//	end - loadFeed()
+
+}	//	end - BELEventList class

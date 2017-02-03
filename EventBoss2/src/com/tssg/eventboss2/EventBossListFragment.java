@@ -19,10 +19,9 @@ public abstract class EventBossListFragment extends ListFragment {
 	/** Indirectly (via an {@link Activity } invokes operations on other fragments **/
 	protected EventFragmentCoordinator eventFragmentCoordinator;
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onAttach(Activity activity) {
-		super.onAttach(activity);
-		
 		super.onAttach(activity);
 		try {
 			eventFragmentCoordinator = (EventFragmentCoordinator) activity;

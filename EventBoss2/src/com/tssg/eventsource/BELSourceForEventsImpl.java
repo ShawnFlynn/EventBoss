@@ -27,13 +27,13 @@ import android.util.Xml;
 
 abstract class BaseFeedParser implements BELSourceForEvents {
 
-	protected final static String TAG = "BaseFeedParser";
+	private final String TAG = getClass().getSimpleName();
 
 	static final Integer CONNECT_TIMEOUT = 15;	// seconds
 	static final Integer READ_TIMEOUT    = 15;	// seconds
-	
+
 	boolean bLOGGING = false;	// enable/disable logging
-	
+
 	static final String ITEM = "item";
 	static final String GUID = "guid";
 
@@ -41,21 +41,25 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	static final  String DESCRIPTION = "description";
 	static final  String LINK = "link";
 	static final  String TITLE = "title";
-	
+
 	static final  String newline = System.getProperty("line.separator");
-	
+
 	/** matches the content p's in the item description */
 	static final  Pattern P_MASTER = Pattern.compile("<p class=\"(\\w+)\">(.*?)</p>", Pattern.DOTALL);
 	static final  Pattern DIV_MASTER = Pattern.compile("<div class = '(\\w+)'>(.*?)</div>", Pattern.DOTALL);
-	
+
 	private final URL feedUrl;
+
+	private String file_path = RSSFeedReader.EB2.getInternalFilePath();
 
 	/**
 	 * 
 	 * @param feedUrl the URL for the feed, like "http://www.bostoneventslist.com/us/bo/events/rss.rxml"
 	 *  @throws RuntimeException in response to MalformedURLException
 	 */
-	protected BaseFeedParser(String feedUrl){
+	protected BaseFeedParser(String feedUrl) {
+		Log.i(TAG, "BaseFeedParser()");
+
 		try {
 			this.feedUrl = new URL(feedUrl);
 		} catch (MalformedURLException e) {
@@ -69,14 +73,16 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	 *  @throws RuntimeException in response to IOException
 	 */
 	protected InputStream getInputStream() {
+		Log.d(TAG, "getInputStream()");
+
 		HttpURLConnection connection = null;
 		InputStream inputStream = null;
 
 		// Set tab label to "Stored"
-		String tabLabel = EB2MainActivity.getmResources().getString(R.string.Stored);
+		String storedTabLabel = RSSFeedReader.EB2.getEB2Resources().getString(R.string.Stored);
 
 		try {
-			if (EB2MainActivity.isReadingFromInternalFile()){
+			if (RSSFeedReader.EB2.ifReadingFromInternalFile()){
 				inputStream = readEventsFromFile();
 			}
 			else{
@@ -97,22 +103,22 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 			}
 			return inputStream;
 		} catch (java.net.SocketTimeoutException ste) {
-			EB2MainActivity.setTabLabel(tabLabel);
+			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
 			String message = "timeout opening URL: " + feedUrl + " (firewall issue?)";
 			Log.e( TAG, message, ste );
 			throw new RuntimeException( message, ste);
 		} catch (FileNotFoundException e) {
-			EB2MainActivity.setTabLabel(tabLabel);
-			String message = "Failed to read events from the file: " + EB2MainActivity.getInternalFilePath();
+			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
+			String message = "Failed to read events from the file: " + file_path;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
 		} catch (IOException e) {
-			EB2MainActivity.setTabLabel(tabLabel);
+			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
 			String message = "Failed to get input stream from URL: " + feedUrl;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
 		}
-		
+
 	}	//  end - getInputStream()
 
 	protected URL getFeedUrl() {
@@ -120,17 +126,18 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	}
 	
 	/** Read from {@link EB2MainActivity#internalFilePath} */
-	private BufferedInputStream readEventsFromFile() throws FileNotFoundException
-	{
+	private BufferedInputStream readEventsFromFile() throws FileNotFoundException {
+		Log.d(TAG, "readEventsFromFile()");
+
 		BufferedInputStream buf = null;
-		
-		if (EB2MainActivity.getInternalFilePath() != null)
+
+		if (file_path != null)
 		{
 			try {
-				buf = new BufferedInputStream(new FileInputStream(EB2MainActivity.getInternalFilePath()));
+				buf = new BufferedInputStream(new FileInputStream(file_path));
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "readEventsFromFile cannot find "
-						+ EB2MainActivity.getInternalFilePath(), e);
+						+ file_path, e);
 				throw e;
 			}
 		}
@@ -149,6 +156,10 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 
 	/** parse out Time. Consider a weakhashmap for times already parsed */
 	static java.util.Date parseEventTime(Pattern pat, String xmlString) {
+		String TAG = "BaseFeedParser";
+
+		Log.d(TAG, "parseEventTime()");
+
 		final Matcher matcher = pat.matcher(xmlString);
 		java.util.Date retval = null;
 		try  {
@@ -164,7 +175,7 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 		return retval;
 	}
 
-}	//  end - BaseFeedParser
+}	//  end - BaseFeedParser class
 
 
 /** A bunch of things changed in the feed XML in May 2014. 
@@ -174,12 +185,11 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 
 	protected final String TAG = getClass().getSimpleName();
 
-//	private EB2MainActivity.ExecFeedReader currentTask = null;
 	private RSSFeedReader currentTask = null;
 
-//	public BELSourceForEventsImpl(String feedUrl, EB2MainActivity.ExecFeedReader currentTask) {
 	public BELSourceForEventsImpl(String feedUrl, RSSFeedReader currentTask) {
 		super(feedUrl);
+		Log.i(TAG, "BELSourceForEventsImpl()");
 		this.currentTask = currentTask;
 	}
 
@@ -188,7 +198,9 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 *  @throws RuntimeException in response to any Exception
 	 */
 	public List<BELEvent> getCurrentEventList() { 
-	
+
+		Log.i(TAG, "getCurrentEventList()");
+
 		List<BELEvent> messages = java.util.Collections.emptyList();
 		InputStream inputStream = null; 
 		// android.os.Debug.startMethodTracing();
@@ -197,12 +209,13 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 			 * if m_mainEventText has no filename       
 			 * 		read from an XML file (a snapshot from the RSS feed) 
 			 * 	else
-			 * 		read from the RSS feed (needs a valid URL)   		
+			 * 		read from the RSS feed (needs a valid URL)
 			 */
-			if( EB2MainActivity.getM_mainEventText() == null)  {
+			String xml = RSSFeedReader.EB2.getMainEventText();
+			if( xml == null)  {
+				String feedName = RSSFeedReader.EB2.getFeedName();
 				// for URL source'd Eventlist
 				// the input stream is read in the base class of this.
-				String feedName = EB2MainActivity.getFeedName();
 				Log.d(TAG, "EventSource,"
 						+ " long pause (4 minutes?)"
 						+ " while we get the network feed for "
@@ -215,7 +228,6 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 						+ feedName); 
 			}
 			else {
-				String xml = EB2MainActivity.getM_mainEventText();
 				Log.d(TAG,  "parsing the feed string" );
 				messages = pullparse(xml);
 				Log.d(TAG,  "parsed the feed string" );
@@ -277,7 +289,7 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	static final int endLabelLen = endLabel.length();
 	static final int maxDescr = 100;	// limit short description to 100 chars
 
-// Parsing routines:   pick out of the data-stream	all elements needed for our display
+	// Parsing routines:   pick out of the data-stream	all elements needed for our display
 
 	/** null constant? */
 	private static final String ns = null;
@@ -289,6 +301,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected List<BELEvent>  pullparse(InputStream in) 
 			throws XmlPullParserException, IOException {
+		Log.i(TAG, "pullparse(InputStream)");
+
 		List<BELEvent>  retval= java.util.Collections.<BELEvent>emptyList();
 		try {
 			XmlPullParser parser = Xml.newPullParser();
@@ -323,6 +337,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected List<BELEvent>  pullparse(String strin) 
 			throws XmlPullParserException, IOException {
+		Log.i(TAG, "pullparse(String)");
+
 		try {
 			XmlPullParser parser = Xml.newPullParser();
 			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -367,6 +383,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	protected List<BELEvent> readFeed(XmlPullParser parser)
 										throws XmlPullParserException,
 										IOException {
+		Log.i(TAG, "readFeed()");
+
 		ArrayList<BELEvent> messages = new ArrayList<BELEvent>(30);
 
 		try {
@@ -405,6 +423,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */ 
 	protected List<BELEvent> readChannel(XmlPullParser parser) 
 			throws IOException, XmlPullParserException {
+
+		Log.i(TAG, "readChannel()");
 
 		ArrayList<BELEvent> messages = new ArrayList<BELEvent>(30);
 		int ii = 0;
@@ -455,7 +475,9 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	protected BELEvent readDiv(String text, BELEvent retval){
+	protected BELEvent readDiv(String text, BELEvent retval) {
+		Log.i(TAG, "readDiv()");
+
 		String divClass;
 		String divContent;
 		final SimpleDateFormat simpFormat = 
@@ -542,6 +564,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readChannelTitle(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readChannelTitle()");
+
 		parser.require(XmlPullParser.START_TAG, ns, TITLE);
 		String title = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, TITLE);
@@ -557,6 +581,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readItemTitle(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readItemTitle()");
+
 		parser.require(XmlPullParser.START_TAG, ns, TITLE);
 		String title = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, TITLE);
@@ -572,6 +598,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readDescription(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readDescription()");
+
 		parser.require(XmlPullParser.START_TAG, ns, DESCRIPTION);
 		String description = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, DESCRIPTION);
@@ -587,6 +615,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readLink(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readLink()");
+
 		parser.require(XmlPullParser.START_TAG, ns, LINK);
 		String link = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, LINK);
@@ -602,6 +632,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readItemLink(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readItemLink()");
+
 		parser.require(XmlPullParser.START_TAG, ns, LINK);
 		String link = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, LINK);
@@ -617,6 +649,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected String readGuidLink(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readGuidLink(msg)");
+
 		parser.require(XmlPullParser.START_TAG, ns, GUID);
 		String link = readText(parser);
 		parser.require(XmlPullParser.END_TAG, ns, GUID);
@@ -626,6 +660,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	/** extract text content */
 	protected String readText(XmlPullParser parser) throws IOException,
 														XmlPullParserException {
+		Log.i(TAG, "readText()");
+
 		String result = "";
 		try {
 			if (parser.next() == XmlPullParser.TEXT) {
@@ -650,6 +686,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	protected BELEvent readItem(XmlPullParser parser)
 												throws XmlPullParserException,
 														IOException {
+		Log.i(TAG, "readItem()");
+
 		String title = null;
 		String linkStr = null;
 
@@ -701,6 +739,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 * @throws XmlPullParserException
 	 */
 	protected BELEvent readP(String text, BELEvent retval){
+		Log.i(TAG, "readP()");
+
 		String pType;
 		String content;
 		final Matcher matcher = P_MASTER.matcher(text);
@@ -764,6 +804,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 											BELEvent retval)
 											throws XmlPullParserException,
 											IOException {
+		Log.i(TAG, "readItemDescription()");
+
 		parser.require(XmlPullParser.START_TAG, ns, DESCRIPTION);
 		String text = readText(parser);
 		text = text.replaceAll("<br />", " ");
@@ -777,6 +819,8 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	 */
 	protected void skip(XmlPullParser parser) throws XmlPullParserException,
 																IOException {
+		Log.i(TAG, "skip()");
+
 		if (parser.getEventType() != XmlPullParser.START_TAG) {
 			throw new IllegalStateException();
 		}
@@ -793,4 +837,4 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 		}
 	}
 
-}	// BELSourceForEventsOld
+}	//	end - BELSourceForEvents class

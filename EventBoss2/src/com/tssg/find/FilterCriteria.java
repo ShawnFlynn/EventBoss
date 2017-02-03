@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.tssg.eventboss2.EB2Interface;
 import com.tssg.eventboss2.EB2MainActivity;
 import com.tssg.eventboss2.R;
 import com.tssg.eventboss2.utils.misc.MakeToast;
@@ -41,6 +42,12 @@ import com.tssg.eventboss2.utils.misc.MakeToast;
 public class FilterCriteria extends Activity {
 
 	protected final String TAG = getClass().getSimpleName();
+
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+	// Local DEBUG flag
+	private final boolean DEBUG = EB2.DEBUG();
 
 	/*
 	 * Inner class to hold Find key and Find value These represent user inputs,
@@ -111,7 +118,7 @@ public class FilterCriteria extends Activity {
 
 		Log.i(TAG, "onCreate()");
 
-		if (EB2MainActivity.DEBUG())
+		if (DEBUG)
 			MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***",
 										MakeToast.LEVEL_USER);
 		
@@ -145,7 +152,7 @@ public class FilterCriteria extends Activity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				// When clicked, show a toast with the TextView text
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					MakeToast.makeToast(getApplicationContext(),
 										((TextView) view).getText().toString(),
 										MakeToast.LEVEL_DEBUG);	
@@ -360,7 +367,7 @@ public class FilterCriteria extends Activity {
 			if (resultCode == RESULT_OK) {
 				findValue = data.getStringExtra(Constants.FIND_VALUE);
 				KeyValue.setFindValue(findValue);
-				if (EB2MainActivity.DEBUG())
+				if (DEBUG)
 					MakeToast.makeToast(getApplicationContext(),
 										"FC; findValue: "
 										+ findValue,
@@ -410,6 +417,7 @@ public class FilterCriteria extends Activity {
 	}
 
 	private void setResultDate(int year, int monthOfYear, int dayOfMonth) {
+		Log.i(TAG, "setResultDate()");
 
 		criteriaDate.set(year, monthOfYear, dayOfMonth, 0, 0, 0);
 	}
@@ -417,19 +425,23 @@ public class FilterCriteria extends Activity {
 	// updates the date in a toast.
 	private void displayToast() {
 
-		String display = new String(new StringBuilder()
+		if (DEBUG) {
+
+			String display = new String(new StringBuilder()
 				// Month is 0 based so add 1
 				.append(cMonth + 1).append("-").append(cDay).append("-")
 				.append(cYear).append(" "));
 
-		if (EB2MainActivity.DEBUG())
 			MakeToast.makeToast(getApplicationContext(), display,
 									MakeToast.LEVEL_DEBUG);
+		}
 	}
 
 	//@Override
 	public boolean onTouch(View v, MotionEvent event) {
+		Log.i(TAG, "onTouch()");
+
 		return false;
 	}
 	
-}	//  end  - FilterCriteria
+}	//  end  - FilterCriteria class

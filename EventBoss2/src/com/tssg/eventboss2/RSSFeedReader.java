@@ -15,6 +15,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -51,6 +52,7 @@ public class RSSFeedReader extends AsyncTask<URL,
 	// Feed ID
 	private static int feedId = 0;
 
+	// Temporary Feed Id
 	private static int oldFeedId = 0;
 
 	// Feed name
@@ -58,6 +60,15 @@ public class RSSFeedReader extends AsyncTask<URL,
 
 	// Cancelled flag
 	private volatile boolean running = true;
+
+	// Get the EB2 Interface
+	public static EB2Interface EB2 = new EB2MainActivity();
+
+	// Local DEBUG flag
+	private final boolean DEBUG = EB2.DEBUG();
+
+	// EB2 resources
+	public Resources mResources = EB2.getEB2Resources();
 
 	// Constructor
 	
@@ -69,13 +80,13 @@ public class RSSFeedReader extends AsyncTask<URL,
 		this.context = context;
 		
 		// Get the specified feed id
-		feedId = EB2MainActivity.getFeedId();
+		feedId = EB2.getFeedId();
 
 		// Get the old feed id
-		oldFeedId = EB2MainActivity.getOldFeedId();
+		oldFeedId = EB2.getOldFeedId();
 
 		// Get the specified feed name
-		feedName = EB2MainActivity.getFeedName();
+		feedName = EB2.getFeedName();
 
 		// Remove progress indicator
 		if (pDialog != null) {
@@ -85,7 +96,7 @@ public class RSSFeedReader extends AsyncTask<URL,
 		}
 
 		// Create and setup the progress indicator
-		pDialog = EB2MainActivity.getProgressDialog();
+		pDialog = new ProgressDialog(context);
 
 		// Set "Cancelable"
 		pDialog.setCancelable(false);
@@ -108,10 +119,10 @@ public class RSSFeedReader extends AsyncTask<URL,
 		Log.i(TAG,  "onPreExecute(" +feedId+ ")");
 
 		// Set the dialog message
-		pDialog.setMessage(EB2MainActivity.getmResources().getString(R.string.ReadingRSSFeed)
-							+ feedId + " "
-							+ feedName
-							+ EB2MainActivity.getmResources().getString(R.string.PleaseWait));
+		pDialog.setMessage( mResources.getString(R.string.ReadingRSSFeed) +
+							feedId + " " +
+							feedName +
+							mResources.getString(R.string.PleaseWait));
 
 		// Specify an indeterminate duration
 		pDialog.setIndeterminate(true);
@@ -128,39 +139,26 @@ public class RSSFeedReader extends AsyncTask<URL,
 		if (null != pDialog) {
 			switch(progress.length) {
 				case 0:
-					pDialog.setMessage(
-						EB2MainActivity.getmResources().getString(
-													R.string.gettingStarted)
-													+ " " + progress[0]);
+					pDialog.setMessage(mResources.getString(R.string.gettingStarted) + " " + progress[0]);
 					break;
 				case 1:
-					pDialog.setMessage(
-							EB2MainActivity.getmResources().getString(
-													R.string.digesting)
-													+ " " + progress[0]);
+					pDialog.setMessage(mResources.getString(R.string.digesting) + " " + progress[0]);
 					break;
 				case 2:
-					pDialog.setMessage(
-							EB2MainActivity.getmResources().getString(
-								R.string.digesting)
-								+ " " +progress[0]+ " " +
-								EB2MainActivity.getmResources().getString(R.string.of)
-								+ " " +progress[1]);
+					pDialog.setMessage(mResources.getString(R.string.digesting) + " " +progress[0]+ " " +
+									   mResources.getString(R.string.of) + " " +progress[1]);
 					break;
 				default:
 					if (progress[2] == 3) {
 						pDialog.setMessage(
-								EB2MainActivity.getmResources().getString(R.string.Storing)
-									+ " " +progress[0]+ " " +
-								EB2MainActivity.getmResources().getString(R.string.of)
-									+ " " +progress[1]+ " " +
-								EB2MainActivity.getmResources().getString(R.string.intoDB));
+								mResources.getString(R.string.Storing) + " " +progress[0]+ " " +
+								mResources.getString(R.string.of) + " " +progress[1]+ " " +feedName+ " " +
+								mResources.getString(R.string.intoDB));
 					} else {
 						pDialog.setMessage(
-								EB2MainActivity.getmResources().getString(R.string.Reading)
-								+ " " +progress[0]+ " " +
-								EB2MainActivity.getmResources().getString(R.string.fromFeed)
-								+ " " + feedName);
+								mResources.getString(R.string.Reading) + " " +progress[0]+ " " +
+								mResources.getString(R.string.From)    + " " +feedName+ " " +
+								mResources.getString(R.string.Feed));
 					}
 					break;
 			}
@@ -178,28 +176,29 @@ public class RSSFeedReader extends AsyncTask<URL,
 
 		Log.i(TAG, "onPostExecute(" + RSS_List.size() + ")");
 
-		if (EB2MainActivity.DEBUG())
+		if (DEBUG)
 			MakeToast.makeToast(context,
-								EB2MainActivity.getmResources().getString(R.string.ReadRSS)
-								+ " ", MakeToast.LEVEL_DEBUG);
+								mResources.getString(R.string.ReadRSS) +
+								" ", MakeToast.LEVEL_DEBUG);
 
 		// If the returned event list is not empty
 		if (!RSS_List.isEmpty() ) {
 
 			// Copy returned list to global list
-			EB2MainActivity.setM_webEventsList(RSS_List);
+			EB2.setCurrentEventsList(RSS_List);
 
 			// Update the event list
-			EB2MainActivity.getCurrentData().updateList();
+			EB2.getCurrentData().updateList();
+
 			// Update the event list header
-			EB2MainActivity.updateListHeader( RSS_List.size() );
+			EB2.updateListHeader( RSS_List.size() );
 
 		} else {
 			// No events at selected feed
 			Log.e(TAG, "No events at selected feed - so not changing view.");
-			if (EB2MainActivity.DEBUG())
+			if (DEBUG)
 				Toast.makeText( context,
-								EB2MainActivity.getmResources().getString(R.string.NoEvents),
+								mResources.getString(R.string.NoEvents),
 								Toast.LENGTH_LONG).show();
 		}
 
@@ -229,15 +228,14 @@ public class RSSFeedReader extends AsyncTask<URL,
 		List<BELEvent> dIBEventList = null;
 
 		// Initialize tab 0 label = Current
-		EB2MainActivity.setTab0Label(EB2MainActivity.getmResources().
-									 getString(R.string.Current));
+		EB2.setTab0Label(mResources.getString(R.string.Current));
 
 		// Check for valid feed ID
-		if (feedId >= EB2MainActivity.getM_webEventsListA().size())
+		if (feedId >= EB2.getEventsListCacheSize())
 			return null;
 
 		// Read from cached feed array
-		dIBEventList = EB2MainActivity.getM_webEventsListA().get(feedId);
+		dIBEventList = EB2.getEventsListCache(feedId);
 
 		// If cache entry was empty
 		if (dIBEventList==null || dIBEventList.isEmpty()) {
@@ -267,9 +265,7 @@ public class RSSFeedReader extends AsyncTask<URL,
 									+ " new events from RSS feedId "
 									+ feedId);
 						// Copy to cache
-						EB2MainActivity.getM_webEventsListA().set(
-											feedId,
-											dIBEventList);
+						EB2.setEventsListCache(feedId, dIBEventList);
 						Log.d(TAG, "saved " + dIBEventList.size()
 											+ " events in cache feedId "
 											+ feedId);
@@ -286,10 +282,10 @@ public class RSSFeedReader extends AsyncTask<URL,
 					// Locally
 					feedId = oldFeedId;
 					// Globally
-					EB2MainActivity.setFeedId(feedId);
+					EB2.setFeedId(feedId);
 
 					// Get the current feed data
-					dIBEventList = EB2MainActivity.getM_webEventsListA().get(feedId);
+					dIBEventList = EB2.getEventsListCache(feedId);
 				}
 			}
 		}
@@ -332,6 +328,7 @@ public class RSSFeedReader extends AsyncTask<URL,
 					Log.e(TAG, "doInBackground: Caught exception trying to save to the database: ", dataExp);
 				}
 			}
+
 			Log.d(TAG, "stored " + dIBEventList.size() 
 								 + " events into the database feedId "
 								 + feedId);
@@ -356,14 +353,13 @@ public class RSSFeedReader extends AsyncTask<URL,
 
 					// Globally
 					// Set feedId, mFeedName and mFeedURL
-					EB2MainActivity.setFeedId(feedId);
-					EB2MainActivity.setOldFeedId(feedId);
+					EB2.setFeedId(feedId);
+					EB2.setOldFeedId(feedId);
 
 					// If this is not a recent database store from cache
-					if (EB2MainActivity.getM_webEventsListA().get(feedId).isEmpty()) {
+					if (EB2.EventsListCacheIsEmpty(feedId)) {
 						// Set tab 0 label = Stored
-						EB2MainActivity.setTab0Label(EB2MainActivity.getmResources().
-													getString(R.string.Stored));
+						EB2.setTab0Label(mResources.getString(R.string.Stored));
 					}
 
 					Log.d(TAG,  "used " +dIBEventList.size()+

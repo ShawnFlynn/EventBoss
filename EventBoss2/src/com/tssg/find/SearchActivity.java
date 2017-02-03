@@ -17,7 +17,8 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.tssg.eventboss2.EventListDisplayActivity;
+import com.tssg.eventboss2.EB2Interface;
+import com.tssg.eventboss2.EB2MainActivity;
 import com.tssg.eventboss2.MainAppScreen;
 import com.tssg.eventboss2.MainAppScreenImpl;
 import com.tssg.eventboss2.R;
@@ -27,7 +28,8 @@ import com.tssg.eventsource.BELEvent;
 
 public class SearchActivity extends Activity {
 
-	public static final String TAG = "SearchActivity";	// log's tag
+//	public static final String TAG = "SearchActivity";	// log's tag
+	private final String TAG = getClass().getSimpleName();
 
 	public static MainAppScreen m_mainAppScreen = null;
 	public View m_mainAppView = null;			//	view for find results	
@@ -46,13 +48,17 @@ public class SearchActivity extends Activity {
 	public static List<BELEvent> eventsListFind = null;		// where to find events
 	public static List<BELEvent> eventsListResult = null;	// what has been found
 
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		Log.i(TAG, "onCreate()");
 
-		eventsListFind = EventListDisplayActivity.m_webEventsList;
+		eventsListFind = EB2.getCurrentEventsList();
 
 		String str;
 		str = "Search in List of size: "+ eventsListFind.size();
@@ -118,6 +124,8 @@ public class SearchActivity extends Activity {
 
 		// Remove empty strings from the list
 		private Set<String> cleanSet(Set<String> s){
+			Log.i(TAG, "cleanSet(msg)");
+
 			if (s.contains("")) {
 				s.remove("");	
 			}if (s.contains("etc")) {  // Developers prerogative
@@ -223,6 +231,8 @@ public class SearchActivity extends Activity {
 		// Called when an options item is clicked
 		@Override
 		public boolean onOptionsItemSelected(MenuItem item) {
+			Log.i(TAG, "onItemSelected()");
+
 			switch (item.getItemId()) { 
 			case R.id.idSearchNew:
 				//  start a new search 
@@ -250,14 +260,18 @@ public class SearchActivity extends Activity {
 			// TODO implement onResume
 			super.onResume();
 
+			Log.i(TAG, "onResume()");
+
 			MakeToast.makeToast(this, "S onResume", MakeToast.LEVEL_DEBUG);
 		}
 
 		@Override
 		public boolean onCreateOptionsMenu(Menu menu) {
+			Log.i(TAG, "onCreateOptionsMenu()");
+
 			// Inflate the menu; this adds items to the action bar if it is present.
 			getMenuInflater().inflate(R.menu.searchactivity, menu);
 			return true;
 		}
 
-}	//	end SearchActivity
+}	//	end SearchActivity class

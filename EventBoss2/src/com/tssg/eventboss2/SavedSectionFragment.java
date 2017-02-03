@@ -1,6 +1,7 @@
 package com.tssg.eventboss2;
 
 import android.annotation.SuppressLint;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -40,6 +41,12 @@ public class SavedSectionFragment extends EventBossListFragment {
 
 	ListView mLV;
 
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+	// Local EB2 resources
+	private Resources mResources = EB2.getEB2Resources();
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -89,8 +96,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location };
 
 		// Setup the list header
-		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader,
-														 null);
+		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
 
 		mEventItemCount = mCursor.getCount();
 		mLV = getListView();
@@ -189,13 +195,13 @@ public class SavedSectionFragment extends EventBossListFragment {
 														Locale.getDefault() );
 		Date m_channelDate = new Date(System.currentTimeMillis());
 		String channelDate = m_channelDate == null?
-					"--" : simpFormat.format(EB2MainActivity.getM_channelDate());
+				"--" : simpFormat.format(EB2.getCurrentDate());
 
 		// Get "Event" or "Events" based on event count
 		if (mEventItemCount == 1)
-			tempEvents = EB2MainActivity.getmResources().getString(R.string.Event);
+			tempEvents = mResources.getString(R.string.Event);
 		else
-			tempEvents = EB2MainActivity.getmResources().getString(R.string.Events);
+			tempEvents = mResources.getString(R.string.Events);
 
 		// This should be the current date or the date when data was saved into the database
 		String tempString = extraText + "@ " +

@@ -17,17 +17,26 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 
 
-public class SettingsActivity extends Activity
-{
-	public static final String TAG = "Settings";
+public class SettingsActivity extends Activity {
+
+//	public static final String TAG = "Settings";
+	private final String TAG = getClass().getSimpleName();
 
 	/** How many choices in location button group */
 	public static final int RBG_CHOICES = 5;
 
 	View mSettingsView = null;
 
+	// Get the EB2 Interface
+	EB2Interface EB2 = new EB2MainActivity();
+
+	// Local DEBUG flag
+	private final boolean DEBUG = EB2.DEBUG();
+
 	private boolean bNewFeed  = true;
-	private Integer mFeedId = EB2MainActivity.getFeedId();
+	private int selectedFeedId;
+	private int currentFeedId = EB2.getFeedId();
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -38,19 +47,22 @@ public class SettingsActivity extends Activity
 		/** sets outer class members according to which button clicked */
 		class prefclick implements OnClickListener {
 			private int iFeedId = 0;
-			public prefclick(int feedId) { iFeedId = feedId; }
+
+			public prefclick(int feedId) {
+				iFeedId = feedId;
+			}
 
 			public void onClick(View v) {
 				// Save the selected Feed Id
-				mFeedId = iFeedId;
+				selectedFeedId = iFeedId;
 				// Check if it is not the current feed
-				if (iFeedId != EB2MainActivity.getFeedId()) {
-						Log.i(TAG, "New feed selected: " + mFeedId);
+				if (iFeedId != EB2.getFeedId()) {
+					Log.i(TAG, "New feed selected: " + selectedFeedId);
 						bNewFeed = true;
 				} else {
 					// Check if the current feed is from the DB
-					if (EB2MainActivity.getM_webEventsListA().get(mFeedId).isEmpty()) {
-						Log.i(TAG, "New feed selected: " + mFeedId);
+					if (EB2.EventsListCacheIsEmpty(selectedFeedId)) {
+						Log.i(TAG, "New feed selected: " + selectedFeedId);
 						bNewFeed = true;
 					} else {
 						// Same as the current feed
@@ -82,9 +94,7 @@ public class SettingsActivity extends Activity
 		choice5.setOnClickListener(new prefclick(4) );
 
 		// Preselect the current feed Id
-		//rgFeed.check( mFeedId );
-
-		switch(EB2MainActivity.getFeedId())
+		switch(currentFeedId)
 		{
 		case (0):
 			rgFeed.check(R.id.choice1);
@@ -107,12 +117,12 @@ public class SettingsActivity extends Activity
 		}
 
 		// Log the preselected item
-		Log.i(TAG, "button " + EB2MainActivity.getFeedId() + " preselected");
+		Log.i(TAG, "button " + selectedFeedId + " preselected");
 
 		rgFeed.setOnCheckedChangeListener ( new OnCheckedChangeListener() {
 			public void onCheckedChanged( RadioGroup rg, int checkedId )
 			{
-				if (EB2MainActivity.DEBUG()) {
+				if (DEBUG) {
 					switch( checkedId )
 					{
 					case R.id.choice1:
@@ -154,7 +164,7 @@ public class SettingsActivity extends Activity
 		doneBtn.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View v) {
 				Log.i(TAG, "on Click() - done");
-				if (EB2MainActivity.DEBUG()) {
+				if (DEBUG) {
 					MakeToast.makeToast(getApplicationContext(),
 										"pressed 'Done' -- bye bye",
 										MakeToast.LEVEL_USER);
@@ -162,15 +172,15 @@ public class SettingsActivity extends Activity
 
 				// Don't reread the current Feed Id
 				if (bNewFeed) {
-					Log.i(TAG, "Reading feed: " + mFeedId);
-					if (EB2MainActivity.DEBUG()) {
+					Log.i(TAG, "Reading feed: " + selectedFeedId);
+					if (DEBUG) {
 						// EventsListReader(url) will do the reading using the AsyncTask
 						MakeToast.makeToast(getApplicationContext(),
-											"Read feed # " + mFeedId,
+											"Read feed # " + selectedFeedId,
 											MakeToast.LEVEL_USER);
 					}
 					// Reload the feed
-					reloadfeed(mFeedId);
+					reloadfeed(selectedFeedId);
 				}
 
 				// Return
@@ -184,7 +194,7 @@ public class SettingsActivity extends Activity
 	public boolean reloadfeed(int whichfeed) {
 		boolean result = false;
 
-		Log.i(TAG, "reloadFeed( " +EB2MainActivity.getFeedName()+ " )");
+		Log.i(TAG, "reloadFeed( " +EB2.getFeedName()+ " )");
 
 		// Generate and start a new EB2MainActivity
 		Intent intent = new Intent(this, EB2MainActivity.class);
@@ -228,7 +238,7 @@ public class SettingsActivity extends Activity
 		
 		case R.id.idDone:
 		Log.i(TAG, "done button");
-		if (EB2MainActivity.DEBUG()) {
+		if (DEBUG) {
 			MakeToast.makeToast(this,
 								"pressed 'Done'",
 								MakeToast.LEVEL_USER);
@@ -237,7 +247,7 @@ public class SettingsActivity extends Activity
 			break;
 		default:
 			Log.e(TAG, "unknown button " + Integer.toHexString(itemId));
-			if (EB2MainActivity.DEBUG()) {
+			if (DEBUG) {
 				MakeToast.makeToast(this,
 									"pressed " + Integer.toHexString(itemId),
 									MakeToast.LEVEL_USER);
@@ -249,4 +259,3 @@ public class SettingsActivity extends Activity
 	}
 
 }	// end - SettingsActivity class
-
