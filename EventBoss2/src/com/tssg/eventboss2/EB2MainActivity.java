@@ -65,7 +65,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	public static boolean bTRACE = false;	// en/disable tracing to device SD
 	boolean bDEVELOPER_MODE = false;		// controls strictMode set to false for release
 
-	private static ActionBar m_actionBar;
+//	private static ActionBar m_actionBar;
+	public static ActionBar m_actionBar;
 	public static DatabaseHelper mDbh;
 	public Context context = this;
 
@@ -176,7 +177,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 			// trace file is created in SD device
 			Debug.startMethodTracing("trace.file");
 			if (DEBUG)
-			MakeToast.makeToast(this, mResources.getString(R.string.startTrace)
+				MakeToast.makeToast(this,
+									mResources.getString(R.string.startTrace)
 									+ " ", MakeToast.LEVEL_DEBUG);
 		}
 
@@ -533,18 +535,18 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	}	//  end - AppSectionsPagerAdapter
 
 
-	public static void updateListHeader( String extraText )  {
+	public static void updateListHeader( int EventCount )  {
 
-		Log.i(TAG, "updateListHeader(" + extraText + ")");
+		Log.i(TAG, "updateListHeader(" +EventCount+ " Events)");
 
+		// This should be the current date or the date when data was saved into the database
 		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault() );
 		String channelDate = EB2MainActivity.m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
 
-		// this should be the current date or the date when data was saved into the database
-		CurrentSectionFragment.mListHeader.setText(extraText + EB2MainActivity.mRSSString
-				+ " " + mResources.getString(R.string.ampersand)
-				+ " " + channelDate);
-		Log.d(TAG, "EB2MainActivity called update List header: " + extraText);
+		CurrentSectionFragment.mListHeader.setText(mRSSString
+				+" @ "
+				+channelDate+ ": "
+				+EventCount+ " Events");
 
 	}	//  end - updateListHeader()
 
@@ -601,7 +603,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 	 */
 	public class ExecFeedReader extends AsyncTask<URL, Integer, List<BELEvent> > {
 
-		static final String TAG = "ExecFeedRdr";  // log's tag
+		static final String TAG = "ExecFeedReader";
 
 		// Progress Dialog
 		private ProgressDialog pDialog = null;
@@ -610,7 +612,14 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 		protected void onPreExecute() {
 			super.onPreExecute();
 
-			Log.i(TAG,  "onPreExecute(" + mFeedId + ")");
+			Log.i(TAG,  "onPreExecute(" +mFeedId+ ")");
+
+			// Remove progress indicator
+			if (pDialog != null) {
+				pDialog.hide();
+				pDialog.cancel();
+				pDialog = null;
+			}
 
 			pDialog = new ProgressDialog(EB2MainActivity.this);
 			pDialog.setMessage(mResources.getString(R.string.ReadingRSSFeed)
@@ -620,7 +629,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 			pDialog.setIndeterminate(false);
 
 			// see http://stackoverflow.com/questions/5253621/android-back-button-and-progress-dialog
-			pDialog.setCancelable(true);	// not sure about this
+			pDialog.setCancelable(true);
 			pDialog.show();
 
 		}	//  end - onPreExecute()
@@ -668,6 +677,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 		protected void onPostExecute( List<BELEvent> RSS_List ) {
 			super.onPostExecute(RSS_List);
 
+			if (RSS_List == null)
+				return;
+
 			Log.i(TAG, "onPostExecute(" + RSS_List.size() + ")");
 
 			// Copy returned list to global list
@@ -679,13 +691,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 									+ " ", MakeToast.LEVEL_DEBUG);
 
 			if (!RSS_List.isEmpty() ) {
-				String  txt =   mResources.getString(R.string.RSS)
-										+ " " +RSS_List.size()
-										+ " "
-										+ mResources.getString(R.string.colon)
-										+ " ";
 				EB2MainActivity.currentData.updateList();
-				EB2MainActivity.updateListHeader( txt );
+				EB2MainActivity.updateListHeader( RSS_List.size() );
 			} else {
 				// What should we say when feed has nothing to show? Could be bad feed,
 				// connectivity issue, or really no events.
@@ -697,7 +704,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 			}
 
 			//  remove progress indicator
-			if (null != pDialog) {
+			if (pDialog != null) {
 				pDialog.hide();
 				pDialog.cancel();
 				pDialog = null;
@@ -736,6 +743,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 			tab0Label = mResources.getString(R.string.Current);
 
 			// Read from cached feedId
+			if (mFeedId >= m_webEventsListA.size())
+				return null;
+
 			dIBEventList = m_webEventsListA.get(mFeedId);
 
 			// If cache entry was empty

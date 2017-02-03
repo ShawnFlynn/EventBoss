@@ -27,15 +27,14 @@ public class EventDetailFragment extends Fragment {
 
 	protected final String TAG = getClass().getSimpleName();
 
-	final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
+	final public static String EVENTITEM_POS = "position";
 	public static final String DB_HELPER = "DBHelper";
 
 	public static final String LIST_TYPE = null;
 
-
-	int m_isListType;		// Current (0), Saved List (1), Saved List (2)
+	int m_isListType;		// Current (0), Saved (1), Search (2)
 	DatabaseHelper mDbh;	// = new DatabaseHelper(getActivity()) EBMainActivity;
-	String mId;				// use ItemId
+	String mId;
 
 	private BELEvent mEvent;
 	private TextView mTitleText;	// title
@@ -47,18 +46,20 @@ public class EventDetailFragment extends Fragment {
 	private TextView mDescriptionText;
 
 	public void setListType(int listType ) {
-		Log.i(TAG, "setListType()");
+		Log.i(TAG, "setListType(" +listType+ ")");
+
 		m_isListType = listType;
-		Log.d(TAG, "onCreate: ListType = " + m_isListType);
 	}
 
 	public void setEventId(String id) {
-		Log.i(TAG, "setEventId()");
+		Log.i(TAG, "setEventId(" +id+ ")");
+
 		mId = id;
 	}
 
 	public void setDBhelper(DatabaseHelper db) {
-		Log.i(TAG, "setDBHelper(msg)");
+		Log.i(TAG, "setDBHelper()");
+
 		mDbh = db;
 	}
 
@@ -67,8 +68,8 @@ public class EventDetailFragment extends Fragment {
 		super.onCreate(savedInstance);
 		Log.i(TAG, "onCreate()");
 
-		Log.d(TAG, "onCreate: List Type = " + m_isListType
-											+ " w/id: " + mId);
+		Log.d(TAG, "List Type = " + m_isListType
+				 				  + " w/id: " + mId);
 
 		// Get a database handle
 		// for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
@@ -76,72 +77,83 @@ public class EventDetailFragment extends Fragment {
 		if( mDbh == null )  {
 			mDbh = new DatabaseHelper(getActivity());
 		}
-		Log.d(TAG, " initialization EventDetailFragment:");
-		Log.d(TAG, "onCreate: type: " + m_isListType
-									  + ",  mId: " 
-									  + mId + ", db: " + mDbh);
 
-		if( m_isListType == 0 ) {    // ----- Current Section
-			// Get the current event
+		// If the mId is empty
+		if (mId.isEmpty())
+			Log.d(TAG, "mId is empty");
+		else
+			Log.d(TAG, "type: " + m_isListType
+								+ ",  mId: " + mId
+								+ ", db: " + mDbh);
+
+		if( m_isListType == 0 && !mId.isEmpty()) {	// ----- Current Section
+
 			Log.d(TAG, "current Event: " + mEvent + ", id = " + mId);
+
+			// Get the Current event
 			try {
 				mEvent = mDbh.getEventById(mId);
 			}
 			catch (android.database.CursorIndexOutOfBoundsException exept ) {
 				if (mEvent == null) {
 					Log.e(TAG, "we have an id, but no Event: " + mEvent);
-					Log.e(TAG, "this did happen when 'm_isSaved' should be false but is true ");
-					Log.e(TAG, "see event EventDetailActivity near line 56");
 					return;
 				}
 				;
 			}
-			Log.d(TAG, "current Event: " + mEvent);
-		}
 
-		if( m_isListType == 1 ) {	// ----- Saved Section
-			// Get the saved event
+			Log.d(TAG, "current Event: " +mEvent);
+
+		}	// ListType == 0
+
+		if( m_isListType == 1 && !mId.isEmpty()) {	// ----- Saved Section
+
 			Log.d(TAG, "saved Event: " + mEvent
 						+ ", mId: " + mId
 						+ ", dbh: " + mDbh);
 
-			if ( mId.isEmpty() ) 
-				Log.d(TAG, "can not delete: Event is empty");
-			else
+			// Get the Saved event
+			try {
 				mEvent = mDbh.getSavedEventById(mId);
-
-			Log.d(TAG, "saved Event: " + mEvent);
-		}
-
-		if( m_isListType == 2 ) {	// ----- Search section
-
-			if ( mId.isEmpty() ) 
-				Log.d(TAG, "can not display: Event is empty");
-			else {
-				Log.d(TAG, "EventDetailFragment(@ 121 read id: " + mId);
-
-				// - mId - should be the Id from CurrentEventList
-				//     also see --> SearchSectionFragment line 97  
-				try {
-					mEvent = mDbh.getEventById(mId);
-				}
-				catch ( SQLException exp ) {
-					Log.e( TAG, "caught SQLException: reading this id: "
-							+ mId ,exp ); }
-				catch (android.database.CursorIndexOutOfBoundsException exept ) {
-					Log.e( TAG, "caught CursorIndexOutOfBoundsException "
-							+ mId ,exept ); }
-
-				Log.d(TAG, "search Event: "+mEvent);
-
 			}
+			catch (android.database.CursorIndexOutOfBoundsException exept ) {
+				if (mEvent == null) {
+					Log.e(TAG, "we have an id, but no Event: " + mEvent);
+					return;
+				}
+				;
+			}
+
+			Log.d(TAG, "saved Event: " +mEvent);
+
+		}	// ListType == 1
+
+		if( m_isListType == 2 && !mId.isEmpty()) {	// ----- Search section
+
+			Log.d(TAG, "EventDetailFragment(read id: " + mId);
+
+			// - mId - should be the Id from CurrentEventList
+			//     also see --> SearchSectionFragment line 97  
+			try {
+				mEvent = mDbh.getEventById(mId);
+			}
+			catch ( SQLException exp ) {
+				Log.e( TAG, "caught SQLException: reading this id: "
+						+ mId ,exp ); }
+			catch (android.database.CursorIndexOutOfBoundsException exept ) {
+				Log.e( TAG, "caught CursorIndexOutOfBoundsException "
+						+ mId ,exept ); }
+
+			Log.d(TAG, "search Event: "+mEvent);
+
 		}	// ListType == 2
 
 	}	//  end - onCreate()
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-								Bundle SavedInstanceState) {
+	public View onCreateView(LayoutInflater inflater,
+							 ViewGroup container,
+							 Bundle SavedInstanceState) {
 
 		Log.i(TAG, "onCreateView()");
 
@@ -184,7 +196,8 @@ public class EventDetailFragment extends Fragment {
 	public void refreshView() {
 		Log.i(TAG, "refreshView()");
 
-		Log.d(TAG,"->refresh view: mEvent= "+mEvent);
+		Log.d(TAG,"mEvent= " +mEvent);
+
 		if(mEvent == null ) {
 			mTitleText.setText(" **** no Event ****");
 		} else {
@@ -198,15 +211,7 @@ public class EventDetailFragment extends Fragment {
 				mDescriptionText.setText(mEvent.getLongDescription());  
 			}
 		}
-		Log.d(TAG, "in refreshView: ");
-		Log.d(TAG, " text: " + mTitleText.getText());
-//		Log.d(TAG, " star: " +mStartText.getText());
-//		Log.d(TAG, " end : " +mEndText.getText());
-//		Log.d(TAG, " type: " +mTypeText.getText());
-//		Log.d(TAG, " link: " +mLinkText.getText());
-//		Log.d(TAG, " org : " +mOrganizerText.getText());
-//		Log.d(TAG, " loc : " +mLocationText.getText());
-//		Log.d(TAG, " desc: " +mDescriptionText.getText());
+		Log.d(TAG, "text: " + mTitleText.getText());
 
 	}	//  end - refreshView()
 
@@ -247,6 +252,5 @@ public class EventDetailFragment extends Fragment {
 	public void set_isEventType(int m_isEventType) {
 		this.m_isListType = m_isEventType;
 	}
-
 
 }	//  end - EventDetailFragment
