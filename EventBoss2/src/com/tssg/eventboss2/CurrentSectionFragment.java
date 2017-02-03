@@ -79,7 +79,10 @@ public class CurrentSectionFragment extends EventBossListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		Log.v(TAG, "(75)---> eventFragmentCoordinator ->displayEventDetails (false)");
 		Log.v(TAG, "onListItemClick Listview =" + l + ": View=" + v + ":Position=" + position + ":Id=" + id);
-		eventFragmentCoordinator.displayEventDetails(Long.toString(id), false);
+		if( position > 0 ) { 
+			// this happens when clicking on the list header
+			eventFragmentCoordinator.displayEventDetails(Long.toString(id), false);
+		}
 	}
 
 	// also see eventDetailActivity
