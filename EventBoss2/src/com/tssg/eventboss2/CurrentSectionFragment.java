@@ -119,7 +119,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
         // TODO Do I really need the setListAdapter call???
-		Log.v(TAG, "getCursorAllEvents //Do I really need the setListAdapter call?");
+		Log.v(TAG, "currentSection getCursorAllEvents //Do I really need the setListAdapter call?");
  		setListAdapter(mAdapter);
         EB2MainActivity.setTabLabel(EB2MainActivity.tab0Label);
 	}
@@ -129,7 +129,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 	public void storeInSaved ()	{
 		String strEvent = String.format("%d", mId); // also "" + long
 
-		Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ mId);
+		Log.v(TAG, "currentSection strEvent: "+strEvent +" from mId :"+ mId);
 
 		dbh.saveEvent( strEvent );
 

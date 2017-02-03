@@ -22,18 +22,17 @@ import java.util.Locale;
  */
 public class SavedSectionFragment extends EventBossListFragment {
 
-    static final String TAG = "SavedSectionFragment";  // log's tag
-	public static boolean mListType = true;		   // not the saved list
+    static final String TAG = "SavedSectionFragment";  	// log's tag
+	public static boolean mListType = true;		   		// the saved list
 	public static TextView mListHeader;
 	public static int mPosition = -1;
 	public static long mId;
 
-	private DatabaseHelper dbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
-	//private String mId;             // use ItemId  or position ?
+	private static DatabaseHelper dbh;	
 
 	Cursor mCursor;
 	SimpleCursorAdapter mAdapter;
-	int mEventItemCount;
+	static int mEventItemCount;
 	LayoutInflater mLayoutInflater;
 	ViewGroup mViewGroup;
 
@@ -81,13 +80,13 @@ public class SavedSectionFragment extends EventBossListFragment {
 		// We pass null for the cursor, then update it in onLoadFinished()
 		mAdapter = new SimpleCursorAdapter(getActivity(),
 				R.layout.eventlist_row, mCursor, fromColumns, toViews, 0);
-//		setListAdapter(adapter);  //???? what does this do exactly
+		setListAdapter(mAdapter);  //???? what does this do exactly
 
 		
 		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
 		mLV.addHeaderView(mListHeader);
 
-        updateList();
+        updateList();   // can not implement in SavedSectionFragment
 	}
 	
 	@Override
@@ -95,8 +94,17 @@ public class SavedSectionFragment extends EventBossListFragment {
 		// there is a constructor in EventBossListFragment
 		setListAdapter(mAdapter);  //???? what does this do exactly
         updateListHeader("have " + mEventItemCount + " saved Events");	//<from
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// update the list  in case there an addition/deletion
+		updateList();
+		Log.v(TAG, "------->  onResume: after update list");
 
 	}
+	
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
@@ -114,7 +122,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
 		}
 */
-        if( position > 0 ) {
+        if( position > 0 ) {	// it's using only mId
             mPosition = position;
             mId = id;
             Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
@@ -129,18 +137,31 @@ public class SavedSectionFragment extends EventBossListFragment {
 		super.onDestroyView();
 	}
 
+	/*
+	/ *  	getActivity()
+	/ *	setListAdapter
+	/ *	error on updateListHeader	*/
+//	public static void updateList() {		// static is bad to call from eventdetail
+	/*
+	 * 
+	 */
 	public void updateList() {
+		/*
+		 * the SavedSectionFragment should reload the list when an 'add' or 'delete' has been done 
+		 */
 		Log.v(TAG, "update saved list");
-
+		
+		dbh = new DatabaseHelper(getActivity());
 		mCursor.close();
 		mCursor = dbh.getCursorSavedEvents();
 		mAdapter.swapCursor(mCursor);
 		setListAdapter(mAdapter);
 
-        updateListHeader("Saved List");
+		Log.v(TAG, "update saved list-header");
+        updateListHeader("update saved list-header");
 	}
 
-    void updateListHeader( String extraText )  {
+     void updateListHeader( String extraText )  {
         // Create a list-header (TextView) and add it to the list like this:
         // mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
         // mLV.addHeaderView(mListHeader);
@@ -151,5 +172,9 @@ public class SavedSectionFragment extends EventBossListFragment {
 
         // this should be the current date or the date when data was saved into the database
         mListHeader.setText( extraText + "(" + channelDate + ") "+ mEventItemCount + " Events");
+		Log.v(TAG, extraText +" "+ channelDate +", "+  mEventItemCount + " Events");
+
     }
+
+    
 } // ------- end SavedSectionFragment

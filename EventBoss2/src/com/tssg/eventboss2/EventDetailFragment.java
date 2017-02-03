@@ -1,14 +1,18 @@
 package com.tssg.eventboss2;
 
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,12 +26,15 @@ import com.tssg.eventsource.BELEvent;
 
 
 /** displays and handles the details of an event */
+/* Notes for development:
+ * 
+ * */
 public class EventDetailFragment extends Fragment {
 
     public static final String TAG = "EventDetailFragment";   // log's tag
 
-    final public static String EVENTITEM_POS = "position"; // compiler suggested taking off 'static'
-    public static final String SAVED_KEY = "isSaved";
+    final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
+    public static final String SAVED_KEY = "isSaved";		// 
     public static final String DB_HELPER = "DBHelper";
 
 
@@ -47,11 +54,10 @@ public class EventDetailFragment extends Fragment {
  //   private Button m_forward = null;
  //   private Button m_addToCalendar;
 
- //   public EventDetailFragment() { m_isSavedEvent = false; } // reset in onCreate
+ //   public EventDetailFragment() { m_isSavedEvent = false; } // is set in onCreate
     public void setListType(boolean listType ) {
         m_isSavedEvent = listType;
-        Log.e(TAG, "onCreate: is ListType = "+listType);
-        Log.e(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent);
+        Log.e(TAG, "onCreate: ListType = "+listType+", isSavedEvent = "+m_isSavedEvent);
     }
 
     public void setEventId(String id) {  mId = id;  }
@@ -61,11 +67,11 @@ public class EventDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        Log.e(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent+" w/id: "+mId);
+        Log.v(TAG, "onCreate: isSavedEvent = "+m_isSavedEvent+" w/id: "+mId);
 
         // Get a database handle
         // for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
-        // for phone  dhh isset here, because 'EventDetailActivity' creates the EventDetailFragment  
+        // for phone  dhh is set here, because 'EventDetailActivity' creates the EventDetailFragment  
         if( dbh == null )  {
         	dbh = new DatabaseHelper(getActivity());
         }
@@ -82,18 +88,23 @@ public class EventDetailFragment extends Fragment {
             catch (android.database.CursorIndexOutOfBoundsException exept ) {
                 if (mEvent == null) {
                     Log.e(TAG, "we have an id, but no Event: " + mEvent);
-                    Log.e(TAG, "this happens when 'm_isSaved' should befalse but is true ");
-                    Log.e(TAG, "see event EventDetailAactivity near linr 56");
+                    Log.e(TAG, "this did happen when 'm_isSaved' should be false but is true ");
+                    Log.e(TAG, "see event EventDetailActivity near linr 56");
                     return;
                 }
                 ;
             }
-             Log.v(TAG, "2/current Event: "+mEvent);
+            Log.v(TAG, "2/current Event: "+mEvent);
 		}
         else {
             // Get the saved event
-            Log.v(TAG, "3/saved Event: "+mEvent);
-            mEvent = dbh.getSavedEventById(mId);
+            Log.v(TAG, "3/saved Event: "+mEvent+", mId: "+mId+", dbh: "+dbh);
+            
+            if ( mId.isEmpty() ) 
+            	Log.v(TAG, "can not delete: Event is empty");  //
+            else 
+            	mEvent = dbh.getSavedEventById(mId);
+            
             Log.v(TAG, "4/saved Event: "+mEvent);
         }
     }   // end --- onCreate()
@@ -114,19 +125,21 @@ public class EventDetailFragment extends Fragment {
         mOrganizerText = (TextView) view.findViewById(R.id.organizerText);
         mLocationText = (TextView) view.findViewById(R.id.locationText);
         mDescriptionText = (TextView) view.findViewById(R.id.descriptionText);
+// these buttons were on the page, but should now be on the Actionbar
 //        m_forward = (Button)view.findViewById(R.id.forward);
 //        m_addToCalendar = (Button)view.findViewById(R.id.addtocalendar);
 
-        Log.v("EventDetailFragment:", " text: " +mTitleText);   // (TextView)
-        Log.v("EventDetailFragment:", " star: " +mStartText);
-        Log.v("EventDetailFragment:", " end: " +mEndText);
-        Log.v("EventDetailFragment:", " type: " +mTypeText);
-        Log.v("EventDetailFragment:", " link: " +mLinkText);
-        Log.v("EventDetailFragment:", " org : " +mOrganizerText);
-        Log.v("EventDetailFragment:", " loc: " +mLocationText);
-        Log.v("EventDetailFragment:", " desc: " +mDescriptionText);
+        Log.v(TAG, " text: " +mTitleText);   // (TextView)
+        Log.v(TAG, "................");
+//        Log.v(TAG, " star: " +mStartText);
+//        Log.v(TAG, " end: " +mEndText);
+//        Log.v(TAG, " type: " +mTypeText);
+//        Log.v(TAG, " link: " +mLinkText);
+//        Log.v(TAG, " org : " +mOrganizerText);
+//        Log.v(TAG, " loc: " +mLocationText);
+        Log.v(TAG, " desc: " +mDescriptionText);
 
-        Log.v("EventDetailFragment:","exit");
+        Log.v(TAG,"exit");
         return view;
 
     }   //  end --- onCreateView()
@@ -134,7 +147,6 @@ public class EventDetailFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        Log.i(TAG, "-> refreshView");
         refreshView();
         // note EGL_Emulation  .. eglSurfaceAttribute not Implemented
     }
@@ -146,41 +158,29 @@ public class EventDetailFragment extends Fragment {
 
 
    public void refreshView() {
+       Log.i(TAG,"->refresh view: mEvent= "+mEvent);
        if(mEvent==null ) {
-           mTitleText.setText("have no Event");
+           mTitleText.setText("have no Event");   // 
            return;
        }
-    /*
-         // This will reload the data in the view
-         if ((mId != null) && (!mId.equals(""))) {
-            if (!m_isSavedEvent){
-                mEvent = dbh.getEventById(mId);
-                Log.i("TAG","Refresh current view: mEvent= "+mEvent);
-            } else {
-                mEvent = dbh.getSavedEventById(mId);
-                Log.i("TAG","Refresh saved view: mEvent= "+mEvent);
-            }
-    */
-            Log.i("TAG","Refresh view: mEvent= "+mEvent);
+       mTitleText.setText(mEvent.getTitle());
+       mStartText.setText(mEvent.getStartTime());
+       mEndText.setText(mEvent.getEndTime());
+       mTypeText.setText(mEvent.getEventType());
+       mLinkText.setText(mEvent.getLinkToGroup());
+       mLocationText.setText(mEvent.getLocation());
+       mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of
+       					// mDescriptionText.setText("substitute for LongDescription");
 
-            mTitleText.setText(mEvent.getTitle());
-            mStartText.setText(mEvent.getStartTime());
-            mEndText.setText(mEvent.getEndTime());
-            mTypeText.setText(mEvent.getEventType());
-            mLinkText.setText(mEvent.getLinkToGroup());
-            mLocationText.setText(mEvent.getLocation());
-            mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of
-//            mDescriptionText.setText("substitute for LongDescription");
-
-            Log.v("TAG", "in refreshView: ");
-            Log.v("TAG", " text: " +mTitleText.getText());   // (TextView)
-            Log.v("TAG", " star: " +mStartText.getText());
-            Log.v("TAG", " end : " +mEndText.getText());
-            Log.v("TAG", " type: " +mTypeText.getText());
-            Log.v("TAG", " link: " +mLinkText.getText());
-            Log.v("TAG", " org : " +mOrganizerText.getText());
-            Log.v("TAG", " loc:  " +mLocationText.getText());
-            Log.v("TAG", " desc: " +mDescriptionText.getText());
+            Log.v(TAG, "in refreshView: ");
+            Log.v(TAG, " text: " +mTitleText.getText());   // (TextView)
+//            Log.v(TAG, " star: " +mStartText.getText());
+//            Log.v(TAG, " end : " +mEndText.getText());
+//            Log.v(TAG, " type: " +mTypeText.getText());
+//            Log.v(TAG, " link: " +mLinkText.getText());
+//            Log.v(TAG, " org : " +mOrganizerText.getText());
+//            Log.v(TAG, " loc : " +mLocationText.getText());
+            Log.v(TAG, " desc: " +mDescriptionText.getText());
 
 /*            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {	// Intents might not work earlier
                 final EventDetailFragment outerThis = this;
@@ -210,7 +210,7 @@ public class EventDetailFragment extends Fragment {
     /** make calendar appointment. This should be a controller method.
      */
     void makeAppointment(String title, String location, Date start, Date end ) {
-        Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
+        	Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
 
         long startL, endL;
         if (null != start) {
@@ -229,6 +229,45 @@ public class EventDetailFragment extends Fragment {
         startActivity(intent);
     }
 
+//   public static void updateList(){} // seen from 
+    /*
+     * setListAdapter
+     * mListHeader
+     * m_eventListItemCount
+     */
+/*
+	public  void updateList() {		//public static void updateList()
+		// xxxxxx
+		Log.v(TAG, "update saved list");
+		Cursor mCursor;
+		SimpleCursorAdapter mAdapter;
+		
+		dbh = new DatabaseHelper(getActivity());
+		mCursor.close();
+		mCursor = dbh.getCursorSavedEvents();
+		mAdapter.swapCursor(mCursor);
+		setListAdapter(mAdapter);
+
+        updateListHeader("Saved List");
+	}
+
+  
+
+static  void updateListHeader( String extraText )  {
+        // Create a list-header (TextView) and add it to the list like this:
+        // mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
+        // mLV.addHeaderView(mListHeader);
+
+        SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US );
+        Date m_channelDate = new Date(System.currentTimeMillis());
+        String channelDate = m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
+
+        // this should be the current date or the date when data was saved into the database
+
+        SavedSectionFragment.mListHeader.setText( extraText + "(" + channelDate + ")" +
+        							SavedSectionFragment.mEventItemCount + " Events");
+    }
+*/
 
 } // ------- class EventDetailFragment
 // ====== EventDetailFragment

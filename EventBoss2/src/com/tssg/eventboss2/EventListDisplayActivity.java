@@ -113,7 +113,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	  MenuInflater inflater = getMenuInflater();   // 
-	  inflater.inflate(R.menu.listdisplay_activity_action, menu);
+	  inflater.inflate(R.menu.menu_listdisplay_activity, menu);
 	  // implement save, delete, settings
 	  return super.onCreateOptionsMenu(menu);
 	}
@@ -138,7 +138,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 			Log.i("EventSource", " onOptionsItemSelected idCalendar");
 			break;
 			
-		case R.id.idShare:
+		case R.id.action_share:
 			Log.i("EventListDispActivity", " onOptionsItemSelected idShare");
 			break;
 

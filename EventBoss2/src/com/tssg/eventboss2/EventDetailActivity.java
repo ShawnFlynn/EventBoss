@@ -6,6 +6,10 @@ import com.tssg.eventboss2.utils.misc.MakeToast;
 
 
 
+
+
+
+import android.content.Context;
 //import android.content.Intent;
 import android.content.Intent;
 import android.os.Build;
@@ -21,6 +25,8 @@ import android.view.MenuInflater;
 //import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ShareActionProvider;
+import android.widget.Toast;
 
 import java.util.Date;
 
@@ -32,9 +38,15 @@ import java.util.Date;
  * This activity is mostly just a 'shell' activity containing nothing more than
  * a {@link EventDetailFragment}.
  */
+
+
 public class EventDetailActivity extends FragmentActivity {
 
 	static final String TAG = "EventDetailActivity";  // log's tag
+	
+    public Context context = this;
+	public static long mId;
+	private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity())
 
 	EventDetailFragment mDetailFragment = new EventDetailFragment();	////
 
@@ -45,18 +57,15 @@ public class EventDetailActivity extends FragmentActivity {
 
 		setContentView(R.layout.activity_event_detail);
 		Log.e(TAG, "onCreate (contentView) " + R.layout.activity_event_detail);
-		Log.e(TAG, "Fragment = " + mDetailFragment);
+		Log.v(TAG, "Fragment = " + mDetailFragment);
 
+		mDbh = new DatabaseHelper(this);
+		
 		String s = getIntent().getStringExtra(EventDetailFragment.SAVED_KEY); // "C" or "S"
-		Log.e(TAG, "s = " + s);
-		boolean savedValue;
-		/*
-		 this comparison does not work right !!!!!!
-		 */
-//		if (s == "C") savedValue = false; else savedValue = true;        // "false" or "true"
-		savedValue = s.equals("S");
-		Log.e(TAG, "for current / saved list = " + savedValue);
-		mDetailFragment.setListType(savedValue);
+		Log.v(TAG, "s = " + s);
+		boolean savedValue = s.equals("S");
+		Log.v(TAG, "for current / saved list = " + savedValue);
+		mDetailFragment.setListType(savedValue);		// the type (current or saved) List to use
 		mDetailFragment.setEventId(getIntent().getStringExtra(EventDetailFragment.EVENTITEM_POS));
 
 
@@ -77,7 +86,7 @@ public class EventDetailActivity extends FragmentActivity {
 		if (savedInstanceState == null) {
 			// Create the detail fragment and add it to the activity
 			// using a fragment transaction.
-			Log.e(TAG, "(savedInstanceState)EventDetailFragment = " + EventDetailFragment.EVENTITEM_POS);
+			Log.v(TAG, "(savedInstanceState)EventDetailFragment = " + EventDetailFragment.EVENTITEM_POS);
 
 			getSupportFragmentManager().beginTransaction()
 							.add(R.id.event_detail_container, mDetailFragment).commit();
@@ -93,7 +102,7 @@ public class EventDetailActivity extends FragmentActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
     	// inflate menu items for the action bar
     	MenuInflater inflater= getMenuInflater();
-    	inflater.inflate(R.menu.detail_activity_actions, menu);
+    	inflater.inflate(R.menu.menu_detail_activity, menu);
     	return super.onCreateOptionsMenu(menu);
     }
 
@@ -109,10 +118,78 @@ public class EventDetailActivity extends FragmentActivity {
 			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
 			//
 			NavUtils.navigateUpTo(this, new Intent(this, EventDetailActivity.class));
-			   MakeToast.makeToast(this, "Up Nav - not implemented", MakeToast.LEVEL_DEBUG);
+			MakeToast.makeToast(this, "Up Nav - implemented", MakeToast.LEVEL_DEBUG);
+			break;
 
-			return true;
+		case R.id.idSaveSelected:
+            /* can do this only if in CurrentSectionFragment */
+            Log.v(TAG, "Save Selected - "+CurrentSectionFragment.mId);
+			if(CurrentSectionFragment.mId == 0)  {
+				Toast.makeText(context, TAG+" - Save only from currentTab", Toast.LENGTH_LONG).show();
+				break; }
+            Toast.makeText(context, TAG+" - Save selected event", Toast.LENGTH_LONG).show();
+            String strEvent = String.format("%d", CurrentSectionFragment.mId); 
+            Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
+            mDbh.saveEvent(strEvent);
+            // 	the CurrentSectionFragment must reload the data table
+            Log.v(TAG, "saveSelected  updateList()"+ CurrentSectionFragment.mId);
+            break;
+
+		case R.id.idDeleteSelected:
+            /* ca do this only if in SavedSectionFragment */
+			if(SavedSectionFragment.mId == 0)  {
+				Toast.makeText(context, TAG+" - Save only from SavedTab", Toast.LENGTH_LONG).show();
+				break; }
+            Log.v(TAG, "Delete Selected - "+SavedSectionFragment.mId);
+            Toast.makeText(context, TAG+" - Delete Selected Saved", Toast.LENGTH_LONG).show();
+            strEvent = String.format("%d", SavedSectionFragment.mId); 
+            Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ SavedSectionFragment.mId);
+            mDbh.deleteSavedEvent(strEvent);
+ 			// the SavedSectionFragment must reload the data table
+            Log.v(TAG, "DeleteSelected call  updateList(), after del "+ SavedSectionFragment.mId);
+            break;
+            
+        case R.id.idCalendar:
+            Log.v(TAG, " Calendar");
+            Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
+            // TODO  code to save in fragment - ... an mId
+            break;
+            
+        case R.id.action_share:
+            Log.v(TAG, " - idShare pressed");
+            Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
+            // TODO  must send an mId to the share
+            Log.d(TAG, " item: " +  SavedSectionFragment.mId);  // TODO or from SavedSectionFragment
+            ProcessShare(item);
+        return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-}
+	} //end   onOptionsItemSelected(MenuItem ..)	
+    
+	void ProcessShare(MenuItem item) {
+
+		ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
+
+		//Toast.makeText(this, mResources.getString(R.string.doTheShare) + " ", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "doTheShare" + " ", Toast.LENGTH_SHORT).show();
+
+		// collect data for sharing - this sends an MMS  ?????
+		Intent shareIntent = new Intent(Intent.ACTION_SEND);
+		shareIntent.putExtra(Intent.EXTRA_TEXT, "enters text to sent!");
+		shareIntent.setType("text/plain");
+
+		shareIntent.putExtra(Intent.EXTRA_EMAIL, "this is an extra string");
+		String str[] = {"qwerty", "asdfgh"};
+		shareIntent.putExtra(Intent.EXTRA_EMAIL, str);
+
+		mShareActionProvider.setShareIntent(shareIntent);
+
+		Log.d("ProcessShare", " shareIntent " + shareIntent);
+
+		// send off shared data
+		startActivity(Intent.createChooser(shareIntent, "Events List"));
+		Log.d("ProcessShare", " after chooser " + shareIntent);
+
+	}   // end --- ProcessShare
+
+}  // end ---

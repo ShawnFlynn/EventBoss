@@ -17,6 +17,7 @@ public class Constants {
 	
 // TODO: These are not used and should be removed. 
 	// If that happens, the entire class can be removed -- kathyr
+	// this was used for in EventBoss version 1, for keyword search -- PK
 	
 //	public static final String INTENT_ACTION_FILTER_CRITERIA = "tssg.eventboss.ui.FilterCriteria";
 //	public static final String FIND_KEY = "find_key";

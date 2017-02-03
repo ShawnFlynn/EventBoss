@@ -133,10 +133,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     private String[] mRSSURL  = null;           // for computer: URL
 
     /*
-     * setTabLabel
+     * setTabLabel in the action bar
      */
     public static void setTabLabel(String labelText){
-        // Set up the action bar.
         Tab currentTab = m_actionBar.getSelectedTab();
         currentTab.setText(labelText);
     }
@@ -160,6 +159,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         super.onCreate(savedInstanceState);
 
         Log.i(TAG, "onCreate()");   // Activity launched or recreated
+        mDbh = new DatabaseHelper(context);
 
         if( bTRACE ) {
             // trace file is created in SD device
@@ -175,7 +175,6 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
             // problem: getInt returns 0 if key is absent, but key is a valid feed#
-//            int arg = extras.getInt("feedId", mFeedId);
             int arg = extras.getInt("feedId", mFeedId);
             Log.i(TAG, "start up, change feedId from " + mFeedId + " to " + arg);
             oldFeedId = mFeedId ;
@@ -389,7 +388,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         mViewPager.setCurrentItem(tab.getPosition());
         Log.v(TAG, "onTabSelected() pos = " + tab.getPosition());
         if (tab.getPosition() == 1) {
-        //TODO    savedData.updateList();
+        //TODO    savedData.updateList();   ???
         }
 
     }
@@ -527,6 +526,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         CurrentSectionFragment.mListHeader.setText(extraText + EB2MainActivity.mRSSString
                 + " " + mResources.getString(R.string.ampersand)
                 + " " + channelDate);
+        Log.v(TAG, "EB2MainActivity called update List header: " + extraText);
+
     }
 
 
@@ -539,7 +540,12 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public boolean onCreateOptionsMenu(Menu main_activity_action) {
         MenuInflater inflater = getMenuInflater();
         // TODO Name???
-        inflater.inflate(R.menu.listdisplay_activity_action, main_activity_action);
+        if( !mDualPane ) {
+        	inflater.inflate(R.menu.menu_main_dual_activity, main_activity_action);
+        }
+        else {
+        	inflater.inflate(R.menu.menu_main_activity, main_activity_action);
+        }
         return true;
     }
 
@@ -547,8 +553,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     /* Called when an options item is clicked.
      * Handles  itemPrefs, punts on idDeleteSelected, idSaveSelected, or anything else.
      *
-     * 'Save'       only if the CurrentSectionfragment is active (Tab0)
-     * 'Delete'     only if the SavedSectionfragment is active (Tab1)
+     * 'Save'       only if the CurrentSectionFragment is active (Tab0)
+     * 'Delete'     only if the SavedSectionFragment is active (Tab1)
      *  currentTab = m_actionBar.getSelectedTab();   <--- could use this
      */
     @Override
@@ -562,35 +568,39 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 Log.v(TAG, "Settings ");
                 startActivity(new Intent(this,SettingsActivity.class));
                 break;
+ /*-----------------
             case R.id.idSaveSelected:
-                /* Do this only if in CurrentSectionFragment */
+            	// TODO Do this only if in CurrentSectionFragment (& dual)
                 Log.v(TAG, "EBMain - Save Selected");
-                Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_SHORT).show();
-                ///CurrentSectionFragment.storeInSaved ( CurrentSectionFragment.mId );    /* can not be referenced from static context */
-                String strEvent = String.format("%d", CurrentSectionFragment.mId); // also "" + long
+                Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_LONG).show();
+                String strEvent = String.format("%d", CurrentSectionFragment.mId); 
                 Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
-//                mDbh = new DatabaseHelper(context);
                 mDbh.saveEvent(strEvent);
                 break;
+                
             case R.id.idDeleteSelected:
-                /* Do this only if in SavedSectionFragment */
+            	// TODO  Do this only if in SavedSectionFragment  (& dual)
                 Log.v(TAG, "EBMain - Delete Selected");
-                Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_SHORT).show();
-                strEvent = String.format("%d", SavedSectionFragment.mId); // also "" + long
+                Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_LONG).show();
+                strEvent = String.format("%d", SavedSectionFragment.mId); 
                 Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ SavedSectionFragment.mId);
-//                mDbh = new DatabaseHelper(context);
                 mDbh.deleteSavedEvent(strEvent);
+                // TODO the SavedSectionFragment must reload the data table
                 break;
             case R.id.idCalendar:
                 Log.v(TAG, " Calendar");
                 Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
+                // TODO  code to save in fragment - ... an mId
                 break;
             case R.id.idShare:
                 Log.v(TAG, " - idShare pressed");
                 Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
-                Log.d(TAG, " item: " +  item);
+                // TODO  must send an mId to the share
+                Log.d(TAG, " item: " +  CurrentSectionFragment.mId);  // TODO or from SavedSectionFragment
                 ProcessShare(item);
                 break;
+                 
+  ------------------*/
             default:
                 Log.d(TAG, " " + mResources.getString(R.string.unimplemented) + " "
                        + Integer.toHexString(optionSelected) + " " + mResources.getString(R.string.pressed));
@@ -603,7 +613,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     }    // end --- onOptionsItemSelected
 
-
+/*
     void ProcessShare(MenuItem item) {
 
         ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
@@ -628,7 +638,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         Log.d("ProcessShare", " after chooser "+shareIntent);
 
     }    // end --- ProcessShare
-
+*/
 // ==========================================================================
 // PK 11/9/2014   -- EventsListReader contains the code following here, about 180 lines --
 //

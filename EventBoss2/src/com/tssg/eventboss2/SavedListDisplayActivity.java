@@ -59,7 +59,7 @@ public class SavedListDisplayActivity extends Activity {
                 Log.v("SavedListDisplayAct", "optionSelected - Calendar");
                 Toast.makeText(this, "EBMain - Calendar", Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.idShare:
+            case R.id.action_share:
                 Log.v("SavedListDisplayAct", "optionSelected - idShare pressed");
                 Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
                 ProcessShare(item);
