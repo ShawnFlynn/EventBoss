@@ -23,6 +23,8 @@
     <string name="ampersand">\@</string>
     <string name="idDelete">Settings - unimplemented idDeleteSelected pressed</string>
     <string name="idSave">Settings - unimplemented idSaveSelected pressed</string>
+    <string name="idDeleteSelected">Settings - idDeleteSelected pressed</string>
+    <string name="idSaveSelected">Settings - idSaveSelected pressed</string>
     <string name="idCalendar">Settings - unimplemented idCalendar pressed</string>
     <string name="unimplemented">Settings - unimplemented</string>
     <string name="pressed">pressed</string>

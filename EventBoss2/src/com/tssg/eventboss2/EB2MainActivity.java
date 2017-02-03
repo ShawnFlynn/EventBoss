@@ -291,12 +291,11 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                                 .setTabListener(this));
                         break;
 
-/*                    case 3:  // TODO was used in search - hill have to use the display detail
+                    case 3:  // TODO was used in search - hill have to use the display detail
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Event))
                                 .setTabListener(this));
                         break;
-*/
                 }
             }
         }
@@ -569,17 +568,18 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 Log.v(TAG, "Settings ");
                 startActivity(new Intent(this,SettingsActivity.class));
                 break;
- /*-----------------
-            case R.id.idSaveSelected:
+
+            case R.id.action_save:   //idSaveSelected:
             	// TODO Do this only if in CurrentSectionFragment (& dual)
                 Log.v(TAG, "EBMain - Save Selected");
                 Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_LONG).show();
                 String strEvent = String.format("%d", CurrentSectionFragment.mId); 
                 Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
                 mDbh.saveEvent(strEvent);
+                // now update the list
                 break;
                 
-            case R.id.idDeleteSelected:
+            case R.id.action_delete:   ///idDeleteSelected:
             	// TODO  Do this only if in SavedSectionFragment  (& dual)
                 Log.v(TAG, "EBMain - Delete Selected");
                 Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_LONG).show();
@@ -588,25 +588,28 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 mDbh.deleteSavedEvent(strEvent);
                 // TODO the SavedSectionFragment must reload the data table
                 break;
-            case R.id.idCalendar:
+                
+            case R.id.action_calendar:
                 Log.v(TAG, " Calendar");
                 Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
                 // TODO  code to save in fragment - ... an mId
                 break;
-            case R.id.idShare:
+
+            case R.id.action_share:
                 Log.v(TAG, " - idShare pressed");
                 Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
                 // TODO  must send an mId to the share
                 Log.d(TAG, " item: " +  CurrentSectionFragment.mId);  // TODO or from SavedSectionFragment
-                ProcessShare(item);
+//                ProcessShare(item);
                 break;
                  
-  ------------------*/
             default:
                 Log.d(TAG, " " + mResources.getString(R.string.unimplemented) + " "
                        + Integer.toHexString(optionSelected) + " " + mResources.getString(R.string.pressed));
                 Toast.makeText(context,  " " + Integer.toHexString(optionSelected)
                                + " " + mResources.getString(R.string.pressed), Toast.LENGTH_SHORT).show();
+                Log.d(TAG, " " + Integer.toHexString(optionSelected)
+                         + " " + mResources.getString(R.string.pressed));  // TODO or from SavedSectionFragment
                 break;
         }
 

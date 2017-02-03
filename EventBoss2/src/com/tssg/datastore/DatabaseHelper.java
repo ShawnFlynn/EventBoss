@@ -409,7 +409,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 			return cursor;
 		} catch (DatastoreException dataExcp) {
 
-			Log.e(DatabaseHelper.LOG_TAG, ">>>>>  DatabaseHelper:getCursorAllEvents: failed to retrieve the database", dataExcp);
+			Log.e(DatabaseHelper.LOG_TAG, ">>>>>  DatabaseHelper:getCursorSearchEvents: failed to retrieve the database", dataExcp);
 			return null;
 		}
 	}

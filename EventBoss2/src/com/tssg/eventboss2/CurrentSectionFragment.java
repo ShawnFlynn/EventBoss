@@ -104,8 +104,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		Log.v(TAG, "(106)---> eventFragmentCoordinator ->displayEventDetails ("+mListType+")");
-		Log.v(TAG, "onListItemClick: Listview=" + l
-                + ":View=" + v + ":Position=" + position + ":Id=" + id);
+		Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + id);
         if( position > 0 ) {
 			mPosition = position;
 			mId = id;

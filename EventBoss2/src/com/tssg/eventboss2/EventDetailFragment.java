@@ -1,12 +1,14 @@
 package com.tssg.eventboss2;
 
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.CalendarContract;
@@ -34,7 +36,7 @@ public class EventDetailFragment extends Fragment {
     public static final String TAG = "EventDetailFragment";   // log's tag
 
     final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
-//    public static final String SAVED_KEY = "isSaved";		// ****************************
+//    public static final String SAVED_KEY = "isSaved";		// ********* previous use ********
     public static final String DB_HELPER = "DBHelper";
 
 	public static final String LIST_TYPE = null;
@@ -84,22 +86,22 @@ public class EventDetailFragment extends Fragment {
         Log.v(TAG, " initialization EventDetailFragment:");
         Log.v(TAG, "onCreate: type: "+m_isListType+",  mId: "+mId+", db: "+dbh);
 
-        if( m_isListType == 0 ) {    //
+        if( m_isListType == 0 ) {    // ----- Current Section
         	// Get the current event
-            Log.v(TAG, "1/current Event: "+mEvent+", id = "+mId);
+            Log.v(TAG, "*/current Event: "+mEvent+", id = "+mId);
         	try {mEvent = dbh.getEventById(mId);}
             catch (android.database.CursorIndexOutOfBoundsException exept ) {
                 if (mEvent == null) {
                     Log.e(TAG, "we have an id, but no Event: " + mEvent);
                     Log.e(TAG, "this did happen when 'm_isSaved' should be false but is true ");
-                    Log.e(TAG, "see event EventDetailActivity near linr 56");
+                    Log.e(TAG, "see event EventDetailActivity near line 56");
                     return;
                 }
                 ;
             }
-            Log.v(TAG, "2/current Event: "+mEvent);
+            Log.v(TAG, "**/current Event: "+mEvent);
 		}
-        if( m_isListType == 1 ) {
+        if( m_isListType == 1 ) {	// ----- Saved Section
             // Get the saved event
             Log.v(TAG, "saved Event: "+mEvent+", mId: "+mId+", dbh: "+dbh);
             
@@ -110,26 +112,25 @@ public class EventDetailFragment extends Fragment {
             
             Log.v(TAG, "saved Event: "+mEvent);
         }
-        if( m_isListType == 2 ) {
-            // Get from the saved event
-//        	mEvent = dbh.getAllWebEventById(arg);	// arg == string
-        	Log.v(TAG, "before getEventById "+mId);        	
-        	mEvent = dbh.getEventById(mId);
-//        	mEvent = dbh.buildBELEvent( cursor );
-            Log.v(TAG, "Search results: "+mEvent+", mId: "+mId+", dbh: "+dbh);
-            /////// mEvent is on the search list
-//********
-//  08-11 14:55:27.739: V/EventDetailFragment(841): 
-//                      Search Event: null, mId: 2714, dbh: com.tssg.datastore.DatabaseHelper@b3eeeba8
+        
+        if( m_isListType == 2 ) {	// ----- Search section
             
             if ( mId.isEmpty() ) 
-            	Log.v(TAG, "can not delete: Event is empty");  //
+            	Log.v(TAG, "can not display: Event is empty");  //
             else 
-            	mEvent = dbh.getSavedEventById(mId);    //<<<<<<<<  search / use Current >>>>>>>>>
-//            	BELEvent mEvent1;
-//            	mEvent1 = dbh.getCursorSearchEvents(key);            
+            	Log.v(TAG, "EventDetailFragment(120) read id: " + mId);  //
+/*
+// - mId - should be the Id from CurrentEventList
+//     also see --> SearchSectionFragment line 97  
+            	try {
+            		mEvent = dbh.getEventById(mId);
+            	} catch ( SQLException exp ) {
+            		Log.e( TAG, "caught SQLException: reading this id: "+mId ,exp );
+            	}
             Log.v(TAG, "search Event: "+mEvent);
+*/
         }
+
     }   // end --- onCreate()
  
     @Override
@@ -183,18 +184,17 @@ public class EventDetailFragment extends Fragment {
    public void refreshView() {
        Log.i(TAG,"->refresh view: mEvent= "+mEvent);
        if(mEvent==null ) {
-           mTitleText.setText("have no Event");   // 
-           return;
-       }
+           mTitleText.setText(" **** no Event ****");   // 
+       }    else   {
        mTitleText.setText(mEvent.getTitle());
        mStartText.setText(mEvent.getStartTime());
        mEndText.setText(mEvent.getEndTime());
        mTypeText.setText(mEvent.getEventType());
        mLinkText.setText(mEvent.getLinkToGroup());
        mLocationText.setText(mEvent.getLocation());
-       mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of
+       mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of CSS and HTML codes
        					// mDescriptionText.setText("substitute for LongDescription");
-
+       }
             Log.v(TAG, "in refreshView: ");
             Log.v(TAG, " text: " +mTitleText.getText());   // (TextView)
 //            Log.v(TAG, " star: " +mStartText.getText());

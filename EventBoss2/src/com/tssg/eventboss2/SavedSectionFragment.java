@@ -28,6 +28,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 	public static TextView mListHeader;
 	public static int mPosition = -1;
 	public static long mId;
+
 	private static DatabaseHelper dbh;	
 
 	Cursor mCursor;
@@ -73,10 +74,9 @@ public class SavedSectionFragment extends EventBossListFragment {
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location };
 
 		mEventItemCount = mCursor.getCount();
-		
 		mLV = getListView();
 		mLV.setHeaderDividersEnabled(true); 
-		mLV.setDividerHeight(20);			// = divider between list items
+		mLV.setDividerHeight(5);				// = divider between list items
 		
 		// Create an empty adapter we will use to display the loaded data.		// <------------
 		// We pass null for the cursor, then update it in onLoadFinished()
@@ -88,7 +88,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
 		mLV.addHeaderView(mListHeader);
 
-        updateList();   // this is done again in on resume - can do with only that one ????
+        updateList();   // can not implement in SavedSectionFragment
 	}
 	
 	@Override
@@ -112,12 +112,24 @@ public class SavedSectionFragment extends EventBossListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		Log.v(TAG, "onListItemClick: Listview=" + l
                 + ":View=" + v + ":Position=" + position + ":Id=" + id);
-        if( position > 0 ) {
+/*		eventFragmentCoordinator.displayEventDetails(Long.toString(id), true);
+
+		Log.v(TAG, "(75)---> eventFragmentCoordinator ->displayEventDetails (false)");
+		Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + id);
+		if( position > 0 ) {
 			mPosition = position;
 			mId = id;
 			Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
 
-		eventFragmentCoordinator.displayEventDetails(Long.toString(id), 1);
+			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
+		}
+*/
+        if( position > 0 ) {	// it's using only mId
+            mPosition = position;
+            mId = id;
+            Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
+
+            eventFragmentCoordinator.displayEventDetails(Long.toString(mId), 1);
         }
     }
 
