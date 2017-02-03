@@ -23,7 +23,9 @@ import com.tssg.eventsource.BELEvent;
 //public class FinderImpl extends Activity implements Finder {
 public class FinderImpl implements Finder {
 
-	// logging level TODO
+	protected final String TAG = getClass().getSimpleName();
+
+	// logging level
 	public boolean LOG = true;
 	public boolean LOGBAR = true;
 
@@ -35,9 +37,12 @@ public class FinderImpl implements Finder {
 	}
 
 	public enum FindKey {
-		TYPE("type"), TITLE("title"), ORGANIZER("organizer"), LOCATION(
-				"location"), DESCRIPTION("description"), LONGDESCRIPTION(
-				"longDescription");
+		TYPE("type"),
+		TITLE("title"),
+		ORGANIZER("organizer"),
+		LOCATION("location"),
+		DESCRIPTION("description"),
+		LONGDESCRIPTION("longDescription");
 
 		private final String key;
 
@@ -59,28 +64,6 @@ public class FinderImpl implements Finder {
 
 	List<BELEvent> targetEventList = null;
 
-	/**
-	 * 
-	 * Parse a comma separated list and return elements in an array.
-	 * 
-	 * @param types
-	 * @return an array of type strings
-	 */
-
-//	private String[] parseTypes(String types) {
-//		String[] t = types.split(",");
-//		String hdr = null;
-//		// remove "Event type:" header from beginning of the string
-//		hdr = new String(t[0]);
-//		int index = hdr.indexOf(':');
-//		t[0] = (hdr.substring(index + 1));
-//
-//		// remove whitespace from each element
-//		for (int i = 0; i < t.length; i++) {
-//			t[i] = t[i].trim();
-//		}
-//		return t;
-//	}
 
 	/**
 	 * Return a list of BELEvents that have a event date that matches the value
@@ -95,7 +78,12 @@ public class FinderImpl implements Finder {
 	 *  If future is true, all events on or after date are returned, sorted, by date
 	 * 
 	 */
-	public List<BELEvent> matchDate(List<BELEvent> input, long date, boolean bFutureEvents) {
+	public List<BELEvent> matchDate(List<BELEvent> input,
+									long date,
+									boolean bFutureEvents) {
+
+		Log.i(TAG, "matchDate()");
+
 		List<BELEvent> matchedList = new ArrayList<BELEvent>();
 		final String TAG = "FinderImpl";
 
@@ -104,9 +92,9 @@ public class FinderImpl implements Finder {
 		Calendar cal = Calendar.getInstance();
 		Calendar fieldCal = Calendar.getInstance();
 		fieldCal.setTimeInMillis(date);
-//		fieldCal.setTime(date);
 		ParsePosition pos = new ParsePosition(0);
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm",Locale.US);
+		SimpleDateFormat formatter = 
+				new SimpleDateFormat("MM/dd/yyyy HH:mm",Locale.getDefault());
 
 		TreeMap<Long, List<BELEvent>> dateSortedMap = null;
 
@@ -116,27 +104,25 @@ public class FinderImpl implements Finder {
 
 		// create calendar set date parameter
 
-		Log.i(TAG, "matchDate inputsize:" + input.size());
-		//Log.i(TAG, "matchDate target date:" + date.toString());
-		// Iterate over input BELEvents
+		Log.d(TAG, "inputsize:" + input.size());
 		Iterator<BELEvent> iterator = input.iterator();
 		while (iterator.hasNext()) {
 			pos = new ParsePosition(0);
 			BELEvent n = iterator.next();
 			eventDateStr = n.getStartTime(); // The Date, in string form, from BEL list
-			Log.i(TAG, "eventDateStr:" + eventDateStr);
+			Log.d(TAG, "eventDateStr:" + eventDateStr);
 			eventDate = formatter.parse(eventDateStr, pos);
-			Log.i(TAG, "eventDate:" + eventDate.toString());
+			Log.d(TAG, "eventDate:" + eventDate.toString());
 			cal.setTime(eventDate);
 
 			// match the day-of-year and the actual year to determine a match of
 			// dates.
 			if ((fieldCal.get(Calendar.DAY_OF_YEAR) == cal
-					.get(Calendar.DAY_OF_YEAR) && (fieldCal.get(Calendar.YEAR) == cal
+					.get(Calendar.DAY_OF_YEAR) &&
+						(fieldCal.get(Calendar.YEAR) == cal
 					.get(Calendar.YEAR))))
 				// date and year matches
 				matchedList.add(n);
-			
 			else if(bFutureEvents == true){
 				// event date is after the target date
 				if (cal.getTimeInMillis() > date){	
@@ -145,25 +131,27 @@ public class FinderImpl implements Finder {
 				}
 			}
 		}
-		
+
 		if(bFutureEvents == true){
 			//replace matchedList with contents of dateSortedMap
 			matchedList = convertMap(dateSortedMap);
 		}
 	return matchedList;	
-		
-	}
+
+	}	//  end - matchDate()
 
 
 	/*
 	 * Take a sorted map of lists and converts it into a single list.
 	 */
 	List<BELEvent> convertMap(TreeMap<Long, List<BELEvent>> dsm){
-		
+
+		Log.i(TAG, "convertMap()");
+
 		List<BELEvent> l = new ArrayList<BELEvent>();
 		if (dsm.isEmpty())
 			return l;
-		
+
 		SortedSet<Long> ss = new TreeSet<Long>(dsm.keySet());
 		Iterator <Long>iter = ss.iterator();
 		List<BELEvent> dateBin = null;
@@ -171,26 +159,30 @@ public class FinderImpl implements Finder {
 			dateBin = dsm.get( iter.next() );
 			l.addAll(dateBin);
 		}
-		
+
 		return l;
-	}
+
+	}	//  end - convertMap()
 	
 	//
-		void addToSortedMap(long l_time, BELEvent e, TreeMap< Long, List<BELEvent>> dsm ){
-			// sort the list by date
-			List<BELEvent> l = null;
+	void addToSortedMap(long l_time, BELEvent e, TreeMap< Long, List<BELEvent>> dsm ){
 
-			if ( dsm.containsKey(l_time) == true){
-			// add BELEvent to list
-				l = dsm.get(l_time);
-				l.add(e);
-			}
-			else
-			{	// add a new list to the map that contains the one event
-				dsm.put((long)l_time, new ArrayList<BELEvent>());
-				l = dsm.get(l_time);
-				l.add(e);
-			}
+		Log.i(TAG, "addToSortedMap()");
+
+		// sort the list by date
+		List<BELEvent> l = null;
+
+		if ( dsm.containsKey(l_time) == true){
+		// add BELEvent to list
+			l = dsm.get(l_time);
+			l.add(e);
+		}
+		else
+		{	// add a new list to the map that contains the one event
+			dsm.put((long)l_time, new ArrayList<BELEvent>());
+			l = dsm.get(l_time);
+			l.add(e);
+		}
 	}
 
 	/**
@@ -205,14 +197,16 @@ public class FinderImpl implements Finder {
 	 * 
 	 */
 	//@Override
-	public List<BELEvent> matchDateRange(List<BELEvent> input, Date startDate,
-			Date endDate) {
+	public List<BELEvent> matchDateRange(List<BELEvent> input,
+												Date startDate,
+												Date endDate) {
+
+		Log.i(TAG, "matchDateRange()");
+
 		List<BELEvent> matchedList = new ArrayList<BELEvent>();
 		final String TAG = "FinderImpl";
 
-		// TODO Test parameters for startDate, + endDate.
-
-		// TODO log bad input and/or throw some sort of exception
+		// log bad input and/or throw some sort of exception
 		if (startDate.after(endDate))
 			return matchedList;
 		// create a Date from the BELEvent
@@ -228,10 +222,11 @@ public class FinderImpl implements Finder {
 		endCal.setTime(endDate);
 
 		ParsePosition pos = new ParsePosition(0);
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy - HH:mm",Locale.US);
+		SimpleDateFormat formatter =
+				new SimpleDateFormat("MM/dd/yyyy - HH:mm",Locale.getDefault());
 
-		Log.i(TAG, "target start date: " + startDate.toString());
-		Log.i(TAG, "target end date  : " + endDate.toString());
+		Log.d(TAG, "target start date: " + startDate.toString());
+		Log.d(TAG, "target end date  : " + endDate.toString());
 
 		Iterator<BELEvent> iterator = input.iterator();
 		while (iterator.hasNext()) {
@@ -241,7 +236,7 @@ public class FinderImpl implements Finder {
 			// Turn a string into a date
 			eventDate = formatter.parse(eventDateStr, pos);
 			eventCal.setTime(eventDate);
-			Log.i(TAG, "current event Date:" + eventDateStr);
+			Log.d(TAG, "current event Date:" + eventDateStr);
 
 			// match the day-of-year and the actual year to determine a match of
 			// dates.
@@ -253,53 +248,46 @@ public class FinderImpl implements Finder {
 					&& (eventCal.get(Calendar.DAY_OF_YEAR) <= endCal
 							.get(Calendar.DAY_OF_YEAR))) {
 				matchedList.add(n);
-				Log.i(TAG, " *** current title is a match: " + n.getTitle()
+				Log.d(TAG, " *** current title is a match: " + n.getTitle()
 						+ " " + n.getStartTime());
 				break;
 			}
 
 			// Checking that events are within range based on the year alone.
-			if (((eventCal.get(Calendar.YEAR) >= startCal.get(Calendar.YEAR)) && (eventCal
+			if (((eventCal.get(Calendar.YEAR) >= startCal.get(Calendar.YEAR))
+						&& (eventCal
 					.get(Calendar.YEAR) <= endCal.get(Calendar.YEAR)))
-					&&
-
+						&&
 					// handle case of event falling on the first year in time
 					// range
 					(((eventCal.get(Calendar.YEAR) == startCal
 							.get(Calendar.YEAR)) && (eventCal
 							.get(Calendar.DAY_OF_YEAR) >= startCal
 							.get(Calendar.DAY_OF_YEAR)))
-
 							||
-
 							// handle an event falling on the final year in time
 							// range
 							((eventCal.get(Calendar.YEAR) == endCal
 									.get(Calendar.YEAR)) && (eventCal
 									.get(Calendar.DAY_OF_YEAR) <= endCal
 									.get(Calendar.DAY_OF_YEAR)))
-
 					||
-
 					// other cases fall through to here
 					((eventCal.get(Calendar.YEAR) > startCal.get(Calendar.YEAR)) && (eventCal
 							.get(Calendar.YEAR) < endCal.get(Calendar.YEAR)))
-
 					)
-
 			)
-
 			{
 				matchedList.add(n);
-				Log.i(TAG, " Current event is a match. Title: " + n.getTitle()
-						+ " " + n.getStartTime());
-				Log.i(TAG, "");
+				Log.d(TAG, " Current event is a match. Title: " + n.getTitle()
+							+ " " + n.getStartTime());
+				Log.d(TAG, "");
 			}
 		}
 
 		return matchedList;
 
-	}
+	}	//  end - matchDateRange()
 
 	//@Override
 	/**
@@ -312,24 +300,25 @@ public class FinderImpl implements Finder {
 	 * 
 	 */
 	public List<BELEvent> match(List<BELEvent> input, String field, String value) {
+
+		Log.i(TAG, "match()");
+
 		List<BELEvent> matchedList = new ArrayList<BELEvent>();
 		final String TAG = "FinderImpl";
-		// TODO error check parameters.
-		
+
 		String mField = field;
 		String mValue = value;
 		String testValue = null;
 
 		if (LOG) {
-			Log.i(TAG, "seeking match on field: " + mField);
-			Log.i(TAG, "seeking match on value: " + mValue);
+			Log.d(TAG, "seeking match on field: " + mField);
+			Log.d(TAG, "seeking match on value: " + mValue);
 		}
 
 		if (input == null || input.isEmpty() || field == null
 				|| field.length() == 0 || value == null || value.length() == 0) {
 			return matchedList;
 		}
-		
 
 		// Iterate over input BELEvents
 		Iterator<BELEvent> iterator = input.iterator();
@@ -354,32 +343,34 @@ public class FinderImpl implements Finder {
 					testValue = n.getEventType();
 				}
 				else if ( mField.compareTo(Constants.EVENT_DATE)== 0 ){
-				// TODO implement a getDate function, investigate getStartTime
 					testValue = n.getStartTime();
 				}
-					
-				
-				if ( testValue.toLowerCase(Locale.getDefault()).contains(value.toLowerCase(Locale.getDefault()) ))
+
+				if ( testValue.toLowerCase(Locale.getDefault())
+							.contains(value.toLowerCase(Locale.getDefault()) ))
 				{
 					matchedList.add(n);
 					if (LOG)
-						Log.i(TAG, "Match found for Find_Key: " + mField + "Find_Value: " + mValue);
-				}		
-			
+						Log.d(TAG,  "Match found for Find_Key: " + mField + 
+									"Find_Value: " + mValue);
+				}
+
 			} catch (Exception e) {
 				if (LOG)
-					Log.w(TAG, e);
+					Log.e(TAG, "" + e);
 			}
 		}
-		Log.i(TAG, matchedList.size() + " matches found for " + mField + ", " + mValue);
+		Log.d(TAG, matchedList.size()
+									+ " matches found for "
+									+ mField + ", "
+									+ mValue);
 		return matchedList;
-	}
+
+	}	//  end - match()
 
 	//@Override
 	public List<BELEvent> matchDate(List<BELEvent> input, Date date) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
-	
-}
+}	//  end - FinderImpl

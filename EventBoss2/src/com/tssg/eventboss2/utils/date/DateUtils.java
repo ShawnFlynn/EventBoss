@@ -104,7 +104,7 @@ public class DateUtils {
 	/**
 	 * Parses a Date out of a string using an array of masks.
 	 * <p/>
-	 * It uses the masks in order until one of them succedes or all fail.
+	 * It uses the masks in order until one of them succeeds or all fail.
 	 * <p/>
 	 *
 	 * @param masks array of masks to use for parsing the string
@@ -118,7 +118,7 @@ public class DateUtils {
 		ParsePosition pp = null;
 		Date d = null;
 		for (int i=0;d==null && i<masks.length;i++) {
-			DateFormat df = new SimpleDateFormat(masks[i],Locale.US);
+			DateFormat df = new SimpleDateFormat(masks[i],Locale.getDefault());
 			//df.setLenient(false);
 			df.setLenient(true);
 			try {
@@ -233,9 +233,9 @@ public class DateUtils {
 			return null; 
 		}
 		Date ddd = null;
-		final SimpleDateFormat simpFormat1 = new SimpleDateFormat("yyyy-MM-dd 2000-01-01 HH:mm:ss", Locale.US);
+		final SimpleDateFormat simpFormat1 = new SimpleDateFormat("yyyy-MM-dd 2000-01-01 HH:mm:ss", Locale.getDefault());
 		/** need to handle 05/29/2014 09:00 */
-		final SimpleDateFormat simpFormat2 = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US);
+		final SimpleDateFormat simpFormat2 = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault());
 
 		try {
 			ddd = simpFormat1.parse(sDate);
@@ -271,7 +271,7 @@ public class DateUtils {
 	 *
 	 */
 	public static String formatRFC822(Date date) {
-		SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'",Locale.US);
+		SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'",Locale.getDefault());
 		dateFormater.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return dateFormater.format(date);
 	}
@@ -287,7 +287,7 @@ public class DateUtils {
 	 *
 	 */
 	public static String formatW3CDateTime(Date date) {
-		SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.US);
+		SimpleDateFormat dateFormater = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",Locale.getDefault());
 		dateFormater.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return dateFormater.format(date);
 	}

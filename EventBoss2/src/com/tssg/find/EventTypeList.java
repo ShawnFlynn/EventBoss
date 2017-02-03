@@ -1,7 +1,7 @@
 package com.tssg.find;
 
 import java.util.ArrayList;
-
+import android.annotation.SuppressLint;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -31,16 +31,17 @@ public class EventTypeList extends ListActivity {
 	private ListView lv = null;
 	private static LayoutInflater mLayoutInflater = null;
 
-	
-	
 	/**
 	 * ArrayAdapter connects the spinner widget to array-based data.
 	 */
 	protected ArrayAdapter<CharSequence> mAdapter;
 
 	/** Called when the activity is first created. */
+	@SuppressLint("InflateParams")
+	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		//this.setContentView(R.layout.type_list);
 		Intent intent = getIntent(); // Get the calling intent
 		ArrayList<String> types = intent.getStringArrayListExtra("TypeValues");
@@ -52,11 +53,8 @@ public class EventTypeList extends ListActivity {
 		View actionbar = layout.findViewById(R.id.type_banner);
 		actionbar.setBackgroundResource(R.color.darkblue);
 
-		
-		//		this.lv = (ListView) layout.findViewById(R.id.list);
 		this.lv = getListView();
 
-		
 		lv.setTextFilterEnabled(true);
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		lv.setCacheColorHint(R.color.white);
@@ -64,17 +62,15 @@ public class EventTypeList extends ListActivity {
 		lv.setSelector(getResources().getDrawable(R.drawable.highlight));
 		lv.setDivider(getResources().getDrawable(R.drawable.divider));
 		lv.setDividerHeight(20);		
-//		lv.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
-//		lv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 		lv.setCacheColorHint(0x000000);
-//		lv.setFocusable(false);
 		lv.setItemsCanFocus(false);
-	
-		
+
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				MakeToast.makeToast(getApplicationContext(), ((TextView) view).getText().toString(), MakeToast.LEVEL_DEBUG);				
+				MakeToast.makeToast(getApplicationContext(),
+									((TextView) view).getText().toString(),
+									MakeToast.LEVEL_DEBUG);
 				Intent retIntent = new Intent();
 				String temp = (String) ((TextView) view).getText();
 				retIntent.putExtra(Constants.FIND_VALUE, temp);
@@ -82,6 +78,5 @@ public class EventTypeList extends ListActivity {
 				finish();
 			}
 		});
-
 	}
 }

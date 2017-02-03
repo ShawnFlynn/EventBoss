@@ -5,7 +5,7 @@ package com.tssg.find;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -26,9 +26,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.tssg.eventboss2.EB2MainActivity;
 import com.tssg.eventboss2.R;
-//import android.app.Application;
-import com.tssg.eventboss2.utils.misc.Constants;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
 /**
@@ -41,7 +40,7 @@ import com.tssg.eventboss2.utils.misc.MakeToast;
 //public class FilterCriteria extends Activity implements OnTouchListener {
 public class FilterCriteria extends Activity {
 
-	public static final String TAG = "FilterCriteria";
+	protected final String TAG = getClass().getSimpleName();
 
 	/*
 	 * Inner class to hold Find key and Find value These represent user inputs,
@@ -79,11 +78,6 @@ public class FilterCriteria extends Activity {
 
 	} // end KeyValue
 
-	// logging tag
-	// static final int DATE_DIALOG_ID = 0;
-
-	// private DatePicker mDatePicker;
-	// private Button mSetDate;
 	private Calendar criteriaDate = null;
 	DatePickerDialog datePicker= null;
 
@@ -109,21 +103,22 @@ public class FilterCriteria extends Activity {
 	int event_key_code = EVENT_UNKNOWN;
 
 	/* Called when the activity is first created. */
+	@SuppressLint("InflateParams")
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-Log.e(TAG, "in: " + "FilterCriteria");
-MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USER);
+		Log.i(TAG, "onCreate()");
+
+		if (EB2MainActivity.DEBUG)
+			MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***",
+										MakeToast.LEVEL_USER);
 		
 		this.setContentView(R.layout.filter_criteria);
-		// Set up the list view
-		// this.lv = (ListView) findViewById(R.id.criteriakey_list);
 
 		types = getIntent().getStringArrayListExtra("TypesKey");
 
-		// inflate the entire view
-		// requestWindowFeature(Window.FEATURE_NO_TITLE);
 		mLayoutInflater = LayoutInflater.from(this.getBaseContext());
 		View layout = mLayoutInflater.inflate(R.layout.filter_criteria, null);
 
@@ -137,22 +132,23 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 		lv.setAdapter(new ArrayAdapter<String>(this, R.layout.row, keys));
 		lv.setTextFilterEnabled(true); // RD: why filter?
 		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-//		lv.setFocusable(false);
 		lv.setItemsCanFocus(false);
-//		lv.setCacheColorHint(R.color.white);
 		lv.setBackgroundResource(R.color.white);
 		lv.setSelector(getResources().getDrawable(R.drawable.highlight));
 		lv.setDivider(getResources().getDrawable(R.drawable.divider));
 		lv.setDividerHeight(20);
-		
-		lv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+		lv.setLayoutParams(new LinearLayout.LayoutParams(
+										LinearLayout.LayoutParams.FILL_PARENT,
+										LinearLayout.LayoutParams.FILL_PARENT));
 
-		
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				// When clicked, show a toast with the TextView text
-				MakeToast.makeToast(getApplicationContext(), ((TextView) view).getText().toString(), MakeToast.LEVEL_DEBUG);	
+				if (EB2MainActivity.DEBUG)
+					MakeToast.makeToast(getApplicationContext(),
+										((TextView) view).getText().toString(),
+										MakeToast.LEVEL_DEBUG);	
 				
 				String choice = ((String) ((TextView) view).getText()).trim();
 				// RD: Question: Should these strings below be replaced with
@@ -186,85 +182,81 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 		});
 
 		this.setContentView(layout);
-	}	// ----- end onCreate  -----
+
+	}	//  end - onCreate()
 
 	private void promptValueUI(int code) {
+
+		Log.i(TAG, "promptValueUI()");
 
 		String title = ""; 
 		String msg = ""; 
 		AlertDialog valDia = null;
-		
-		
+
 		switch (code) {
-		case EVENT_TYPE:
-			// Display a list of the existing types in a new activity.
-			Intent type_intent = new Intent(this, EventTypeList.class);
-			// Pass the array of event types to the next activity
-			type_intent.putStringArrayListExtra("TypeValues", types);
-			startActivityForResult(type_intent, Constants.FIND_TYPE_REQ);
-			break;
+			case EVENT_TYPE:
+				// Display a list of the existing types in a new activity.
+				Intent type_intent = new Intent(this, EventTypeList.class);
+				// Pass the array of event types to the next activity
+				type_intent.putStringArrayListExtra("TypeValues", types);
+				startActivityForResult(type_intent, Constants.FIND_TYPE_REQ);
+				break;
 
-		case EVENT_DATE:
-			title = "Date";
-			msg = "Select earliest date of interest:"; // 
+			case EVENT_DATE:
+				title = "Date";
+				msg = "Select earliest date of interest:"; // 
 
-			//get the current date
-	        c = Calendar.getInstance();
-	        cYear = c.get(Calendar.YEAR);
-	        cMonth = c.get(Calendar.MONTH);
-	        cDay = c.get(Calendar.DATE);
+				//get the current date
+				c = Calendar.getInstance();
+				cYear = c.get(Calendar.YEAR);
+				cMonth = c.get(Calendar.MONTH);
+				cDay = c.get(Calendar.DATE);
 
-			datePicker = 
-				new DatePickerDialog(this,  mDateSetListener,  cYear, cMonth, cDay);
-
-			datePicker.setMessage(msg);
-			datePicker.show();
-			break;
- 
-		case EVENT_TITLE:
-			
-			title = "Title Search";
-			msg = "Enter Search String";
-			valDia = genValueDialogBox(title, msg);
-			valDia.show();
-			break;
-			
-		case EVENT_SHORT_DESC:
-			
-			title = "Description";
-			msg = "Enter Search String";
-			valDia = genValueDialogBox(title, msg);
-			valDia.show();
-			break;
-			
-		case EVENT_LOCATION:
-
-			title = "Location";
-			msg = "Enter Search String";
-			valDia = genValueDialogBox(title, msg);
-			valDia.show();
-			break;
-			
-		case EVENT_ORGANIZATION:
-			
-			title = "Organization";
-			msg = "Enter Search String";
-			valDia = genValueDialogBox(title, msg);
-			valDia.show();
-			break;
-		
-//			Intent dia_intent = new Intent(this, FindValueDialog.class);
-//			dia_intent.putExtra("CriteriaName", code);
-//			startActivityForResult(dia_intent, Constants.FIND_TEXT_REQ);
-//			break;
-
-		case EVENT_UNKNOWN:
-			break;
-		}
-	}
-
+				datePicker = new DatePickerDialog(this,
+													mDateSetListener,
+													cYear, cMonth, cDay);
 	
+				datePicker.setMessage(msg);
+				datePicker.show();
+				break;
+
+			case EVENT_TITLE:
+				title = "Title Search";
+				msg = "Enter Search String";
+				valDia = genValueDialogBox(title, msg);
+				valDia.show();
+				break;
+
+			case EVENT_SHORT_DESC:
+				title = "Description";
+				msg = "Enter Search String";
+				valDia = genValueDialogBox(title, msg);
+				valDia.show();
+				break;
+
+			case EVENT_LOCATION:
+				title = "Location";
+				msg = "Enter Search String";
+				valDia = genValueDialogBox(title, msg);
+				valDia.show();
+				break;
+
+			case EVENT_ORGANIZATION:
+				title = "Organization";
+				msg = "Enter Search String";
+				valDia = genValueDialogBox(title, msg);
+				valDia.show();
+				break;
+
+			case EVENT_UNKNOWN:
+				break;
+		}
+	}	//  end - promptValueUI()
+
 	private AlertDialog genValueDialogBox(String title, String message){
+
+		Log.i(TAG, "genValueDialogBox()");
+
 		// Set an EditText view to get user input 
 		AlertDialog alert = null;
 		final EditText input = new EditText(this);
@@ -275,41 +267,43 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 		.setView(input)
 		.setIcon(R.drawable.ic_search)	// OLD ICON FORMAT
 		.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int id) {
-			  Editable value = input.getText();
-			  KeyValue.setFindValue(value.toString().trim());
-				forwardKeyValue();
-		}
+			public void onClick(DialogInterface dialog, int id) {
+				  Editable value = input.getText();
+				  KeyValue.setFindValue(value.toString().trim());
+					forwardKeyValue();
+			}
 		});
 
 		alt_bld.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-		  public void onClick(DialogInterface dialog, int whichButton) {
-			  KeyValue.setFindValue("");
-			  KeyValue.setFindKey(Constants.EVENT_UNKNOWN);
-		  dialog.cancel();
-		  }
+			public void onClick(DialogInterface dialog, int whichButton) {
+				KeyValue.setFindValue("");
+				KeyValue.setFindKey(Constants.EVENT_UNKNOWN);
+				dialog.cancel();
+			}
 		});
 		
 		alert = alt_bld.create();
 		return alert;
-		
-	}
+
+	}	//  end - genValueDialogBox()
 	
 	
 	protected DatePickerDialog.OnDateSetListener mDateSetListener = 
 		new DatePickerDialog.OnDateSetListener() {
-		public void onDateSet(DatePicker view, int year, int monthOfYear,
-				int dayOfMonth) {
-			cYear = year;
-			cMonth = monthOfYear;
-			cDay = dayOfMonth;
-			displayToast();
-			c.set(cYear, cMonth, cDay);
-			lDateValue = c.getTimeInMillis();
-			KeyValue.setDateValue(lDateValue);
-			forwardKeyValue();
-			
-		}
+			public void onDateSet(DatePicker view,
+					int year,
+					int monthOfYear,
+					int dayOfMonth)
+			{
+				cYear = year;
+				cMonth = monthOfYear;
+				cDay = dayOfMonth;
+				displayToast();
+				c.set(cYear, cMonth, cDay);
+				lDateValue = c.getTimeInMillis();
+				KeyValue.setDateValue(lDateValue);
+				forwardKeyValue();
+			}
 	};
 	
 	
@@ -317,12 +311,17 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 	 * Process Key and Value (or Date)
 	 */
 	private void forwardKeyValue() {
-		String str = "forwardKeyValue: "+KeyValue.getFindKey()+", "+KeyValue.getFindValue();
-		Log.e("Filter Criteria: ", str);
+
+		Log.i(TAG, "forwardKeyValue()");
+
+		String str = "forwardKeyValue: "
+						+ KeyValue.getFindKey()
+						+ ", "
+						+ KeyValue.getFindValue();
+		Log.d("Filter Criteria: ", str);
 
 		// Pass the selected criteria back to the calling activity.
 		Intent retIntent = new Intent();
-//		Intent retIntent = new Intent(this, SearchDlgActivity.class);
 
 		retIntent.putExtra(Constants.FIND_KEY, KeyValue.getFindKey());
 		retIntent.putExtra(Constants.FIND_VALUE, KeyValue.getFindValue());
@@ -341,8 +340,10 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		String str = "req"+requestCode+"res"+resultCode;
-		Log.e("Filter Criteria - onActivityResult: ", str);
+		Log.i(TAG, "onActivityResult()");
+
+		String str = "req" + requestCode + "res" + resultCode;
+		Log.d("Filter Criteria - onActivityResult: ", str);
 
 		String findValue = null;
 		// Values returned from the text input dialog box.
@@ -353,13 +354,17 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 				MakeToast.makeToast(getApplicationContext(), "FC; findValue: " + findValue, MakeToast.LEVEL_DEBUG);			
 			}
 		}
-		
+
 		// Values returned from the "Type" selection list.
 		if (requestCode == Constants.FIND_TYPE_REQ) {
 			if (resultCode == RESULT_OK) {
 				findValue = data.getStringExtra(Constants.FIND_VALUE);
 				KeyValue.setFindValue(findValue);
-				MakeToast.makeToast(getApplicationContext(), "FC; findValue: " + findValue, MakeToast.LEVEL_DEBUG);	
+				if (EB2MainActivity.DEBUG)
+					MakeToast.makeToast(getApplicationContext(),
+										"FC; findValue: "
+										+ findValue,
+										MakeToast.LEVEL_DEBUG);
 			} else {  // user made no selection from event type
 				setResult(RESULT_CANCELED);
 				finish();	
@@ -374,7 +379,8 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 
 		setResult(RESULT_OK, retIntent);
 		finish();
-	}	// end onActivityResult
+
+	}	//  end  - onActivityResult()
 
 	
 	/*
@@ -392,32 +398,21 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 	static final String KEY_DESCRIPTION = "description";
 	static final String KEY_LONGDESCRIPTION = "longDescription";
 
-
-
-
-	protected void onDateChanged(DatePicker view, int year, int monthOfYear,
-			int dayOfMonth) {
+	protected void onDateChanged(DatePicker view,
+									int year,
+									int monthOfYear,
+									int dayOfMonth) {
 		cYear = year;
 		cMonth = monthOfYear;
 		cDay = dayOfMonth;
 		displayToast();
 		setResultDate(year, monthOfYear, dayOfMonth);
-
 	}
 
 	private void setResultDate(int year, int monthOfYear, int dayOfMonth) {
 
 		criteriaDate.set(year, monthOfYear, dayOfMonth, 0, 0, 0);
 	}
-
-//	private String getDateString(Calendar cal) {
-//
-//		SimpleDateFormat sdf = new SimpleDateFormat("DATE_FORMAT");
-//
-//		Date date = cal.getTime();
-//		String dateStr = sdf.format(date);
-//		return dateStr;
-//	}
 
 	// updates the date in a toast.
 	private void displayToast() {
@@ -427,30 +422,14 @@ MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***", MakeToast.LEVEL_USE
 				.append(cMonth + 1).append("-").append(cDay).append("-")
 				.append(cYear).append(" "));
 
-		MakeToast.makeToast(getApplicationContext(), display, MakeToast.LEVEL_DEBUG);
+		if (EB2MainActivity.DEBUG)
+			MakeToast.makeToast(getApplicationContext(), display,
+									MakeToast.LEVEL_DEBUG);
 	}
-
-//	private void handleGetResults() {
-//		if (!validate()) {
-//			return;
-//		}
-//
-//		// Use Application Object for state (global values)
-//		// Application application = (Application) this.getApplication();
-//	}
-
-//	private boolean validate() {
-//		boolean valid = true;
-//		// TODO this function needs fleshing out.
-//		return valid;
-//
-//	}
 
 	//@Override
 	public boolean onTouch(View v, MotionEvent event) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 	
-	
-}	//  end FilterCriteria
+}	//  end  - FilterCriteria

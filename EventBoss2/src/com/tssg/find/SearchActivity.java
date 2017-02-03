@@ -21,7 +21,6 @@ import com.tssg.eventboss2.EventListDisplayActivity;
 import com.tssg.eventboss2.MainAppScreen;
 import com.tssg.eventboss2.MainAppScreenImpl;
 import com.tssg.eventboss2.R;
-import com.tssg.eventboss2.utils.misc.Constants;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
 

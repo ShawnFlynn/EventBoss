@@ -1,5 +1,6 @@
 package com.tssg.eventboss2;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -22,9 +23,9 @@ import java.util.Locale;
  */
 public class SavedSectionFragment extends EventBossListFragment {
 
-    static final String TAG = "SavedSectionFragment";  	// log's tag
-//	public static boolean mListType = true;		   		// the saved list
-	public static int mListType = 1;		   			// -> saved list
+	protected final String TAG = getClass().getSimpleName();
+
+	public static int mListType = 1;		// -> saved list
 	public static TextView mListHeader;
 	public static int mPosition = -1;
 	public static long mId;
@@ -39,134 +40,146 @@ public class SavedSectionFragment extends EventBossListFragment {
 
 	ListView mLV;
 
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "OnCreate: --- SavedSectionFragment");
 		super.onCreate(savedInstanceState);
+
+		Log.i(TAG, "OnCreate()");
+
 		if ( dbh == null ) {
 			dbh = new DatabaseHelper(getActivity());
 		}
-
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
+								Bundle savedInstanceState) {
+
+		Log.i(TAG, "OnCreateView()");
+
 		mViewGroup = container;
 		mLayoutInflater = inflater;
-		Log.v(TAG, "onCreateView: container" +container);
+		Log.d(TAG, "container: " + container);
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}
 
-
+	@SuppressLint("InflateParams")
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		Log.v(TAG, "( CurrentSectionFragment.onActivityCreated: "+"before cursor, dbh:"+dbh);
+		Log.i(TAG, "OnActivityCreated()");
+
+		Log.d(TAG, "before cursor, dbh: " + dbh);
 		if (mCursor == null) {
 			mCursor = dbh.getCursorSavedEvents();
 		}
-		Log.v(TAG, "( CurrentSectionFragment.onActivityCreated: "+"after cursor");
+		Log.d(TAG, "after cursor");
 		// For the cursor adapter, specify which columns go into which views
 		String[] fromColumns = { DatabaseHelper.KEY_TITLE,
-			    				 DatabaseHelper.KEY_STARTTIME,
-			    				 DatabaseHelper.KEY_ENDTIME,
-			    				 DatabaseHelper.KEY_LOCATION};
+								 DatabaseHelper.KEY_STARTTIME,
+								 DatabaseHelper.KEY_ENDTIME,
+								 DatabaseHelper.KEY_LOCATION};
+
 		int[] toViews = { R.id.title, R.id.time, R.id.endtime, R.id.location };
 
 		mEventItemCount = mCursor.getCount();
 		mLV = getListView();
 		mLV.setHeaderDividersEnabled(true); 
-		mLV.setDividerHeight(5);				// = divider between list items
+		mLV.setDividerHeight(5);			// = divider between list items
 		
-		// Create an empty adapter we will use to display the loaded data.		// <------------
+		// Create an empty adapter we will use to display the loaded data.
 		// We pass null for the cursor, then update it in onLoadFinished()
 		mAdapter = new SimpleCursorAdapter(getActivity(),
 				R.layout.eventlist_row, mCursor, fromColumns, toViews, 0);
-		setListAdapter(mAdapter);  //???? what does this do exactly
+		setListAdapter(mAdapter);
 
-		
-		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null); 
+		mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader,
+															null);
 		mLV.addHeaderView(mListHeader);
 
-        updateList();   // can not implement in SavedSectionFragment
-	}
-	
+		updateList();   // can not implement in SavedSectionFragment
+
+	}	//  end - OnActivityCreated()
+
 	@Override
 	public void onLoadFinished() {
+
+		Log.i(TAG, "OnLoadFinished()");
+
 		// there is a constructor in EventBossListFragment
-		setListAdapter(mAdapter);  //???? what does this do exactly
-        updateListHeader("have " + mEventItemCount + " saved Events");	//<from
+		setListAdapter(mAdapter);
+		updateListHeader("have " + mEventItemCount + " saved Events");
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
+
+		Log.i(TAG, "OnResume()");
+
 		// update the list  in case there an addition/deletion
 		updateList();
-		Log.v(TAG, "------->  onResume: after update list");
-
 	}
 	
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		Log.v(TAG, "onListItemClick: Listview=" + l
-                + ":View=" + v + ":Position=" + position + ":Id=" + id);
-/*		eventFragmentCoordinator.displayEventDetails(Long.toString(id), true);
 
-		Log.v(TAG, "(75)---> eventFragmentCoordinator ->displayEventDetails (false)");
-		Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + id);
-		if( position > 0 ) {
+		Log.i(TAG, "OnListItemClick()");
+
+		Log.d(TAG, "Listview=" + l
+					+ ":View=" + v
+					+ ":Position=" + position
+					+ ":Id=" + id);
+
+		if( position > 0 ) {	// it's using only mId
 			mPosition = position;
 			mId = id;
-			Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
+			Log.d(TAG, "Position=" + mPosition
+						+ ":mId=" + mId);
 
-//			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), false);
+			eventFragmentCoordinator.displayEventDetails(Long.toString(mId), 1);
 		}
-*/
-        if( position > 0 ) {	// it's using only mId
-            mPosition = position;
-            mId = id;
-            Log.v(TAG, "onListItemClick: Position=" + mPosition + ":mId=" + mId);
-
-            eventFragmentCoordinator.displayEventDetails(Long.toString(mId), 1);
-        }
-    }
+	}	//  end - onListItemClick()
 
 	@Override
 	public void onDestroyView() {
+
+		Log.i(TAG, "OnDestroyView()");
+
 		mCursor.close();
 		super.onDestroyView();
 	}
 
 	public void updateList() {
-		Log.v(TAG, "update saved list");
-//		dbh = new DatabaseHelper(getActivity());
-//		mCursor.close();
+
+		Log.i(TAG, "updateList()");
+
 		mCursor = dbh.getCursorSavedEvents();
 		mAdapter.swapCursor(mCursor);
 		setListAdapter(mAdapter);
 		mEventItemCount = mCursor.getCount();
-		Log.v(TAG, "update saved list-header, count: "+mEventItemCount);
-        updateListHeader("update saved list-header");
-// TODO  ---- around here --- clear the old data iff count is zero
+		Log.d(TAG, "count: " + mEventItemCount);
+		updateListHeader("update saved list-header");
 	}
 
-     void updateListHeader( String extraText )  {
-        // Create a list-header (TextView) and add it to the list like this:
-        // mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
-        // mLV.addHeaderView(mListHeader);
+	void updateListHeader( String extraText )  {
 
-        SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US );
-        Date m_channelDate = new Date(System.currentTimeMillis());
-        String channelDate = m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
+		Log.i(TAG, "updateListHeader(" + extraText + ")");
 
-        // this should be the current date or the date when data was saved into the database
-        mListHeader.setText( extraText + "(" + channelDate + ") "+ mEventItemCount + " Events");
-		Log.v(TAG, extraText +" "+ channelDate +", "+  mEventItemCount + " Events");
-    }
-  
-} // ------- end SavedSectionFragment
+		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm",
+														Locale.getDefault() );
+		Date m_channelDate = new Date(System.currentTimeMillis());
+		String channelDate = m_channelDate == null?
+					"--" : simpFormat.format(EB2MainActivity.m_channelDate);
+
+		// this should be the current date or the date when data was saved into the database
+		mListHeader.setText( extraText + "(" + channelDate + ") "
+										+ mEventItemCount + " Events");
+		Log.d(TAG, extraText + " " 
+				 + channelDate + ", " 
+				 +  mEventItemCount + " Events");
+	}
+
+}	//  end - SavedSectionFragment

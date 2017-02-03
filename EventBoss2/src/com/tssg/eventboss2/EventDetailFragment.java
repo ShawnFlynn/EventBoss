@@ -1,31 +1,21 @@
 package com.tssg.eventboss2;
 
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.SQLException;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.content.Context;
-
 import com.tssg.datastore.DatabaseHelper;
-import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
 
 
@@ -35,219 +25,220 @@ import com.tssg.eventsource.BELEvent;
  * */
 public class EventDetailFragment extends Fragment {
 
-    public static final String TAG = "EventDetailFragment";   // log's tag
+	protected final String TAG = getClass().getSimpleName();
 
-    final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
-//    public static final String SAVED_KEY = "isSaved";		// ********* previous use ********
-    public static final String DB_HELPER = "DBHelper";
+	final public static String EVENTITEM_POS = "position";  // compiler suggested taking off 'static'
+	public static final String DB_HELPER = "DBHelper";
 
 	public static final String LIST_TYPE = null;
 
 
-//    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
-    int m_isListType; 		// Current (0), Saved List (1), Saved List (2)
-    DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
-    String mId;             // use ItemId
+	int m_isListType;		// Current (0), Saved List (1), Saved List (2)
+	DatabaseHelper mDbh;	// = new DatabaseHelper(getActivity()) EBMainActivity;
+	String mId;				// use ItemId
 
-    private BELEvent mEvent;        //
-    private TextView mTitleText;	// title
-    private TextView mStartText;	// start time
-    private TextView mEndText;		// end time
-    private TextView mTypeText;
-    private TextView mLinkText;
-    private TextView mOrganizerText;
-    private TextView mLocationText;
-    private TextView mDescriptionText;
- //   private Button m_forward = null;
- //   private Button m_addToCalendar;
+	private BELEvent mEvent;
+	private TextView mTitleText;	// title
+	private TextView mStartText;	// start time
+	private TextView mEndText;		// end time
+	private TextView mTypeText;
+	private TextView mLinkText;
+	private TextView mLocationText;
+	private TextView mDescriptionText;
 
- //   public EventDetailFragment() { m_isSavedEvent = false; } // is set in onCreate
- //   public void setListType(boolean listType ) {
-    public void setListType(int listType ) {
-    	  m_isListType = listType;
-    	  Log.e(TAG, "onCreate: ListType = "+m_isListType);
-    }
+	public void setListType(int listType ) {
+		Log.i(TAG, "setListType()");
+		m_isListType = listType;
+		Log.d(TAG, "onCreate: ListType = " + m_isListType);
+	}
 
-    public void setEventId(String id) {  mId = id;  }
-//    public void setEventId(String id) {  mEvent = mId;  }
-    public void setDBhelper(DatabaseHelper db) { mDbh = db; }         // from  displayEventDetails
+	public void setEventId(String id) {
+		Log.i(TAG, "setEventId()");
+		mId = id;
+	}
 
-    @Override
-    public void onCreate(Bundle savedInstance) {
-        super.onCreate(savedInstance);
-        Log.v(TAG, "onCreate: EventDetailFragment:");
-        Log.v(TAG, "onCreate: List Type = "+m_isListType+" w/id: "+mId);
-        String key = "";
+	public void setDBhelper(DatabaseHelper db) {
+		Log.i(TAG, "setDBHelper(msg)");
+		mDbh = db;
+	}
 
-        // Get a database handle
-        // for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
-        // for phone  dhh is set here, because 'EventDetailActivity' creates the EventDetailFragment  
-        if( mDbh == null )  {
-        	mDbh = new DatabaseHelper(getActivity());
-        }
-        Log.v(TAG, " initialization EventDetailFragment:");
-        Log.v(TAG, "onCreate: type: "+m_isListType+",  mId: "+mId+", db: "+mDbh);
+	@Override
+	public void onCreate(Bundle savedInstance) {
+		super.onCreate(savedInstance);
+		Log.i(TAG, "onCreate()");
 
-        if( m_isListType == 0 ) {    // ----- Current Section -----------------
-        	// Get the current event
-            Log.v(TAG, "*/current Event: "+mEvent+", id = "+mId);
-        	try {mEvent = mDbh.getEventById(mId);}
-            catch (android.database.CursorIndexOutOfBoundsException exept ) {
-                if (mEvent == null) {
-                    Log.e(TAG, "we have an id, but no Event: " + mEvent);
-                    Log.e(TAG, "this did happen when 'm_isSaved' should be false but is true ");
-                    Log.e(TAG, "see event EventDetailActivity near line 56");
-                    return;
-                }
-                ;
-            }
-            Log.v(TAG, "**/current Event: "+mEvent);
+		Log.d(TAG, "onCreate: List Type = " + m_isListType
+											+ " w/id: " + mId);
+
+		// Get a database handle
+		// for tablet dbh is set when 'displayEventDetails' creates an EventDetailFragment
+		// for phone  dbh is set here, because 'EventDetailActivity' creates the EventDetailFragment  
+		if( mDbh == null )  {
+			mDbh = new DatabaseHelper(getActivity());
 		}
-        if( m_isListType == 1 ) {	// ----- Saved Section -----------------
-            // Get the saved event
-            Log.v(TAG, "saved Event: "+mEvent+", mId: "+mId+", dbh: "+mDbh);
-            
-            if ( mId.isEmpty() ) 
-            	Log.v(TAG, "can not delete: Event is empty");  //
-            else 
-            	mEvent = mDbh.getSavedEventById(mId);
-            
-            Log.v(TAG, "saved Event: "+mEvent);
-        }
-        
-        if( m_isListType == 2 ) {	// ----- Search section -----------------
-            
-            if ( mId.isEmpty() ) 
-            	Log.v(TAG, "can not display: Event is empty");  //
-            else {
-            	Log.v(TAG, "EventDetailFragment(@ 121 read id: " + mId);  //
-														
-// - mId - should be the Id from CurrentEventList
-//     also see --> SearchSectionFragment line 97  
-            	try {
-            		mEvent = mDbh.getEventById(mId);            	} 
-            	catch ( SQLException exp ) {
-            		Log.e( TAG, "caught SQLException: reading this id: "+mId ,exp ); }
-            	catch (android.database.CursorIndexOutOfBoundsException exept ) {
-            		Log.e( TAG, "caught CursorIndexOutOfBoundsException "+mId ,exept ); }
-            Log.v(TAG, "search Event: "+mEvent);
+		Log.d(TAG, " initialization EventDetailFragment:");
+		Log.d(TAG, "onCreate: type: " + m_isListType
+									  + ",  mId: " 
+									  + mId + ", db: " + mDbh);
 
-////            updateSearch();
-//            refreshView(); // will do it at start
-            }
-        }	// ListType == 2
+		if( m_isListType == 0 ) {    // ----- Current Section
+			// Get the current event
+			Log.d(TAG, "current Event: " + mEvent + ", id = " + mId);
+			try {
+				mEvent = mDbh.getEventById(mId);
+			}
+			catch (android.database.CursorIndexOutOfBoundsException exept ) {
+				if (mEvent == null) {
+					Log.e(TAG, "we have an id, but no Event: " + mEvent);
+					Log.e(TAG, "this did happen when 'm_isSaved' should be false but is true ");
+					Log.e(TAG, "see event EventDetailActivity near line 56");
+					return;
+				}
+				;
+			}
+			Log.d(TAG, "current Event: " + mEvent);
+		}
 
-    }   // end --- onCreate()
- 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle SavedInstanceState) {
+		if( m_isListType == 1 ) {	// ----- Saved Section
+			// Get the saved event
+			Log.d(TAG, "saved Event: " + mEvent
+						+ ", mId: " + mId
+						+ ", dbh: " + mDbh);
 
-        Log.v(TAG, " inflate: -> fragment_event_detail, container:" + container);
-        View view = inflater.inflate(R.layout.fragment_event_detail, container, false);
-        Log.v(TAG, " view: " + view);
+			if ( mId.isEmpty() ) 
+				Log.d(TAG, "can not delete: Event is empty");
+			else
+				mEvent = mDbh.getSavedEventById(mId);
 
-        mTitleText = (TextView) view.findViewById(R.id.titleText);
-        mStartText = (TextView) view.findViewById(R.id.startText);
-        mEndText = (TextView) view.findViewById(R.id.endText);
-        mTypeText = (TextView) view.findViewById(R.id.typeText);
-        mLinkText = (TextView) view.findViewById(R.id.linkText);
-        mOrganizerText = (TextView) view.findViewById(R.id.organizerText);
-        mLocationText = (TextView) view.findViewById(R.id.locationText);
-        mDescriptionText = (TextView) view.findViewById(R.id.descriptionText);
-// these buttons were on the page, but should now be on the Actionbar
-//        m_forward = (Button)view.findViewById(R.id.forward);
-//        m_addToCalendar = (Button)view.findViewById(R.id.addtocalendar);
+			Log.d(TAG, "saved Event: " + mEvent);
+		}
 
-        Log.v(TAG, " text: " +mTitleText);   // (TextView)
-        Log.v(TAG, "................");
-        Log.v(TAG, " star: " +mStartText);
-        Log.v(TAG, " end: " +mEndText);
-//        Log.v(TAG, " type: " +mTypeText);
-//        Log.v(TAG, " link: " +mLinkText);
-//        Log.v(TAG, " org : " +mOrganizerText);
-//        Log.v(TAG, " loc: " +mLocationText);
-//        Log.v(TAG, " desc: " +mDescriptionText);
+		if( m_isListType == 2 ) {	// ----- Search section
 
-        Log.v(TAG,"onCreateView - exit");
-        return view;
+			if ( mId.isEmpty() ) 
+				Log.d(TAG, "can not display: Event is empty");
+			else {
+				Log.d(TAG, "EventDetailFragment(@ 121 read id: " + mId);
 
-    }   //  end --- onCreateView()
+				// - mId - should be the Id from CurrentEventList
+				//     also see --> SearchSectionFragment line 97  
+				try {
+					mEvent = mDbh.getEventById(mId);
+				}
+				catch ( SQLException exp ) {
+					Log.e( TAG, "caught SQLException: reading this id: "
+							+ mId ,exp ); }
+				catch (android.database.CursorIndexOutOfBoundsException exept ) {
+					Log.e( TAG, "caught CursorIndexOutOfBoundsException "
+							+ mId ,exept ); }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        refreshView();			// show all of the list entry
-    }
+				Log.d(TAG, "search Event: "+mEvent);
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-    }
+			}
+		}	// ListType == 2
 
+	}	//  end - onCreate()
 
-   public void refreshView() {
-       Log.i(TAG,"->refresh view: mEvent= "+mEvent);
-       if(mEvent == null ) {
-           mTitleText.setText(" **** no Event ****");   // 
-       }    else   {
-       mTitleText.setText(mEvent.getTitle());
-       
-       mStartText.setText(mEvent.getStartTime());
-       if (m_isListType < 2) {
-    	   mEndText.setText(mEvent.getEndTime());
-    	   mTypeText.setText(mEvent.getEventType());
-    	   mLinkText.setText(mEvent.getLinkToGroup());
-    	   mLocationText.setText(mEvent.getLocation());
-    	   mDescriptionText.setText(mEvent.getLongDescription());  
-    	   	//  <- is full of CSS and HTML codes
-       		// mDescriptionText.setText("substitute for LongDescription");
-       	   }
-       }
-            Log.v(TAG, "in refreshView: ");
-            Log.v(TAG, " text: " +mTitleText.getText());   // (TextView)
-//            Log.v(TAG, " star: " +mStartText.getText());
-//            Log.v(TAG, " end : " +mEndText.getText());
-//            Log.v(TAG, " type: " +mTypeText.getText());
-//            Log.v(TAG, " link: " +mLinkText.getText());
-//            Log.v(TAG, " org : " +mOrganizerText.getText());
-//            Log.v(TAG, " loc : " +mLocationText.getText());
-//            Log.v(TAG, " desc: " +mDescriptionText.getText());
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+								Bundle SavedInstanceState) {
 
-        Log.v(TAG, "exit refreshView");
-   }    //  end --- refreshView()
+		Log.i(TAG, "onCreateView()");
 
+		Log.d(TAG, " inflate: -> fragment_event_detail, container:" + container);
+		View view = inflater.inflate(R.layout.fragment_event_detail,
+										container, false);
+		Log.d(TAG, " view: " + view);
 
+		mTitleText = (TextView) view.findViewById(R.id.titleText);
+		mStartText = (TextView) view.findViewById(R.id.startText);
+		mEndText = (TextView) view.findViewById(R.id.endText);
+		mTypeText = (TextView) view.findViewById(R.id.typeText);
+		mLinkText = (TextView) view.findViewById(R.id.linkText);
+		mLocationText = (TextView) view.findViewById(R.id.locationText);
+		mDescriptionText = (TextView) view.findViewById(R.id.descriptionText);
 
-// /* make calendar appointment. This should be a controller method.
+		Log.d(TAG, " text: " + mTitleText);
+		Log.d(TAG, "................");
+		Log.d(TAG, " star: " + mStartText);
+		Log.d(TAG, " end: " + mEndText);
 
-   void makeAppointment(String title, String location, Date start, Date end ) {
-        Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
+		return view;
 
-        long startL, endL;
-        if (null != start) {
-            startL = start.getTime();
-            intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startL);
-        }
-        if (null != end) {
-            endL = end.getTime();
-            intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endL);
-        }
-        String strEvent = String.format("%d", CurrentSectionFragment.mId); // number of the id
-//        Toast.makeText(getBaseContext(), TAG + " Calendar "+strEvent, Toast.LENGTH_SHORT).show();
-        BELEvent event = mDbh.getEventById(strEvent);
-        title = event.getTitle();
-        location = event.getLocation();
-        start = (Date) event.getStartDate();
-        end = (Date) event.getEndDate();
+	}	//  end - onCreateView()
 
-        intent.putExtra(Events.TITLE, title);
-        intent.putExtra(Events.ALL_DAY, false);
-        intent.putExtra(Events.EVENT_LOCATION, location);
+	@Override
+	public void onStart() {
+		super.onStart();
+		Log.i(TAG, "onStart()");
 
-        startActivity(intent);
-    }	// ---- makeAppointment
-//         */
+		refreshView();	// show all of the list entry
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		Log.i(TAG, "onDestroyView()");
+	}
+
+	public void refreshView() {
+		Log.i(TAG, "refreshView()");
+
+		Log.d(TAG,"->refresh view: mEvent= "+mEvent);
+		if(mEvent == null ) {
+			mTitleText.setText(" **** no Event ****");
+		} else {
+			mTitleText.setText(mEvent.getTitle());
+			mStartText.setText(mEvent.getStartTime());
+			if (m_isListType < 2) {
+				mEndText.setText(mEvent.getEndTime());
+				mTypeText.setText(mEvent.getEventType());
+				mLinkText.setText(mEvent.getLinkToGroup());
+				mLocationText.setText(mEvent.getLocation());
+				mDescriptionText.setText(mEvent.getLongDescription());  
+			}
+		}
+		Log.d(TAG, "in refreshView: ");
+		Log.d(TAG, " text: " + mTitleText.getText());
+//		Log.d(TAG, " star: " +mStartText.getText());
+//		Log.d(TAG, " end : " +mEndText.getText());
+//		Log.d(TAG, " type: " +mTypeText.getText());
+//		Log.d(TAG, " link: " +mLinkText.getText());
+//		Log.d(TAG, " org : " +mOrganizerText.getText());
+//		Log.d(TAG, " loc : " +mLocationText.getText());
+//		Log.d(TAG, " desc: " +mDescriptionText.getText());
+
+	}	//  end - refreshView()
+
+	void makeAppointment(String title, String location, Date start, Date end ) {
+		Log.i(TAG, "makeAppointment()");
+
+		Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
+		long startL, endL;
+		if (null != start) {
+			startL = start.getTime();
+			intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startL);
+		}
+		if (null != end) {
+			endL = end.getTime();
+			intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endL);
+		}
+		String strEvent = String.format(Locale.getDefault(),
+										"%d",
+										CurrentSectionFragment.mId);
+		BELEvent event = mDbh.getEventById(strEvent);
+		title = event.getTitle();
+		location = event.getLocation();
+		start = (Date) event.getStartDate();
+		end = (Date) event.getEndDate();
+
+		intent.putExtra(Events.TITLE, title);
+		intent.putExtra(Events.ALL_DAY, false);
+		intent.putExtra(Events.EVENT_LOCATION, location);
+
+		startActivity(intent);
+
+	}	//  end - makeAppointment()
 
 	public int get_isEventType() {
 		return m_isListType;
@@ -257,45 +248,5 @@ public class EventDetailFragment extends Fragment {
 		this.m_isListType = m_isEventType;
 	}
 
-//   public static void updateList(){} // seen from 
-    /*
-     * setListAdapter
-     * mListHeader
-     * m_eventListItemCount
-     */
-/*
-	public  void updateList() {		//public static void updateList()
-		// xxxxxx
-		Log.v(TAG, "update saved list");
-		Cursor mCursor;
-		SimpleCursorAdapter mAdapter;
-		
-		dbh = new DatabaseHelper(getActivity());
-		mCursor.close();
-		mCursor = dbh.getCursorSavedEvents();
-		mAdapter.swapCursor(mCursor);
-		setListAdapter(mAdapter);
 
-        updateListHeader("Saved List");
-	}
-
-  
-
-static  void updateListHeader( String extraText )  {
-        // Create a list-header (TextView) and add it to the list like this:
-        // mListHeader = (TextView) mLayoutInflater.inflate(R.layout.listheader, null);
-        // mLV.addHeaderView(mListHeader);
-
-        SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US );
-        Date m_channelDate = new Date(System.currentTimeMillis());
-        String channelDate = m_channelDate == null? "--" : simpFormat.format(EB2MainActivity.m_channelDate);
-
-        // this should be the current date or the date when data was saved into the database
-
-        SavedSectionFragment.mListHeader.setText( extraText + "(" + channelDate + ")" +
-        							SavedSectionFragment.mEventItemCount + " Events");
-    }
-*/
-
-} // ------- class EventDetailFragment
-// ====== EventDetailFragment
+}	//  end - EventDetailFragment

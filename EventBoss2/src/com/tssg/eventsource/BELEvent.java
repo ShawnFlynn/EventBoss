@@ -15,16 +15,15 @@ import com.tssg.eventboss2.utils.date.DateUtils;
  */
 public class BELEvent  implements Comparable<BELEvent>
 {
-	//  A unique identifier for this event. The Boston Events List
+	// A unique identifier for this event. The Boston Events List
 	//  does not send us an unique identifier so we should make one up
 	//  until they do.
-	//TODO make up an identifier to use whenever the constructor is
-	// passed a null
+	// Make up an identifier to use whenever the constructor is passed a null
 	Integer m_id = null;
 	Integer m_feed = null;
 	String m_title = null;
-	String m_startTime = null;	// confusing name just a string date
-	String m_endTime = null;	// confusing name just a string date
+	String m_startTime = null;
+	String m_endTime = null;
 	String m_eventType = null;
 	String m_linkToGroup = null;
 	String m_organizer = null;
@@ -32,16 +31,15 @@ public class BELEvent  implements Comparable<BELEvent>
 	String m_description = null;
 	String m_longDescription = null;
 	Date  m_startDate = null;
-	Date  m_endDate = null;		// = java.util.Date
+	Date  m_endDate = null;
 
 	/** no-arg constructor uses defaults */
 	public BELEvent() {
-		;
 	}
 	
 	/**
 	 * Class constructor
-	 * TODO: should we change constructor to create a Date and URL
+	 * Should we change constructor to create a Date and URL
 	 * from the times and linkToGroup fields?  If so, make sure the
 	 * constructor throws error if the input strings are not valid.
 	 * 
@@ -64,7 +62,7 @@ public class BELEvent  implements Comparable<BELEvent>
 					String type,
 					String linkToGroup, String org, String loc,
 					String description, String longDescription )
-	{   
+	{
 		m_id = id;
 		m_feed = feed;
 		m_title = title;
@@ -82,7 +80,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	
 	/**
 	 * Class constructor
-	 * TODO: should we change constructor to create a Date and URL
+	 * Should we change constructor to create a Date and URL
 	 * from the times and linkToGroup fields?  If so, make sure the
 	 * constructor throws error of the input strings are not valid.
 	 * 
@@ -103,7 +101,7 @@ public class BELEvent  implements Comparable<BELEvent>
 					 String type,
 					 String linkToGroup, String org, String loc,
 					 String description, String longDescription )
-	{   
+	{
 		m_id = id;
 		m_feed = feed;
 		m_title = title;
@@ -126,7 +124,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	public Integer getId() { 
 		return m_id; 
 	}
-	
+
 	/**
 	 * Set the event Id 
 	 * @param id the event Id
@@ -134,7 +132,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	public void setId( Integer id ) { 
 		m_id = id; 
 	}
-	
+
 	/**
 	 * Gets the feed Id
 	 * @return feed Id
@@ -142,7 +140,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	public Integer getFeed() { 
 		return m_feed; 
 	}
-	
+
 	/**
 	 * Set the feed Id 
 	 * @param id the feed Id
@@ -150,7 +148,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	public void setFeed( Integer feed ) { 
 		m_feed = feed; 
 	}
-	
+
 	/** since id is based on hashcode, it should not be set until other fields are set */
 	BELEvent setId() {
 		this.m_id = hashCode();	// that makes a unique id
@@ -232,8 +230,9 @@ public class BELEvent  implements Comparable<BELEvent>
 	public static final String simpDatePatternStored = "MM/dd/yyyy hh:mm aa";
 	public static final String simpDatePatternSource = "yyyy-MM-dd - hh:mm aa";
 	// note: not static because not thread-safe
-	private final SimpleDateFormat simpDateFormat = new SimpleDateFormat(simpDatePatternStored, Locale.US );
-	
+	private final SimpleDateFormat simpDateFormat =
+			new SimpleDateFormat(simpDatePatternStored, Locale.getDefault() );
+
 	private BELEvent setStartDate(String date) {
 		try {
 			if (null != date && !date.isEmpty() ) {
@@ -448,10 +447,7 @@ public class BELEvent  implements Comparable<BELEvent>
 		sb.append("Organizer: ").append(getOrganizer()).append('\n');
 		sb.append("Description: ").append(getDescription()).append('\n');
 		sb.append("Long Description: ").append(getLongDescription()).append('\n');
-		// sb.append("Long Description: ");
-		// sb.append(getLongDescription());
-		// sb.append('\n');
 		return sb.toString();
 	}
 
-}
+}	//  end - BELEvent

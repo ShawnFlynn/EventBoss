@@ -38,72 +38,79 @@ import com.tssg.find.SearchActivity;
 // in EB2MainActivity: lines 531 +
 public class EventListDisplayActivity extends FragmentActivity {
 
+	protected final String TAG = getClass().getSimpleName();
+
 	public View m_mainAppView = null;		
 	public static MainAppScreen mainAppScreen = null;
-//====vvvvvv	(probably just in EB2Main
 	public static final String INTENT_LOG = "com.tssg.eventboss.bLOGGING";
 	static public TextView m_statusView = null;
-	public boolean bLOGGING = true;				// enable/disable logging
-	public static final String TAG = "EDAct";	// log's tag
-	public static boolean bTrace = false;		// enable/disable tracing to device SD
-	
+	public boolean bLOGGING = true;			// enable/disable logging
+	public static boolean bTrace = false;	// enable/disable tracing to device SD
+
 	public static boolean m_readEventText = false; // if true do read XML
 	public static String m_mainEventText = null;   // use an XML file for Eventsource
-//====^^^^^^^^^
+
 	public static List<BELEvent> m_webEventsList = new ArrayList<BELEvent>();
-//	public static String statusLine = null;	// in mainApp is statusMessage
-											// should use showStatus(" ... ") exclusively?
+
 	public static Context context = null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
+		Log.i(TAG, "onCreate()");
+
 		// get optional parameters from the intent
 		Intent intent = this.getIntent();
 		bLOGGING = intent.getBooleanExtra(INTENT_LOG, bLOGGING);
 		context = this;
-		
+
 		mainAppScreen = new MainAppScreenImpl();
 		mainAppScreen.setupLogging(bLOGGING, TAG);
 		mainAppScreen.setUp(this, bLOGGING, TAG);
 		m_mainAppView = mainAppScreen.getView();
 		this.setContentView(m_mainAppView);
 		m_statusView = (TextView) (m_mainAppView.findViewById(R.id.status_line));
-		
 
 		showStatus("Reading from Boston Events List's RSS feed");
-		MakeToast.makeToast(this, "Reading BostonEventsList's RSS feed", MakeToast.LEVEL_USER);
-// do some display: i.e.  a progress indicator in this view ?
-//                         or can this be done in main
-	}		// end OnCreate( ... )		
+		if (EB2MainActivity.DEBUG)
+			MakeToast.makeToast(this, "Reading BostonEventsList's RSS feed",
+										MakeToast.LEVEL_USER);
+
+	}	//  end - OnCreate()		
 
 	/**
 	 *   Display or redisplay the eventlist 
 	 *   eventlist is read in an async task
 	 */
-	static void doDisplayEventList () {
-// questionable if saving to database should be done here
+	static void doDisplayEventList() {
+
+		Log.i("EventListDisplayActivity", "doDisplayEventList()");
 
 		m_webEventsList = EB2MainActivity.m_webEventsList;
-		Log.i("doDispEventList -> q = ", " " + m_webEventsList.size() );
+		Log.d("doDispEventList -> q = ", " " + m_webEventsList.size() );
 
 		showStatus("Showing " + m_webEventsList.size() + " from current Web events");
-	} // -------  end:   doDisplayEventList ()
+
+	}	//  end - doDisplayEventList()
 
 	/**
 	 *   If one of the Items displayed in the Event List 
 	 *   is clicked/selected do something with it
 	 */
 	protected void onListItemClick(ListView l, View v, int position, long id) {
+
+		Log.i(TAG, "onListItemClick(" + position + ")");
+
 		EventListAdapter adapter = mainAppScreen.getAdapter();
 		adapter.notifyDataSetInvalidated();
-		String str = "Event select at: " + "pos: "+position+",  id: "+id;//
-		Toast.makeText(this, str, Toast.LENGTH_LONG).show();
-        Log.v("Click :",str);
+		String str = "Event select at: " + "pos: "+position+",  id: "+id;
+		if (EB2MainActivity.DEBUG)
+			Toast.makeText(this, str, Toast.LENGTH_LONG).show();
+		Log.d("Click :",str);
 	}
-	   
-    
+
+
 	/**
 	 * (non-Javadoc)
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
@@ -112,40 +119,44 @@ public class EventListDisplayActivity extends FragmentActivity {
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-	  MenuInflater inflater = getMenuInflater();   // 
-	  inflater.inflate(R.menu.menu_listdisplay_activity, menu);
-	  // implement save, delete, settings
-	  return super.onCreateOptionsMenu(menu);
+
+		Log.i(TAG, "onCreateOptionsMenu()");
+
+		MenuInflater inflater = getMenuInflater();   // 
+		inflater.inflate(R.menu.menu_listdisplay_activity, menu);
+		// implement save, delete, settings
+		return super.onCreateOptionsMenu(menu);
 	}
-	
+
 	// Called when an options item is clicked
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {		// 
-		
-		case R.id.itemPrefs:
-			startActivity(new Intent(this, SettingsActivity.class));  // 
-			break;
 
-		case R.id.idSearchNew:
-			Intent searchIntent = new Intent(this, SearchActivity.class);
-//			can't add it to intent  -- but search activity can see it
-//			searchIntent.getIntExtra("EventList",listAddr);
-			startActivity(searchIntent);  // 
-			break;
+		Log.i(TAG, "onOptionsItemSelected()");
 
-		case R.id.idCalendar:
-			Log.i("EventSource", " onOptionsItemSelected idCalendar");
-			break;
+		switch (item.getItemId()) {
+
+			case R.id.itemPrefs:
+				startActivity(new Intent(this, SettingsActivity.class));  // 
+				break;
+
+			case R.id.idSearchNew:
+				Intent searchIntent = new Intent(this, SearchActivity.class);
+				startActivity(searchIntent);  // 
+				break;
+
+			case R.id.idCalendar:
+				Log.d(TAG, " idCalendar");
+				break;
 			
-		case R.id.action_share:
-			Log.i("EventListDispActivity", " onOptionsItemSelected idShare");
-			break;
+			case R.id.action_share:
+				Log.i(TAG, " idShare");
+				break;
 		}
-		return true;   
+		return true;
 	}
 
-	
+
 	/**
 	 * Opens a file somewhere on the device and returns the InputStream pointer
 	 * @param fileName - the path to the file to be opened
@@ -153,17 +164,17 @@ public class EventListDisplayActivity extends FragmentActivity {
 	 */
 	protected InputStream getInputStream(String fileName) {
 
+		Log.i(TAG, "getInputStream()");
+
 		try {
 			FileInputStream fileStream = new FileInputStream (fileName);
 			return fileStream;
-
 		} catch (IOException e) {
-
 			String message = "Failed to open file: " + fileName;
 			Log.e("EventSource", message);
 			throw new RuntimeException( message, e);
 		}
-	}	
+	}
 
 	/**
 	 * function: convertStreamToString
@@ -172,6 +183,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 	 * @param is - an opened InputStream
 	 * @return String - returns a text string
 	 */
+	@SuppressWarnings("resource")
 	protected String convertStreamToString(java.io.InputStream is) {
 		try {
 			return new java.util.Scanner(is).useDelimiter("\\A").next();
@@ -198,68 +210,55 @@ public class EventListDisplayActivity extends FragmentActivity {
  */
 		@Override
 		protected void onStart() {
-			// TODO implement onStart
-
 			super.onStart();
 
-			// updateFromSavedState();
-
-			MakeToast.makeToast(this, "onStart", MakeToast.LEVEL_DEBUG);
-
+			Log.i(TAG, "onStart()");
 		}
 
 		@Override
 		protected void onPause() {
-			// TODO implement onPause
-			MakeToast.makeToast(this, "onPause", MakeToast.LEVEL_DEBUG);
-			
-//			if (progressDialog.isShowing()) {
-//				progressDialog.dismiss();
-//			}
-
 			super.onPause();
+
+			Log.i(TAG, "onPause()");
 		}
 
 		@Override
 		protected void onRestart() {
-			// TODO implement onRestart
 			super.onRestart();
 
-			MakeToast.makeToast(this, "onRestart", MakeToast.LEVEL_USER);
+			Log.i(TAG, "onRestart()");
 		}
 
 		@Override
 		protected void onResume() {
-			// TODO implement onResume
 			super.onResume();
 
-			MakeToast.makeToast(this, "onResume", MakeToast.LEVEL_DEBUG);
+			Log.i(TAG, "onResume()");
 		}
 
 		@Override
 		protected void onStop() {
-			// TODO implement onStop
-			super.onStop();
-			
+
 			if( bTrace )	{
 				Debug.stopMethodTracing();
 				MakeToast.makeToast(this, "onStop, stop trace", MakeToast.LEVEL_DEBUG);
 			}
 
-			MakeToast.makeToast(this, "onStop", MakeToast.LEVEL_DEBUG);
+			Log.i(TAG, "onStop()");
+
+			super.onStop();
 		}
 
-    @Override
-    protected void onDestroy() {
-        // TODO implement onDestroy
-        super.onDestroy();
+		@Override
+		protected void onDestroy() {
 
-        MakeToast.makeToast(this, "onDestroy", MakeToast.LEVEL_DEBUG);
+			Log.i(TAG, "onDestroy()");
 
-//			DatabaseHelper.closeDB();
-        MakeToast.makeToast(this, "closeDB", MakeToast.LEVEL_DEBUG);
+			if (EB2MainActivity.DEBUG)
+				MakeToast.makeToast(this, "closeDB", MakeToast.LEVEL_DEBUG);
 
-    }
+			super.onDestroy();
+		}
 
+}	//  end - EventListDisplayActivity
 
-}   /*  EventListDisplayActivity */
