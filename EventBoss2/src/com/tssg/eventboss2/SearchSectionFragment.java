@@ -38,14 +38,16 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 	public void onCreate(Bundle savedInstance) {
 		super.onCreate(savedInstance);
 		dbh = new DatabaseHelper(getActivity());
-		Log.e("onCreate: ", "--- in Search");
+		Log.e(TAG,"onCreate: --- in Search");
+		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+", search string: "+mSearch);
+		mCursor = dbh.getCursorSearchEvents(mSearch);
 	}
 	
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		Log.e("onCreateView: ", "--- in Search");
+		Log.e(TAG,"onCreateView: --- in Search");
 		View rootView = inflater.inflate(R.layout.fragment_section_launchpad,
 				container, false);
 //		Bundle args = getArguments();
@@ -56,8 +58,8 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 		// view =/= context
 		Log.v("SearchSectionFragment:search_section_text:layout", " "+ rootView);
 
-		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+", search string: "+mSearch);
-		mCursor = dbh.getCursorSearchEvents(mSearch);
+//		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+", search string: "+mSearch);
+//		mCursor = dbh.getCursorSearchEvents(mSearch);
 		Log.v(TAG, "( SearchSectionFragment.onActivityCreated: "+"after, mCursor: "+mCursor);
 
 		// For the cursor adapter, specify which columns go into which views
@@ -87,19 +89,12 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 		// here we need to get the Id of the original record
 		// id is selection in the now updated list (search result)
 		// it contains the id of the event in the list (loaded from current list)
-		
-//		mId = mCursor.getInt((int) id);	
 		mId = id;
-		//<------  Failed to read row 0, column 4994 from a CursorWindow which has 12 rows, 12 columns.
 		Log.v("SearchSectionFragment", "onListItemClick:Id= " + id+" mId= "+ mId);
 		String idStr = Long.toString(mId);	
 		mEvent = dbh.getEventById( idStr );
 		Log.v("SearchSectionFragment", "onListItemClick:Id= " + id+" mId= "+ mId+" : "+ mEvent);
 
-
-//		08-19 16:04:29.106: V/SearchSectionFragment(847): Listview=android.widget.ListView{b3df26e8 VFED.VC. ......ID 0,53-319,1044 #102000a android:id/list}:View=android.widget.LinearLayout{b3d92040 V.E..... ........ 0,187-319,317}:Position=1:Id=2956
-//				08-19 16:04:29.106: E/CursorWindow(847): Failed to read row 1, column 2956 from a CursorWindow which has 13 rows, 12 columns.
-		
 		eventFragmentCoordinator.displayEventDetails(Long.toString(id), 2);
 	}
 	
@@ -136,8 +131,8 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 
 	@Override
 	public void onDestroyView() {
-		mCursor.close();
-		Log.v(TAG, "( SearchSectionFragment.onDestroyView: "+"cursor is closed, dbh:"+dbh);
+//		mCursor.close();
+//		Log.v(TAG, "( SearchSectionFragment.onDestroyView: "+"cursor is closed, dbh:"+dbh);
 		super.onDestroyView();
 	}
 

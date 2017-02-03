@@ -101,6 +101,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     public static CurrentSectionFragment currentData = null;
     public static SavedSectionFragment savedData = null;
+    public static SearchSectionFragment searchData = null;
 
     /*
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -117,7 +118,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     ViewPager mViewPager;
 
     //  private static boolean mDualPane;
-    static boolean mDualPane;               // not public?
+    static boolean mDualPane;               // not public, why?
+    int mTabSelected = -1;
 
     public static EventDetailFragment mEventFragment;
 
@@ -220,7 +222,6 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             }
         }
 
-        // need a mechanism to signal valid data and a fresh read.
         // ********* This test is probably not right:
         //           Both versions (tablet and phone) will use 'event data'
         //           one in a single fragment, the other in separate fragments !!!!!!!
@@ -291,7 +292,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                                 .setTabListener(this));
                         break;
 
-                    case 3:  // TODO was used in search - hill have to use the display detail
+                    case 3:  // TODO was used in search - will have to use the display detail
                         actionBar.addTab(actionBar.newTab()
                                 .setText(mResources.getString(R.string.Event))
                                 .setTabListener(this));
@@ -384,6 +385,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         if (mDualPane){
             Log.v(TAG, "displayEventDetails() -> int");
             displayEventDetails("", tab.getPosition());
+            mTabSelected = tab.getPosition();		// for specializing menu for current & saved
         }
         mViewPager.setCurrentItem(tab.getPosition());
         Log.v(TAG, "onTabSelected() pos = " + tab.getPosition());
@@ -424,6 +426,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     public static class AppSectionsPagerAdapter extends FragmentPagerAdapter {
 
+    	final String[] humanReadableType = {"Current","Saved","Search"}; // like to use this globally in displayEventDetails
+
         public AppSectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -440,7 +444,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             Fragment fragment;
             Bundle args;
 
-            switch (i) {
+			switch (i) {
                 case 0:
                     Log.v(TAG, "---"+ARG_SECTION_NUMBER1+": tab=0 *");
                     currentData = new CurrentSectionFragment();
@@ -466,7 +470,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
                 case 2:
                     Log.v(TAG, "---"+ARG_SECTION_NUMBER3+": tab=2 *");
-                    fragment = new SearchSectionFragment();
+                    searchData = new SearchSectionFragment();
+                    fragment = searchData;
                     Log.v(TAG, "--- Search: tab/2 **");
                     args = new Bundle();
                     args.putInt(ARG_SECTION_NUMBER3, 3);
@@ -539,9 +544,25 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     @Override
     public boolean onCreateOptionsMenu(Menu main_activity_action) {
         MenuInflater inflater = getMenuInflater();
-        // TODO Name???
         if( mDualPane ) {
-        	inflater.inflate(R.menu.menu_main_dual_activity, main_activity_action);
+        	// ?use different menu depending on Tab
+        	// current can only save	-> menu_current_fragment
+        	// saved can only delete	-> menu_saved_current
+        	// search ?iterate over different searches  	
+//        	inflater.inflate(R.menu.menu_main_dual_activity, main_activity_action);
+// the code below does not work - can it be set in the fragments ??
+        	if ( mTabSelected == 0 ) {
+        		inflater.inflate(R.menu.menu_dual_activity_cur, main_activity_action);
+        		Log.v("current tab is :","mTabSelected: 0");
+        	}
+        	if ( mTabSelected == 1 )  {
+        		inflater.inflate(R.menu.menu_dual_activity_sav, main_activity_action);
+        		Log.v("current tab is :","mTabSelected: 1");
+         	}
+        	// probably need a case for 3 (search) too
+        	// > save a selected item - like with current ? <<
+
+//
         }
         else {
         	inflater.inflate(R.menu.menu_main_activity, main_activity_action);
@@ -571,22 +592,25 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
             case R.id.action_save:   //idSaveSelected:
             	// TODO Do this only if in CurrentSectionFragment (& dual)
-                Log.v(TAG, "EBMain - Save Selected");
+                Log.v(TAG, " - Save Selected");
                 Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_LONG).show();
                 String strEvent = String.format("%d", CurrentSectionFragment.mId); 
                 Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
                 mDbh.saveEvent(strEvent);
                 // now update the list
+                savedData.updateList();   //call SavedSectionFragment.updateList();
                 break;
                 
             case R.id.action_delete:   ///idDeleteSelected:
             	// TODO  Do this only if in SavedSectionFragment  (& dual)
-                Log.v(TAG, "EBMain - Delete Selected");
+                Log.v(TAG, " - Delete Selected");
                 Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_LONG).show();
                 strEvent = String.format("%d", SavedSectionFragment.mId); 
                 Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ SavedSectionFragment.mId);
                 mDbh.deleteSavedEvent(strEvent);
                 // TODO the SavedSectionFragment must reload the data table
+                savedData.updateList();   //call SavedSectionFragment.updateList();
+                // should now close the just deleted detail view
                 break;
                 
             case R.id.action_calendar:
@@ -1020,34 +1044,30 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 //    public void displayEventDetails(String eventID, boolean isSavedEvent) {
     public void displayEventDetails(String eventID, int EventType) {
 
-    	Log.v(TAG, "displayEventDetails(String eventID, int EventType (0(cur), 1(sav), 2(search)");
-//        Log.v(TAG, "displayEventDetails(String eventID, boolean isSavedEvent)");
+// old:       Log.v(TAG, "displayEventDetails(String eventID, boolean isSavedEvent)");
 //        Log.v(TAG, "EventID, isSavedEvent are passed to the EventDetailFragment");
 //        Log.v(TAG, "the boolean is passed in as a string value for true/false ");
 //        Log.v(TAG, "the translation to string then back to boolean does not work");
-    	String humanReadableType = " ";
-    	if (EventType == 0){humanReadableType = "Current";};
-    	if (EventType == 1){humanReadableType = "Saved";};
-    	if (EventType == 2){humanReadableType = "Search";};
-        if (mDualPane) {
+    	String humanReadableType[] = {"Current","Saved","Search"};
+    	Log.v(TAG, "displayEventDetails(String eventID = " +eventID +", EventType = "+humanReadableType[EventType]);
+
+    	if (mDualPane) {
             // for a dual-pane view (tablet) - the fragment implements the detail-view
 
             EventDetailFragment mEventItemFrag = new EventDetailFragment();
             mEventItemFrag.setEventId(eventID);
             mEventItemFrag.setListType(EventType);
             mEventItemFrag.setDBhelper(new DatabaseHelper(context));
-            Log.i(TAG, "displayEventDetails: DualPane:"
-            		+ " eventID: " + eventID + " +eventType: " + EventType + humanReadableType);
+            Log.i(TAG, "displayEventDetails: DualPane:" +
+            		" eventID: " + eventID + 
+            		", eventType: " + EventType + "("+ humanReadableType + ")");
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.eventData, mEventItemFrag); // eventData, layout-large/activity_main.xml 
             Integer i = R.id.eventData;
-            Log.i(TAG, "id.eventData: " + Integer.toHexString(i));
-            Log.i(TAG, "eventItem " + mEventItemFrag);
+            Log.i(TAG, "id.eventData: " + Integer.toHexString(i)+", eventItem " + mEventItemFrag);
             //transaction.addToBackStack(null);
             transaction.commit();
-            
-            //TODO write the event's data into 
-
+ 
         } else {
             // for a single-pane view (phone) - Start the detail-view activity which
             //                                  controls the detail-view (fragment)

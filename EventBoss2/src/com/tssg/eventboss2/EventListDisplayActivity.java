@@ -141,8 +141,6 @@ public class EventListDisplayActivity extends FragmentActivity {
 		case R.id.action_share:
 			Log.i("EventListDispActivity", " onOptionsItemSelected idShare");
 			break;
-
-		
 		}
 		return true;   
 	}

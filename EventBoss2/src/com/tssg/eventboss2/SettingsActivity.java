@@ -200,7 +200,7 @@ public class SettingsActivity extends Activity // implements OnClickListener
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	  MenuInflater inflater = getMenuInflater();   // 
-	  inflater.inflate(R.menu.eb_settings, menu);         // 
+	  inflater.inflate(R.menu.menu_main_activity, menu);         // 
 	  return true; // 
 	};
 	

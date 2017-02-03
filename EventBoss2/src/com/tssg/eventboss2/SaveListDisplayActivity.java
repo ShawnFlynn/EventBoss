@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
+import com.tssg.find.SearchActivity;
 //----------- this is the old version ----------------------------------------
 /** The SaveList is the list of saved events seen on the Saved tab */
 public class SaveListDisplayActivity extends Activity { // 
@@ -96,9 +98,29 @@ public class SaveListDisplayActivity extends Activity { //
 			final int itemId = item.getItemId();
 			switch (itemId) { 
 
+			case R.id.itemPrefs:
+				startActivity(new Intent(this, SettingsActivity.class));  // 
+				break;
+				
 			case R.id.idDeleteSelected:  /// only delete item
 				// remove one or more items from saved list
 				break;
+
+			case R.id.idSearchNew:
+				Intent searchIntent = new Intent(this, SearchActivity.class);
+//				can't add it to intent  -- but search activity can see it
+//				searchIntent.getIntExtra("EventList",listAddr);
+				startActivity(searchIntent);  // 
+				break;
+
+			case R.id.idCalendar:
+				Log.i("EventSource", " onOptionsItemSelected idCalendar");
+				break;
+				
+			case R.id.action_share:
+				Log.i("EventListDispActivity", " onOptionsItemSelected idShare");
+				break;
+
 		    default:
 				Log.i("Prefs ", "SaveListDisplayActivity - unimplemented " + Integer.toHexString(itemId) + " pressed");
 				Toast.makeText(context,  "SaveListDisplayActivity - unimplemented " + Integer.toHexString(itemId) + " pressed", Toast.LENGTH_SHORT).show();
@@ -120,7 +142,10 @@ public class SaveListDisplayActivity extends Activity { //
 		public boolean onCreateOptionsMenu(Menu menu) {
 			// Inflate the menu; this adds items to the action bar if it is present.
 			// only items : delete and quit (-> go to eventlist ?P)
-//			getMenuInflater().inflate(R.menu.idDeleteSelected, menu);
+			
+			MenuInflater inflater = getMenuInflater();   // 
+			inflater.inflate(R.menu.menu_listdisplay_activity, menu);
+
 			return true;
 		}
 	

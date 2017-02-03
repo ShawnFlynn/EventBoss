@@ -4,11 +4,6 @@ import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 
 
-
-
-
-
-
 import android.content.Context;
 //import android.content.Intent;
 import android.content.Intent;
@@ -46,8 +41,8 @@ public class EventDetailActivity extends FragmentActivity {
 	
     public Context context = this;
 	public static long mId;
+	public static int mType;
 	private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity())
-
 	EventDetailFragment mDetailFragment = new EventDetailFragment();	////
 
 
@@ -67,10 +62,10 @@ public class EventDetailActivity extends FragmentActivity {
 //		Log.v(TAG, "for current / saved list = " + savedValue);
 ///		int s = getIntent().getStringExtra(EventDetailFragment.LIST_TYPE); // 0, 1, 2
 
-		int s = getIntent().getIntExtra(EventDetailFragment.LIST_TYPE, 0); // 0, 1, 2
-		Log.v(TAG, "s = " + s);
-		Log.v(TAG, "for current / saved list = " + s);
-			mDetailFragment.setListType(s);		// the type (current, saved, search) List to use
+		mType = getIntent().getIntExtra(EventDetailFragment.LIST_TYPE, 0); // 0, 1, 2
+		Log.v(TAG, "list type = " + mType);
+		Log.v(TAG, "for current / saved list = " + mType);
+		mDetailFragment.setListType(mType);		// the type (current, saved, search) List to use
 		mDetailFragment.setEventId(getIntent().getStringExtra(EventDetailFragment.EVENTITEM_POS));
 
 
@@ -107,7 +102,14 @@ public class EventDetailActivity extends FragmentActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
     	// inflate menu items for the action bar
     	MenuInflater inflater= getMenuInflater();
-    	inflater.inflate(R.menu.menu_detail_activity, menu);
+    	if (mType == 0) {
+    		inflater.inflate(R.menu.menu_detail_activity_cur, menu);
+			Log.v(TAG, "EventDetailActivity - save only");
+    	} else  {
+    		inflater.inflate(R.menu.menu_detail_activity_sav, menu);
+			Log.v(TAG, "EventDetailActivity - delete only");
+    	}
+    		
     	return super.onCreateOptionsMenu(menu);
     }
 

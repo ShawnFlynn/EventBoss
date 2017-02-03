@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 public class SavedListDisplayActivity extends Activity {
 
+	String TAG = "SavedListDisplayAct";
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -48,24 +50,24 @@ public class SavedListDisplayActivity extends Activity {
 //		}
         switch (optionSelected) {
             case R.id.itemPrefs:
-                Log.v("SaveList ", "Settings ");
+                Log.v(TAG, "Settings ");
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
             case R.id.idDeleteSelected:
-                Log.v("SavedListDisplayAct", "optionSelected - Delete");
+                Log.v(TAG, "optionSelected - Delete");
                 Toast.makeText(this, "EBMain - Delete", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.idCalendar:
-                Log.v("SavedListDisplayAct", "optionSelected - Calendar");
+                Log.v(TAG, "optionSelected - Calendar");
                 Toast.makeText(this, "EBMain - Calendar", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.action_share:
-                Log.v("SavedListDisplayAct", "optionSelected - idShare pressed");
+                Log.v(TAG, "optionSelected - idShare pressed");
                 Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
                 ProcessShare(item);
                 break;
             default:
-                Log.d("SavedListDisplayAct","optionSelected "+ " " + "xxxxx" + " "
+                Log.d(TAG,"optionSelected "+ " " + "xxxxx" + " "
                         + Integer.toHexString(optionSelected) + " " + "yyy");
                 Toast.makeText(this, " " + Integer.toHexString(optionSelected)
                         + " " + "yyy", Toast.LENGTH_SHORT).show();

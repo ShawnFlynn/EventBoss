@@ -117,19 +117,23 @@ public class EventDetailFragment extends Fragment {
             
             if ( mId.isEmpty() ) 
             	Log.v(TAG, "can not display: Event is empty");  //
-            else 
-            	Log.v(TAG, "EventDetailFragment(120) read id: " + mId);  //
-/*
+            else {
+            	Log.v(TAG, "EventDetailFragment(@ 121 read id: " + mId);  //
+														
 // - mId - should be the Id from CurrentEventList
 //     also see --> SearchSectionFragment line 97  
             	try {
-            		mEvent = dbh.getEventById(mId);
-            	} catch ( SQLException exp ) {
-            		Log.e( TAG, "caught SQLException: reading this id: "+mId ,exp );
-            	}
+            		mEvent = dbh.getEventById(mId);            	} 
+            	catch ( SQLException exp ) {
+            		Log.e( TAG, "caught SQLException: reading this id: "+mId ,exp ); }
+            	catch (android.database.CursorIndexOutOfBoundsException exept ) {
+            		Log.e( TAG, "caught CursorIndexOutOfBoundsException "+mId ,exept ); }
             Log.v(TAG, "search Event: "+mEvent);
-*/
-        }
+
+////            updateSearch();
+//            refreshView(); // will do it at start
+            }
+        }	// ListType == 2
 
     }   // end --- onCreate()
  
@@ -163,7 +167,7 @@ public class EventDetailFragment extends Fragment {
 //        Log.v(TAG, " loc: " +mLocationText);
 //        Log.v(TAG, " desc: " +mDescriptionText);
 
-        Log.v(TAG,"exit");
+        Log.v(TAG,"onCreateView - exit");
         return view;
 
     }   //  end --- onCreateView()
@@ -171,8 +175,7 @@ public class EventDetailFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        refreshView();
-        // note EGL_Emulation  .. eglSurfaceAttribute not Implemented
+        refreshView();			// show all of the list entry
     }
 
     @Override
@@ -183,18 +186,22 @@ public class EventDetailFragment extends Fragment {
 
    public void refreshView() {
        Log.i(TAG,"->refresh view: mEvent= "+mEvent);
-       if(mEvent==null ) {
+       if(mEvent == null ) {
            mTitleText.setText(" **** no Event ****");   // 
        }    else   {
        mTitleText.setText(mEvent.getTitle());
+       
        mStartText.setText(mEvent.getStartTime());
-       mEndText.setText(mEvent.getEndTime());
-       mTypeText.setText(mEvent.getEventType());
-       mLinkText.setText(mEvent.getLinkToGroup());
-       mLocationText.setText(mEvent.getLocation());
-       mDescriptionText.setText(mEvent.getLongDescription());  //  <- is full of CSS and HTML codes
-       					// mDescriptionText.setText("substitute for LongDescription");
-       }
+//       if (m_isListType < 2) {
+    	   mEndText.setText(mEvent.getEndTime());
+    	   mTypeText.setText(mEvent.getEventType());
+    	   mLinkText.setText(mEvent.getLinkToGroup());
+    	   mLocationText.setText(mEvent.getLocation());
+    	   mDescriptionText.setText(mEvent.getLongDescription());  
+    	   	//  <- is full of CSS and HTML codes
+       		// mDescriptionText.setText("substitute for LongDescription");
+       	   }
+//       }
             Log.v(TAG, "in refreshView: ");
             Log.v(TAG, " text: " +mTitleText.getText());   // (TextView)
 //            Log.v(TAG, " star: " +mStartText.getText());
@@ -204,26 +211,6 @@ public class EventDetailFragment extends Fragment {
 //            Log.v(TAG, " org : " +mOrganizerText.getText());
 //            Log.v(TAG, " loc : " +mLocationText.getText());
 //            Log.v(TAG, " desc: " +mDescriptionText.getText());
-
-/*            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {	// Intents might not work earlier
-                final EventDetailFragment outerThis = this;
-                m_addToCalendar.setOnClickListener(
-                            new View.OnClickListener() {
-                            public void onClick(View v) {
-                                Log.i("EventListDisp.Fragment", "want to make an appointment for '" + mEvent.getTitle() + "' " + mEvent.getStartDate());
-                                    outerThis.makeAppointment(mEvent.getTitle(), mEvent.getLocation(), mEvent.getStartDate(), mEvent.getEndDate());
-                                }
-                            } });
-
-                m_forward.setOnClickListener(
-                            new View.OnClickListener() {
-                            public void onClick(View v) {
-                                Log.d("EventListDisp.Fragment", "forward button unimplemented");
-                                MakeToast.makeToast(v.getContext(), "onCreate, start trace", MakeToast.LEVEL_DEBUG);
-                            } });
-            }   // finished with OnClickListeners
-*/
- //       }   // end else clause (we have valid mId)
 
         Log.v(TAG, "exit refreshView");
    }    //  end --- refreshView()
