@@ -33,6 +33,8 @@ public class SettingsActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		Log.i(TAG, "onCreate()");
+
 		/** sets outer class members according to which button clicked */
 		class prefclick implements OnClickListener {
 			private int iFeedId = 0;
@@ -110,65 +112,71 @@ public class SettingsActivity extends Activity
 		rgFeed.setOnCheckedChangeListener ( new OnCheckedChangeListener() {
 			public void onCheckedChanged( RadioGroup rg, int checkedId )
 			{
-				switch( checkedId )
-				{
-				case R.id.choice1:
-					MakeToast.makeToast(getApplicationContext(),
-							"set 1 id = " + Integer.toHexString(checkedId),
-							MakeToast.LEVEL_USER);
-					break;
-				case R.id.choice2:
-					MakeToast.makeToast(getApplicationContext(),
-							"set 2 id = " + Integer.toHexString(checkedId),
-							MakeToast.LEVEL_USER);
-					break;
-				case R.id.choice3:
-					MakeToast.makeToast(getApplicationContext(),
-							"set 3 id = " + Integer.toHexString(checkedId),
-							MakeToast.LEVEL_USER);
-					break;
-				case R.id.choice4:
-					MakeToast.makeToast(getApplicationContext(),
-							"set 4 id = " + Integer.toHexString(checkedId),
-							MakeToast.LEVEL_USER);
-					break;
-				case R.id.choice5:
-					MakeToast.makeToast(getApplicationContext(),
-							"set 5 id = " + Integer.toHexString(checkedId),
-							MakeToast.LEVEL_USER);
-					break;
-				default:
-					MakeToast.makeToast(getApplicationContext(),
-							"RG "+rg+"; id " + checkedId,
-							MakeToast.LEVEL_USER);
-					break;
+				if (EB2MainActivity.DEBUG) {
+					switch( checkedId )
+					{
+					case R.id.choice1:
+						MakeToast.makeToast(getApplicationContext(),
+								"set 1 id = " + Integer.toHexString(checkedId),
+								MakeToast.LEVEL_USER);
+						break;
+					case R.id.choice2:
+						MakeToast.makeToast(getApplicationContext(),
+								"set 2 id = " + Integer.toHexString(checkedId),
+								MakeToast.LEVEL_USER);
+						break;
+					case R.id.choice3:
+						MakeToast.makeToast(getApplicationContext(),
+								"set 3 id = " + Integer.toHexString(checkedId),
+								MakeToast.LEVEL_USER);
+						break;
+					case R.id.choice4:
+						MakeToast.makeToast(getApplicationContext(),
+								"set 4 id = " + Integer.toHexString(checkedId),
+								MakeToast.LEVEL_USER);
+						break;
+					case R.id.choice5:
+						MakeToast.makeToast(getApplicationContext(),
+								"set 5 id = " + Integer.toHexString(checkedId),
+								MakeToast.LEVEL_USER);
+						break;
+					default:
+						MakeToast.makeToast(getApplicationContext(),
+								"RG "+rg+"; id " + checkedId,
+								MakeToast.LEVEL_USER);
+						break;
+					}
 				}
 			}
-		}); 
+		});
 
 		final Button doneBtn = (Button) findViewById(R.id.idDone);
-		doneBtn.setOnClickListener(new Button.OnClickListener()  {
+		doneBtn.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View v) {
 				Log.i(TAG, "on Click() - done");
-				MakeToast.makeToast(getApplicationContext(),
-						"pressed 'Done' -- bye bye", MakeToast.LEVEL_USER);
+				if (EB2MainActivity.DEBUG) {
+					MakeToast.makeToast(getApplicationContext(),
+										"pressed 'Done' -- bye bye",
+										MakeToast.LEVEL_USER);
+				}
 
 				// Don't reread the current Feed Id
 				if (bNewFeed) {
 					Log.i(TAG, "Reading feed: " + mFeedId);
-					
-					// EventsListReader(url) will do the reading using the AsyncTask
-					MakeToast.makeToast(getApplicationContext(),
-							"Read feed # " + mFeedId,
-							MakeToast.LEVEL_USER);
-
+					if (EB2MainActivity.DEBUG) {
+						// EventsListReader(url) will do the reading using the AsyncTask
+						MakeToast.makeToast(getApplicationContext(),
+											"Read feed # " + mFeedId,
+											MakeToast.LEVEL_USER);
+					}
+					// Reload the feed
 					reloadfeed(mFeedId);
 				}
 
 				// Return
 				finish();
 			}
-		} );
+		});
 
 	}	// end OnCreate ()
 
@@ -176,7 +184,7 @@ public class SettingsActivity extends Activity
 	public boolean reloadfeed(int whichfeed) {
 		boolean result = false;
 
-		Log.i(TAG, "Replacing feed: " +  EB2MainActivity.mRSSString);
+		Log.i(TAG, "reloadFeed( " +EB2MainActivity.mRSSString+ " )");
 
 		// Generate and start a new EB2MainActivity
 		Intent intent = new Intent(this, EB2MainActivity.class);
@@ -195,31 +203,51 @@ public class SettingsActivity extends Activity
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+
+		Log.i(TAG, "onCreateOptionsMenu()");
+
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.menu_main_activity, menu);
+
+		// Remove the search button
+		MenuItem search_item = menu.findItem(R.id.action_search);
+		if (search_item != null) {
+			search_item.setVisible(false);
+			this.invalidateOptionsMenu();
+		}
+
 		return true;
 	};
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+
+		Log.i(TAG, "onOptionsItemSelected()");
+
 		final int itemId = item.getItemId();
 		switch (itemId) { 
 		
 		case R.id.idDone:
 		Log.i(TAG, "done button");
+		if (EB2MainActivity.DEBUG) {
 			MakeToast.makeToast(this,
-				"pressed 'Done'", MakeToast.LEVEL_USER);
+								"pressed 'Done'",
+								MakeToast.LEVEL_USER);
+		}
 			finish();
 			break;
 		default:
 			Log.e(TAG, "unknown button " + Integer.toHexString(itemId));
-			MakeToast.makeToast(this,
-				"pressed " + Integer.toHexString(itemId), MakeToast.LEVEL_USER);
+			if (EB2MainActivity.DEBUG) {
+				MakeToast.makeToast(this,
+									"pressed " + Integer.toHexString(itemId),
+									MakeToast.LEVEL_USER);
+			}
 			break;
 		}
 
 		return true; 
 	}
 
-}	// end - SettingsActivity
+}	// end - SettingsActivity class
 

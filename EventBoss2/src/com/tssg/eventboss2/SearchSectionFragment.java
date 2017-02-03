@@ -20,14 +20,17 @@ import com.tssg.eventsource.BELEvent;
  * Fragment which contains the search activity.
  * ======================================================================================
  */
-public class SearchSectionFragment extends EventBossListFragment implements TextWatcher{
+public class SearchSectionFragment  extends EventBossListFragment
+									implements TextWatcher{
 
-    static final String TAG = "SearchSectionFragment";  // log's tag
+	static final String TAG = "SearchSectionFragment";
+
 	public static final String ARG_SECTION_NUMBER = "section_number";
-	public static int mListType = 2;			 	 	// -> SearchList
+
+	public static int mListType = 2;	// -> SearchList
 	private EditText mSearchText;
-	private String mSearch= "";
-	
+	private String mSearch = "";
+
 	public static long mId;
 	public BELEvent mEvent;
 	private DatabaseHelper dbh;
@@ -38,35 +41,32 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 	public void onCreate(Bundle savedInstance) {
 		super.onCreate(savedInstance);
 		dbh = new DatabaseHelper(getActivity());
-		Log.e(TAG,"onCreate: --- in Search");
-		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+", search string: "+mSearch);
+		Log.i(TAG,"onCreate()");
+		Log.d(TAG, "before cursor, dbh:" +dbh+ ", search string: " +mSearch);
 		mCursor = dbh.getCursorSearchEvents(mSearch);
 	}
-	
-	
+
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		Log.e(TAG,"onCreateView: --- in Search");
+		Log.i(TAG,"onCreateView()");
 		View rootView = inflater.inflate(R.layout.fragment_section_launchpad,
 				container, false);
-//		Bundle args = getArguments();
 		mSearchText = (EditText) rootView.findViewById(R.id.searchText);
 		mSearchText.addTextChangedListener(this);
-		// MakeToast.makeToast(MainActivity.context, "---in DummySection",
-		// MakeToast.LEVEL_USER);
-		// view =/= context
-		Log.v("SearchSectionFragment:search_section_text:layout", " "+ rootView);
+		Log.d("SearchSectionFragment:search_section_text:layout",
+			  " " + rootView);
 
-//		Log.v(TAG, "( SearchSectionFragment.onCreateView: "+"before cursor, dbh:"+dbh+", search string: "+mSearch);
-//		mCursor = dbh.getCursorSearchEvents(mSearch);
-		Log.v(TAG, "( SearchSectionFragment.onActivityCreated: "+"after, mCursor: "+mCursor);
+		Log.d(TAG, "after, mCursor: " +mCursor);
 
 		// For the cursor adapter, specify which columns go into which views
 		String[] fromColumns = { DatabaseHelper.KEY_TITLE,
 								 DatabaseHelper.KEY_DESCRIPTION,
 								 DatabaseHelper.KEY_EVENTID};
-		int[] toViews = { R.id.title, R.id.description }; // The TextView a simple_list_item_1
+
+		// The TextView a simple_list_item_1
+		int[] toViews = { R.id.title, R.id.description };
 
 		// Create an empty adapter we will use to display the loaded data.
 		// We pass null for the cursor, then update it in onLoadFinished()
@@ -82,59 +82,60 @@ public class SearchSectionFragment extends EventBossListFragment implements Text
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		// do something with the data
-		Log.v("SearchdSectionFragment (onListItemClick):", "---> eventFragmentCoordinator ->displayEventDetails (2)");
-		Log.v("SearchSectionFragment", "Listview=" + l
-				+ ":View=" + v + ":Position=" + position + ":Id=" + id);
-		
+		Log.i(TAG, "onListItemClick()");
+		Log.d(TAG, ":View = " + v + ":Position = " + position + ":Id=" + id);
+
 		// here we need to get the Id of the original record
 		// id is selection in the now updated list (search result)
 		// it contains the id of the event in the list (loaded from current list)
 		mId = id;
-		Log.v("SearchSectionFragment", "onListItemClick:Id= " + id+" mId= "+ mId);
+		Log.d(TAG, "onListItemClick:Id = " +id+ " mId = " +mId);
 		String idStr = Long.toString(mId);	
 		mEvent = dbh.getEventById( idStr );
-		Log.v("SearchSectionFragment", "onListItemClick:Id= " + id+" mId= "+ mId+" : "+ mEvent);
+		Log.d(TAG, "id = " +id+ " mId = " +mId+ " : " +mEvent);
 
 		eventFragmentCoordinator.displayEventDetails(Long.toString(id), 2);
 	}
 	
 	public void updateSearch() {
 		mCursor.close();
-		Log.v(TAG, "( SearchSectionFragment.updateSearch: "+"before cursor, dbh:"+dbh);
-		Log.v(TAG, "( SearchSectionFragment: "+"search term: "+mSearch);
+		Log.i(TAG, "updateSearch()");
+		Log.d(TAG, "before cursor, dbh: " +dbh);
+		Log.d(TAG, "search term: " +mSearch);
 		mCursor = dbh.getCursorSearchEvents(mSearch);
-		Log.v(TAG, "( SearchSectionFragment.updateSearch: "+"after cursor, dbh:"+dbh);
+		Log.d(TAG, "after cursor, dbh: " +dbh);
 		mAdapter.swapCursor(mCursor);
-		Log.v(TAG, "( SearchSectionFragment: "+"after cursor swap");
+		Log.d(TAG, "after cursor swap");
 		setListAdapter(mAdapter);
-
 	}
-	
+
+	public void beforeTextChanged(CharSequence arg0,
+			int arg1, int arg2, int arg3) {
+		// TODO Auto-generated method stub
+		Log.i(TAG, "beforeTextChanged()");
+		Log.d(TAG, "cursor: " +mCursor+ ", dbh: " +dbh);
+	}
+
 	public void afterTextChanged(Editable text) {
 		// TODO Auto-generated method stub
 		mSearch = text.toString();
-		Log.v(TAG, "( SearchSectionFragment:afterTextChanged: "+mCursor);
+		Log.i(TAG, "afterTextChanged( " +mSearch+ " )");
+		Log.d(TAG, "cursor: " +mCursor);
 		updateSearch();
-	}
-
-	public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
-			int arg3) {
-		// TODO Auto-generated method stub
-		Log.v(TAG, "( SearchSectionFragment:beforeTextChanged: "+"cursor: "+ mCursor+", dbh:"+dbh);
 	}
 
 	public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
 		// TODO Auto-generated method stub
-		Log.v(TAG, "( SearchSectionFragment:onTextChanged: "+"cursor: "+ mCursor+", dbh:"+dbh);
+		Log.i(TAG, "onTextChanged()");
+		Log.d(TAG, "cursor: " +mCursor+ ", dbh: " +dbh);
 	}
 	
 
 	@Override
 	public void onDestroyView() {
-//		mCursor.close();
-//		Log.v(TAG, "( SearchSectionFragment.onDestroyView: "+"cursor is closed, dbh:"+dbh);
+		Log.i(TAG, "onDestroyView()");
 		super.onDestroyView();
 	}
 
-} // ------- end SearchSectionFragment
+}	//	end - SearchSectionFragment class
 
