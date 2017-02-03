@@ -35,15 +35,13 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.ActionProvider;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.ShareActionProvider;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tssg.datastore.DatabaseHelper;
 import com.tssg.datastore.DatastoreException;
 import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
@@ -59,27 +57,23 @@ import com.tssg.eventsource.BELEventlist;
  */
 public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabListener, EventFragmentCoordinator {
 
-    public Context context = this;
-    public static final boolean bLOGGING = true;    // enable/disable logging
     public static final String TAG = "EBMainAct";   // log's tag
+
+    public Context context = this;
     public static boolean bTRACE = false;           // en/disable tracing to device SD
     boolean bDEVELOPER_MODE = false;                // controls strictMode set to false for release
     private static ActionBar m_actionBar;
 
-    public static String statusMessage = null;      // status line content
-    public static TextView m_statusView = null;     // view for status line
-
     // the URL selected in SettingsActivity can change mURLString and mRSSString
     // volatiles may be changed from doInBackground; don't think we need to synchronize, yet
     // static volatile public String mURLString = "http://www.bostoneventslist.com/us/nh/events/rss.xml";
-    static volatile public String mURLString = "http://www.nheventslist.com/rss.xml";
-    static volatile public String mRSSString = "New Hampshire";
+    static volatile public String mURLString = null;
+    static volatile public String mRSSString = null;
 
     // String to hold Current/Stored for tab 0 label
     static volatile public String tab0Label;
 
-//    static volatile int mFeedId = 1;    // start with New Hampshire, it's a short list
-    static volatile int mFeedId = 0;    // start with Boston it has list items
+    static volatile int mFeedId = 1;    // start with New Hampshire, it's a short list
     int oldFeedId = mFeedId;            // backup copy
 
     // this is a bit klugey. OK if date is near-enough
@@ -113,7 +107,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      * derivative, which will keep every loaded fragment in memory. If this becomes too memory
      * intensive, it may be best to switch to a {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
-    private AppSectionsPagerAdapter mAppSectionsPagerAdapter;
+    AppSectionsPagerAdapter mAppSectionsPagerAdapter;
 
     /*
      * The {@link ViewPager} that will display the three primary sections
@@ -130,12 +124,12 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     public static String internalFilePath = null;
 
     // Note: The file specified below must exist on the device's internal storage.
-    private String eventListFileName = "your_file_name";
+    String eventListFileName = "your_file_name";
 
     // resources
-    public static Resources mResources = null;      // data to be set into the spinner
-    private String[] mRSSname = null;       // for user: name
-    private String[] mRSSURL  = null;       // for computer: URL
+    public static Resources mResources = null;  // data to be set into the spinner
+    private String[] mRSSname = null;           // for user: name
+    private String[] mRSSURL  = null;           // for computer: URL
 
     /*
      * setTabLabel
@@ -144,7 +138,6 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // Set up the action bar.
         Tab currentTab = m_actionBar.getSelectedTab();
         currentTab.setText(labelText);
-
     }
 
     @Override
@@ -155,6 +148,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // it might switch between portrait and landscape format
         // (phone or dual mode)
 
+        Log.i(TAG, "onConfigurationChanged()");
+
         Log.v(TAG, mResources.getString(R.string.DetectedConfig));
         Toast.makeText(context, mResources.getString(R.string.DetectedConfig) + " ", Toast.LENGTH_SHORT).show();
     }
@@ -162,6 +157,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.i(TAG, "onCreate()");
 
         if( bTRACE ) {
             // trace file is created in SD device
@@ -230,12 +227,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         // it must be like that because the APK file does not know onto what kind of a device it will be loaded!
 
         Log.v(TAG, "EventsListReader-> ");
-        ViewGroup details = (ViewGroup) findViewById(R.id.eventData);
-        if (details != null) {
-            mDualPane = true;
-        } else {
-            mDualPane = false;
-        }
+
+        // Single or Dual pane?
+        mDualPane = (findViewById(R.id.eventData) != null);
 
         // Create the adapter that will return a fragment for each of
         // the three primary sections (Tab) of the app.
@@ -245,59 +239,64 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         final ActionBar actionBar = getActionBar();     // ok within onCreate???
         m_actionBar = actionBar;
 
-        // Specify that the Home/Up button should not be enabled, since there is no hierarchical parent.
-        actionBar.setHomeButtonEnabled(false);
+        // Check for valid actionBar
+        if (actionBar != null) {
 
-        // Specify that we will be displaying tabs in the action bar.
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+            // Specify that the Home/Up button should not be enabled, since there is no hierarchical parent.
+            actionBar.setHomeButtonEnabled(false);
 
-        // Set up the ViewPager, attaching the adapter and setting up a listener
-        // for when the user swipes between sections.
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mAppSectionsPagerAdapter);
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            // Specify that we will be displaying tabs in the action bar.
+            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-            @Override
-            public void onPageSelected(int position) {
-                // When swiping between different app sections, select the
-                // corresponding tab. We can also use ActionBar.Tab#select()
-                // to do this if we have a reference to the Tab.
-                actionBar.setSelectedNavigationItem(position);
-            }
+            // Set up the ViewPager, attaching the adapter and setting up a listener
+            // for when the user swipes between sections.
+            mViewPager = (ViewPager) findViewById(R.id.pager);
+            mViewPager.setAdapter(mAppSectionsPagerAdapter);
 
-        });
+            // onPageSelected
+            mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
 
-        // For each of the sections in the app, add a tab to the action bar.
-        for (int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++) {
-            // Create a tab with text corresponding to the page title
-            // defined by the adapter.  Also specify this Activity object,
-            // which implements the TabListener interface, as the listener
-            // for when this tab is selected.
+                @Override
+                public void onPageSelected(int position) {
+                    // When swiping between different app sections, select the
+                    // corresponding tab. We can also use ActionBar.Tab#select()
+                    // to do this if we have a reference to the Tab.
+                    actionBar.setSelectedNavigationItem(position);
+                }
+            });
 
-            switch (i) {
-                case 0:
-                    actionBar.addTab(actionBar.newTab()
-                            .setText(tab0Label)
-                            .setTabListener(this));
-                    break;
+            // For each of the sections in the app, add a tab to the action bar.
+            for (int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++) {
+                // Create a tab with text corresponding to the page title
+                // defined by the adapter.  Also specify this Activity object,
+                // which implements the TabListener interface, as the listener
+                // for when this tab is selected.
 
-                case 1:
-                    actionBar.addTab(actionBar.newTab()
-                            .setText(mResources.getString(R.string.Saved))
-                            .setTabListener(this));
-                    break;
+                switch (i) {
+                    case 0:
+                        actionBar.addTab(actionBar.newTab()
+                                .setText(tab0Label)
+                                .setTabListener(this));
+                        break;
 
-                case 2:
-                    actionBar.addTab(actionBar.newTab()
-                            .setText(mResources.getString(R.string.Search))
-                            .setTabListener(this));
-                    break;
+                    case 1:
+                        actionBar.addTab(actionBar.newTab()
+                                .setText(mResources.getString(R.string.Saved))
+                                .setTabListener(this));
+                        break;
 
-                case 3:
-                    actionBar.addTab(actionBar.newTab()
-                            .setText(mResources.getString(R.string.Event))
-                            .setTabListener(this));
-                    break;
+                    case 2:
+                        actionBar.addTab(actionBar.newTab()
+                                .setText(mResources.getString(R.string.Search))
+                                .setTabListener(this));
+                        break;
+
+                    case 3:
+                        actionBar.addTab(actionBar.newTab()
+                                .setText(mResources.getString(R.string.Event))
+                                .setTabListener(this));
+                        break;
+                }
             }
         }
 
@@ -309,6 +308,66 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         }
     }   //    end --- OnCreate
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Log.i(TAG, "onStart()");
+
+    }   //  end --- onStart
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        Log.i(TAG, "onRestart()");
+
+    }   //  end --- onRestart
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Log.i(TAG, "onResume()");
+
+    }   //  end --- onResume
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        Log.i(TAG, "onPause()");
+
+    }   //  end --- onPause
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Log.i(TAG, "onStop()");
+
+    }   //  end --- onStop
+
+    @Override
+    protected void onDestroy() {
+
+        Log.i(TAG, "onDestroy()");
+
+        // Clear the cache events
+        for (List<BELEvent> lbel : m_webEventsListA) {
+            if (lbel != Collections.EMPTY_LIST)  {
+                lbel.clear();
+            }
+        }
+
+        // Clear the cache
+        m_webEventsListA.clear();
+
+        super.onDestroy();
+
+    }   //  end - onDestroy
+
+
 
     public void onTabUnselected(ActionBar.Tab tab,
                                 android.app.FragmentTransaction fragmentTransaction) {
@@ -316,14 +375,17 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
     public void onTabSelected(ActionBar.Tab tab,
                               android.app.FragmentTransaction fragmentTransaction) {
+
+        Log.v(TAG, "onTabSelected()");
+
         // When the given tab is selected,
         // switch to the corresponding page in the ViewPager.
         if (mDualPane){
-            Log.v(TAG, "onTabSelected (267): ->displayEventDetails (false)");
+            Log.v(TAG, "displayEventDetails() -> false");
             displayEventDetails("", false);
         }
         mViewPager.setCurrentItem(tab.getPosition());
-        Log.v(TAG, "onTabSelected " + tab.getPosition());
+        Log.v(TAG, "onTabSelected() position = " + tab.getPosition());
         if (tab.getPosition() == 1) {
             savedData.updateList();
         }
@@ -333,7 +395,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     /** Huh? This doesn't do anything */
     public void onTabReselected(ActionBar.Tab tab,
                                 android.app.FragmentTransaction fragmentTransaction) {
-        Log.v(TAG, "onTabReselected " + tab.getPosition());
+
+        Log.v(TAG, "onTabReselected() position = " + tab.getPosition());
+
         // here resume activity
         switch (tab.getPosition()) {
             case 0:
@@ -365,6 +429,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
         @Override
         public Fragment getItem(int i) {
+
+            Log.i(TAG, "getItem(" +i+ ")");
 
             final String ARG_SECTION_NUMBER1 = "Current";
             final String ARG_SECTION_NUMBER2 = "Saved";
@@ -423,7 +489,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
             if (mDualPane) {
                 return 3;
             } else {
-                return 3;   /////// <- 3
+                return 3;
             }
         }
 
@@ -439,17 +505,6 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         }
     }    // end --- AppSectionsPagerAdapter
 
-
-    /*
-     * Write a message to the status window:	EB2MainActivity has no status view!
-     * Does nothing if there is no status window.
-     */
-
-    // static public void showStatus(String statusMessage) {
-    //        if (m_statusView != null) {
-    //            m_statusView.setText(statusMessage);
-    //        }
-    // }
 
     public static void updateListHeader( String extraText )  {
 
@@ -490,6 +545,9 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final int optionSelected = item.getItemId();
+
+        Log.i(TAG, "onOptionItemSelected()");
+
         switch (optionSelected) {
             case R.id.itemPrefs:
                 Log.v("Prefs ", "Settings ");
@@ -511,7 +569,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 Log.v("Main menu", " - idShare pressed");
                 Toast.makeText(context,  "", Toast.LENGTH_SHORT).show();
                 Log.d("Main ", " item: " +  item);
-                ProcessShare(item.getActionProvider(), item);
+                ProcessShare(item);
                 break;
             default:
                 Log.d("Main ", " " + mResources.getString(R.string.unimplemented) + " "
@@ -526,7 +584,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
     }    // end --- onOptionsItemSelected
 
 
-    void ProcessShare(ActionProvider actionProvider, MenuItem item) {
+    void ProcessShare(MenuItem item) {
 
         ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
 
@@ -575,7 +633,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      *      this is for test purposes, it should be feed to the DOM parser (which
      *      currently chokes on it).
      */
-    public class ExecFeedReader extends AsyncTask<URL, Integer, Integer> {
+    public class ExecFeedReader extends AsyncTask<URL, Integer, List<BELEvent> > {
 
         static final String TAG = "ExFeedRdr";  // log's tag
 
@@ -586,11 +644,10 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         protected void onPreExecute() {
             super.onPreExecute();
 
-            Log.i(TAG, "onPreExecute");
+            Log.i(TAG,  "onPreExecute, feedId = " +mFeedId);
 
             pDialog = new ProgressDialog(EB2MainActivity.this);
-            pDialog.setMessage(mResources.getString(R.string.ReadingRSSFeed) + mFeedId + " "
-                               + mRSSString + mResources.getString(R.string.PleaseWait));
+            pDialog.setMessage(mResources.getString(R.string.ReadingRSSFeed) +mFeedId+ " " +mRSSString+ mResources.getString(R.string.PleaseWait));
             pDialog.setIndeterminate(false);
 
             // see http://stackoverflow.com/questions/5253621/android-back-button-and-progress-dialog
@@ -630,33 +687,28 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                         } else {
                             pDialog.setMessage(mResources.getString(R.string.digesting)
                                                + " " +progress[0]+ " " +
-                                               mResources.getString(R.string.of)
-                                               + " " +progress[1]+
                                                mResources.getString(R.string.phase)
                                                + " " +progress[2]);
                         }
                         break;
                 }
-
-                // attempt early summary update
-                if (progress[0] == 15) {
-                    currentData.updateList();
-                }
-
             }
         }   // end --- onProgressUpdate
 
         @Override
-        protected void onPostExecute( Integer result ) {
-            super.onPostExecute(result);
+        protected void onPostExecute( List<BELEvent> RSS_List ) {
+            super.onPostExecute(RSS_List);
+
+            Log.i(TAG, "onPostExecute, events = " + RSS_List.size());
+
+            // Copy returned list to global list
+            m_webEventsList = RSS_List;
 
             MakeToast.makeToast(EB2MainActivity.this, mResources.getString(R.string.ReadRSS) + " ", MakeToast.LEVEL_DEBUG);
-            Log.i(TAG, "onPostExecute, events = " + result );
 
-            if (!m_webEventsList.isEmpty() ) {
-                currentData.updateList();
-                String  txt =   mResources.getString(R.string.RSS) + " " +m_webEventsList.size()+ " " +
-                                mResources.getString(R.string.colon) + " ";
+            if (!RSS_List.isEmpty() ) {
+                String  txt =   mResources.getString(R.string.RSS) + " " +RSS_List.size()+ " " + mResources.getString(R.string.colon) + " ";
+                EB2MainActivity.currentData.updateList();
                 EB2MainActivity.updateListHeader( txt );
             } else {
                 // What should we say when feed has nothing to show? Could be bad feed,
@@ -694,52 +746,54 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
 
 
         @Override
-        protected Integer doInBackground(URL... params) {
-            // TODO Auto-generated method stub
+        protected List<BELEvent> doInBackground(URL... params) {
+
+            // Local Event List
+            List<BELEvent> dIBEventList;
 
             // Initialize tab 0 label = Current
             tab0Label = mResources.getString(R.string.Current);
 
-            // Get Connection manager and network info
-            ConnectivityManager connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            // Read from cached feedId
+            dIBEventList = m_webEventsListA.get(mFeedId);
 
-            // If we have network info and a connection
-            if (networkInfo != null && networkInfo.isConnected())
-            {
-                // Get a new empty event list
-                BELEventlist eventSource = new BELEventlist(this);
-                try {
-                    // Read from cached feedId
-                    m_webEventsList = m_webEventsListA.get(mFeedId);
-                    // If it is empty
-                    if (m_webEventsList.isEmpty()) {
+            // If cache entry was empty
+            if (dIBEventList.isEmpty()) {
+
+                // Get Connection manager and network info
+                ConnectivityManager connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+                // If we have network info and a connection
+                if (networkInfo != null && networkInfo.isConnected()) {
+
+                    // Get a new empty event list
+                    BELEventlist eventSource = new BELEventlist(this);
+                    try {
                         // Get a new or empty list from RSS feedId
-                        m_webEventsList = eventSource.getBELEventlist();
-                        // If this list is not empty
-                        if (!m_webEventsList.isEmpty()) {
-                            Log.i(TAG, "retrieved " +m_webEventsList.size()+ " new events from RSS feedId " + mFeedId);
-                        }
-                    } else {
-                        Log.i(TAG, "used " +m_webEventsList.size()+ " saved events from cache feedId " + mFeedId);
-                    }
+                        dIBEventList = eventSource.getBELEventlist(params);
 
-                    // Copy to cache if m_webEventsListA(mFeedId) is empty and m_webEventsList is not
-                    if (EB2MainActivity.m_webEventsListA.get(EB2MainActivity.mFeedId ).isEmpty() && ! m_webEventsList.isEmpty()) {
-                        // Copy m_webEventsList to m_webEventsListA
-                        EB2MainActivity.m_webEventsListA.set(EB2MainActivity.mFeedId,  m_webEventsList);
-                        Log.i(TAG, "saved " +m_webEventsList.size()+ " events in cache feedId " + mFeedId );
+                        // If this list is not empty
+                        if (!dIBEventList.isEmpty()) {
+                            Log.i(TAG, "retrieved " + dIBEventList.size() + " new events from RSS feedId " + mFeedId);
+                            // Copy to cache
+                            EB2MainActivity.m_webEventsListA.set(EB2MainActivity.mFeedId, dIBEventList);
+                            Log.i(TAG, "saved " + dIBEventList.size() + " events in cache feedId " + mFeedId);
+                        }
+                    } catch (Exception excp) {
+                        Log.e(TAG, "doInBackground - exception " + excp.toString()
+                                + " in read RSS phase, feedId changed from " + mFeedId
+                                + " to " + oldFeedId, excp);
+                        mFeedId = oldFeedId;
+                        dIBEventList = EB2MainActivity.m_webEventsListA.get(EB2MainActivity.mFeedId);
                     }
-                } catch(Exception excp) {
-                    Log.e(TAG, "doInBackground - exception " + excp.toString()
-                            + " in read RSS phase, feedId changed from " + mFeedId
-                            + " to " + oldFeedId, excp );
-                    mFeedId = oldFeedId;
-                    m_webEventsList = EB2MainActivity.m_webEventsListA.get(EB2MainActivity.mFeedId);
                 }
+            } else {
+                Log.i(TAG, "used " +dIBEventList.size()+ " saved events from cache feedId " + mFeedId);
             }
 
-            if (!m_webEventsList.isEmpty() ) {
+            // If we received something from the cache or RSS feed
+            if ((dIBEventList != null) && (!dIBEventList.isEmpty()) ) {
                 // Save in DB for future use in case next time there is nothing read from the feed.
                 // First throw out previous BD entries
                 try {
@@ -749,8 +803,8 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                     Log.e(TAG, "doInBackground: dataStore.deleteAllWebEvents: ", e);
                 }
                 // Second make a copy in the DB of the current list of events
-                int kk = 0, size = m_webEventsList.size();
-                for (BELEvent next : m_webEventsList) {
+                int kk = 0, size = dIBEventList.size();
+                for (BELEvent next : dIBEventList) {
                     try {
                         next.setFeed(mFeedId);
                         dataStore.saveWebEvent( next );
@@ -759,15 +813,17 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                         Log.e(TAG, "doInBackground: Caught exception trying to save to the database: ", dataExp);
                     }
                 }
-                Log.i(TAG, "stored " +m_webEventsList.size()+ " events into the database feedId " + mFeedId);
+                Log.i(TAG, "stored " +dIBEventList.size()+ " events into the database feedId " + mFeedId);
             } else {
                 BELEvent next;
+
                 // Get current DB entries
-                m_webEventsList = dataStore.getAllWebEvents();
+                dIBEventList = dataStore.getAllWebEvents();
+
                 // Check if we received anything
-                if (!m_webEventsList.isEmpty()) {
+                if (!dIBEventList.isEmpty()) {
                     // Get the first event record
-                    next = m_webEventsList.get(0);
+                    next = dIBEventList.get(0);
                     if (null != next) {
                         // Get and update the feedId
                         mFeedId = next.getFeed();
@@ -782,14 +838,15 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                             EB2MainActivity.tab0Label = mResources.getString(R.string.Stored);
                         }
 
-                        Log.i(TAG, "used " +m_webEventsList.size()+ " stored events from database feedId " + mFeedId);
+                        Log.i(TAG, "used " +dIBEventList.size()+ " stored events from database feedId " + mFeedId);
                     }
                 } else {
                     Log.i(TAG, "nothing found in the database");
                 }
             }
 
-            return m_webEventsList.size();
+            // Return the list
+            return dIBEventList;
 
         }   // end --- doInBackground
 
@@ -892,8 +949,7 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      */
     protected InputStream getInputStream(String fileName) {
         try {
-            FileInputStream fileStream = new FileInputStream (fileName);
-            return fileStream;
+            return new FileInputStream(fileName);
         } catch (IOException e) {
             String message = "Failed to open file: " + fileName;
             Log.e(TAG, message);
@@ -921,15 +977,24 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
      **      Implements interface {@link EventFragmentCoordinator}, displays the event details (fragment)
      **/
     public void displayEventDetails(String eventID, boolean isSavedEvent) {
-        Bundle args = new Bundle();
+/*        Bundle args = new Bundle();
         args.putString(com.tssg.eventboss2.EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
         EventDetailFragment mEventItem = new EventDetailFragment();  //<----
         mEventItem.setArguments(args);
         mEventItem.setId(eventID);
         Log.i(TAG, "displayEventDetails begin: w/EventId: " + eventID);
-
+*/
         if (mDualPane) {
-            Log.i(TAG, "displayEventDetails: DualPane," + eventID);
+            Bundle args = new Bundle();
+            args.putString(com.tssg.eventboss2.EventDetailFragment.SAVED_KEY, String.valueOf(isSavedEvent));
+//            args.
+            EventDetailFragment mEventItem = new EventDetailFragment();  //<----
+            mEventItem.setArguments(args);
+            mEventItem.setDBhelper (new DatabaseHelper(context));
+            mEventItem.setId(eventID);
+            Log.i(TAG, "displayEventDetails begin: w/EventId: " + eventID);
+            
+           Log.i(TAG, "displayEventDetails: DualPane," + eventID);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.eventData, mEventItem);    // eventData is used layout-large/activity_main.xml
             Integer i = R.id.eventData;
@@ -941,39 +1006,29 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         } else {
 
             Log.i(TAG, "displayEventDetails: |DualPane," + eventID);
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
 //            transaction.replace(R.id.eventData_s, mEventItem);    // eventData_s is used layout/activity_main.xml//
-            //  work not, crash not
- ///           transaction.replace(R.id.details_container, mEventItem);    //
+//            work not, crash not
+//            transaction.replace(R.id.details_container, mEventItem);    //
 //            transaction.replace(R.id.eventData, mEventItem);
-///            transaction.addToBackStack(null);
-///            transaction.commit();
+//            transaction.addToBackStack(null);
+//            transaction.commit();
 
-            Log.i(TAG, "eventItem " + mEventItem);
+//            Log.i(TAG, "eventItem " + mEventItem);
             Log.i(TAG, "displayEventDetails: start EventDetailActivity " + eventID);
+
             // In single-pane mode, start the detail event activity for the selected item ID:
             Intent detailIntent = new Intent(this, EventDetailActivity.class);
             detailIntent.putExtra(EventDetailFragment.EVENTITEM_POS, eventID);
+
             // start the detail activity ??
             Log.i(TAG, "displayEventDetails: w/intent: " + detailIntent.toString());
-            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
-            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
-           startActivity(detailIntent);
+//            Log.i(TAG, "displayEventDetails: w/EventItem " + mEventItem.toString());
+
+            startActivity(detailIntent);
 
         }
     }    // end --- displayEventDetails
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        for (List<BELEvent> lbel : m_webEventsListA) {
-            if (lbel != Collections.EMPTY_LIST)  {
-                lbel.clear();
-            }
-        }
-
-        m_webEventsListA.clear();
-    }
 
 }    // end ---- MainActivity

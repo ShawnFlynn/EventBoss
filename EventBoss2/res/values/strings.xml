@@ -7,16 +7,13 @@
     <string name="Event">Event</string>
     <string name="Stored">Stored</string>
     <string name="Reading">Reading: </string>
-
     <string name="gettingStarted">getting started</string>
     <string name="digesting">digesting</string>
     <string name="storing">storing</string>
     <string name="of">of</string>
     <string name="phase">,  phase</string>
-
     <string name="RSS">RSS</string>
     <string name="colon">:</string>
-
     <string name="ReadingRSSFeed">Reading RSS feed #</string>
     <string name="PleaseWait">, Please wait...</string>
     <string name="NoEvents">"No events at selected feed - so not changing view."</string>
@@ -30,7 +27,6 @@
     <string name="unimplemented">Settings - unimplemented</string>
     <string name="pressed">pressed</string>
     <string name="doTheShare">MainActivity do the Share</string>
-
     <string name="app_name">EventBoss2</string>
     <string name="menu_settings">Settings</string>
     <string name="feedSource">Select EventsList:</string>
@@ -55,17 +51,14 @@
     <string name="title_activity_search_dlg">SearchDlg</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_do_search">DoSearch</string>
-
     <string name="dummy_section_text">Section %1d is just a dummy section.</string>
     <string name="search_section_text">Section %1d is the Search section.</string>
-
     <string name="titlePrefs">Preferences</string>
     <string name="titleSettings">Settings</string>
     <string name="readRSS">ReadRss</string>
     <string name="titleReadRss">Read selected Feed now</string>
     <string name="idDone">idDone</string>
-    <string name="title_DoneBtn">Done</string>   
-    
+    <string name="title_DoneBtn">Done</string>
     <string name="title_SearchDlgActivity">Search Dialog</string>
     <string name="title_SearchNew">Search new</string>
     <string name="title_SearchAgain">Search again</string>
@@ -73,15 +66,17 @@
     <string name="idSearchNew">Search new</string>
     <string name="idSearchAgain">Search again</string>
     <string name="idEndSearch">End search</string>
-    
     <string name="searchHint">Enter Search</string>
-    <string name="addToCalendar">Add to calendar</string><string name="forward">Forward</string>
-    
-    <string name="eventslist"> Eventslist</string> 
+    <string name="addToCalendar">Add to calendar</string>
+    <string name="forward">Forward</string>
+    <string name="eventslist"> Eventslist</string>
     <string name="bolist">Boston Eventslist</string>
     <string name="nhlist">New Hampshire Eventslist</string>
     <string name="melist">Maine Eventslist</string>
     <string name="nylist">New York Eventslist</string>
     <string name="sflist">San Francisco Eventslist</string>
     <string name="Read_selected_Feed_now">Read selected Feed now</string>
+    <string name="title_activity_saved_list_display">SavedListDisplayActivity</string>
+    <string name="hello_world">Hello world!</string>
+
 </resources>

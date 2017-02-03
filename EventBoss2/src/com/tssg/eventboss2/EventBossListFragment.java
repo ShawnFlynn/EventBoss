@@ -29,6 +29,11 @@ public abstract class EventBossListFragment extends ListFragment {
 			throw new ClassCastException(activity.toString()+" must implement onListSelect");
 		}
 	}
+
+	public void onLoadFinished() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	
 

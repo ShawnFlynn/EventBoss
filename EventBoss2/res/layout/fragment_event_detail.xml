@@ -12,7 +12,7 @@
        android:layout_height="wrap_content"
        android:padding="16dp"
        android:textIsSelectable="true" />
-    
+   
     <ScrollView
       android:layout_width="match_parent"
       android:layout_height="match_parent" 
@@ -31,35 +31,41 @@
 	    android:id="@+id/endText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
+        android:layout_below="@id/startText" 
     	/>
 	  <TextView
 	    android:id="@+id/typeText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
+      	android:layout_below="@id/endText" 
     	/>
 	  <TextView
 	    android:id="@+id/linkText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	android:autoLink="web"
+      	android:layout_below="@id/typeText" 
     	/>
 	  <TextView
 	    android:id="@+id/organizerText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
+      	android:layout_below="@id/linkText" 
     	/>
 	  <TextView
 	    android:id="@+id/locationText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
     	android:autoLink="map"
+       	android:layout_below="@id/organizerText" 
     	/>
 	  <TextView
 	    android:id="@+id/descriptionText"
     	android:layout_width="match_parent"
     	android:layout_height="wrap_content"
+       	android:layout_below="@id/locationText" 
     	/>
-	
+<!-- 
 	  <RelativeLayout
 	    	android:background="?android:attr/dividerVertical"
 	    	android:layout_width="match_parent"
@@ -86,9 +92,9 @@
 		    	android:background="?android:attr/selectableItemBackground"
 		    	android:text="@string/addToCalendar" />	
 		</RelativeLayout>
-		
+ -->	
     </RelativeLayout>
     
-    </ScrollView>	      
-      
+    </ScrollView>	       
+    
 </RelativeLayout>

@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 import com.tssg.eventboss2.utils.misc.MakeToast;
 import com.tssg.eventsource.BELEvent;
-
+//----------- this is the old version ----------------------------------------
 /** The SaveList is the list of saved events seen on the Saved tab */
 public class SaveListDisplayActivity extends Activity { // 
 
