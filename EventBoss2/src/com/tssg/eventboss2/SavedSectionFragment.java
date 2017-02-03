@@ -183,18 +183,32 @@ public class SavedSectionFragment extends EventBossListFragment {
 
 		Log.i(TAG, "updateListHeader(" +extraText+ ")");
 
+		String tempEvents = null;
+
 		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm",
 														Locale.getDefault() );
 		Date m_channelDate = new Date(System.currentTimeMillis());
 		String channelDate = m_channelDate == null?
-					"--" : simpFormat.format(EB2MainActivity.m_channelDate);
+					"--" : simpFormat.format(EB2MainActivity.getM_channelDate());
 
-		// this should be the current date or the date when data was saved into the database
-		mListHeader.setText( extraText  + "@ " +channelDate+ ": "
-										+mEventItemCount+ " Events");
-		Log.d(TAG, extraText + " " 
-				  +channelDate+ ", " 
-				  +mEventItemCount+ " Events");
-	}
+		// Get "Event" or "Events" based on event count
+		if (mEventItemCount == 1)
+			tempEvents = EB2MainActivity.getmResources().getString(R.string.Event);
+		else
+			tempEvents = EB2MainActivity.getmResources().getString(R.string.Events);
+
+		// This should be the current date or the date when data was saved into the database
+		String tempString = extraText + "@ " +
+							channelDate + ": " +
+							mEventItemCount +
+							" " + tempEvents;
+
+		// Set the Saved list header text
+		mListHeader.setText( tempString );
+
+		// Log the modified header string
+		Log.d(TAG, tempString);
+
+	}	// end - updateListHeader()
 
 }	//  end - SavedSectionFragment

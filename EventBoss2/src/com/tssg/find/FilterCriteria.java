@@ -111,7 +111,7 @@ public class FilterCriteria extends Activity {
 
 		Log.i(TAG, "onCreate()");
 
-		if (EB2MainActivity.DEBUG)
+		if (EB2MainActivity.DEBUG())
 			MakeToast.makeToast(this, "in: " + "*** FilterCriteria ***",
 										MakeToast.LEVEL_USER);
 		
@@ -145,7 +145,7 @@ public class FilterCriteria extends Activity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				// When clicked, show a toast with the TextView text
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					MakeToast.makeToast(getApplicationContext(),
 										((TextView) view).getText().toString(),
 										MakeToast.LEVEL_DEBUG);	
@@ -360,7 +360,7 @@ public class FilterCriteria extends Activity {
 			if (resultCode == RESULT_OK) {
 				findValue = data.getStringExtra(Constants.FIND_VALUE);
 				KeyValue.setFindValue(findValue);
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					MakeToast.makeToast(getApplicationContext(),
 										"FC; findValue: "
 										+ findValue,
@@ -422,7 +422,7 @@ public class FilterCriteria extends Activity {
 				.append(cMonth + 1).append("-").append(cDay).append("-")
 				.append(cYear).append(" "));
 
-		if (EB2MainActivity.DEBUG)
+		if (EB2MainActivity.DEBUG())
 			MakeToast.makeToast(getApplicationContext(), display,
 									MakeToast.LEVEL_DEBUG);
 	}

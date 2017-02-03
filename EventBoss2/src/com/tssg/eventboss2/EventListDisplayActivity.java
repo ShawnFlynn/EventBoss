@@ -73,7 +73,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 		m_statusView = (TextView) (m_mainAppView.findViewById(R.id.status_line));
 
 		showStatus("Reading from Boston Events List's RSS feed");
-		if (EB2MainActivity.DEBUG)
+		if (EB2MainActivity.DEBUG())
 			MakeToast.makeToast(this, "Reading BostonEventsList's RSS feed",
 										MakeToast.LEVEL_USER);
 
@@ -87,7 +87,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 
 		Log.i("EventListDisplayActivity", "doDisplayEventList()");
 
-		m_webEventsList = EB2MainActivity.m_webEventsList;
+		m_webEventsList = EB2MainActivity.getM_webEventsList();
 		Log.d("doDispEventList -> q = ", " " + m_webEventsList.size() );
 
 		showStatus("Showing " + m_webEventsList.size() + " from current Web events");
@@ -105,7 +105,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 		EventListAdapter adapter = mainAppScreen.getAdapter();
 		adapter.notifyDataSetInvalidated();
 		String str = "Event select at: " + "pos: "+position+",  id: "+id;
-		if (EB2MainActivity.DEBUG)
+		if (EB2MainActivity.DEBUG())
 			Toast.makeText(this, str, Toast.LENGTH_LONG).show();
 		Log.d("Click :",str);
 	}
@@ -254,7 +254,7 @@ public class EventListDisplayActivity extends FragmentActivity {
 
 			Log.i(TAG, "onDestroy()");
 
-			if (EB2MainActivity.DEBUG)
+			if (EB2MainActivity.DEBUG())
 				MakeToast.makeToast(this, "closeDB", MakeToast.LEVEL_DEBUG);
 
 			super.onDestroy();

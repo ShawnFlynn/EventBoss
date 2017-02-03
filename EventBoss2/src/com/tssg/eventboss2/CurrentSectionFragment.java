@@ -157,15 +157,15 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		Log.i(TAG, "updateList()");
 
 		// Set the proper tab label (Current or Stored)
-		if (EB2MainActivity.m_actionBar.getSelectedTab().getPosition() == 0)
-			EB2MainActivity.setTabLabel(EB2MainActivity.tab0Label);
+		if (EB2MainActivity.getM_actionBar().getSelectedTab().getPosition() == 0)
+			EB2MainActivity.setTabLabel(EB2MainActivity.getTab0Label());
 
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
 		mEventItemCount = mCursor.getCount();
 
 		Log.d(TAG, "count: " +mEventItemCount);
-		updateListHeader(EB2MainActivity.mRSSString);
+		updateListHeader(EB2MainActivity.getFeedName());
 
 		setListAdapter(mAdapter);
 
@@ -179,7 +179,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 														Locale.getDefault() );
 		Date m_channelDate = new Date(System.currentTimeMillis());
 		String channelDate = m_channelDate == null?
-					"--" : simpFormat.format(EB2MainActivity.m_channelDate);
+					"--" : simpFormat.format(EB2MainActivity.getM_channelDate());
 
 		// This should be the current date or the date when data was saved into the database
 		mListHeader.setText(extraText + " @ " +channelDate+ ": "

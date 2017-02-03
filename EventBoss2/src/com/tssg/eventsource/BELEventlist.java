@@ -1,6 +1,6 @@
 package com.tssg.eventsource;
 
-import com.tssg.eventboss2.EB2MainActivity;
+import com.tssg.eventboss2.RSSFeedReader;
 
 import java.net.URL;
 import java.util.Collections;
@@ -18,12 +18,12 @@ import android.util.Log;
 public class BELEventlist {
 
     public static final String TAG = "BELEventsList";   // log's tag
-    private EB2MainActivity.ExecFeedReader currentTask = null;
+    private RSSFeedReader currentTask = null;
 
     List<BELEvent> rssEventList;
 
-    /** @param currentTask is needed to publish progress callback */
-    public BELEventlist( EB2MainActivity.ExecFeedReader currentTask ) {
+    /** @param RSSFeedReader is needed to publish progress callback */
+    public BELEventlist( RSSFeedReader currentTask) {
         super();
         this.currentTask = currentTask;
     }

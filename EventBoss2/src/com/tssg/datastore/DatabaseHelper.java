@@ -147,12 +147,12 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	SQLiteDatabase getDatabase() throws DatastoreException {
 
 		// Check if we need a new DB
-		if (EB2MainActivity.last_list != LAST_DB)
+		if (EB2MainActivity.getLast_list() != LAST_DB)
 			if (mDb != null)
 				closeDB();
 
 		// Set the specific database name
-		if (EB2MainActivity.last_list == event_list.Current)
+		if (EB2MainActivity.getLast_list() == event_list.Current)
 			DATABASE_SEARCH = DATABASE_WEB;
 		else
 			DATABASE_SEARCH = DATABASE_SAVED;
@@ -171,7 +171,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				mDb = getWritableDatabase();
 
 				// Save the current database type
-				if (EB2MainActivity.last_list == event_list.Current)
+				if (EB2MainActivity.getLast_list() == event_list.Current)
 					LAST_DB = event_list.Current;
 				else
 					LAST_DB = event_list.Saved;

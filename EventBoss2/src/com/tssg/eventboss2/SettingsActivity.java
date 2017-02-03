@@ -27,7 +27,7 @@ public class SettingsActivity extends Activity
 	View mSettingsView = null;
 
 	private boolean bNewFeed  = true;
-	private Integer mFeedId = EB2MainActivity.mFeedId;
+	private Integer mFeedId = EB2MainActivity.getFeedId();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +44,12 @@ public class SettingsActivity extends Activity
 				// Save the selected Feed Id
 				mFeedId = iFeedId;
 				// Check if it is not the current feed
-				if (iFeedId != EB2MainActivity.mFeedId) {
+				if (iFeedId != EB2MainActivity.getFeedId()) {
 						Log.i(TAG, "New feed selected: " + mFeedId);
 						bNewFeed = true;
 				} else {
 					// Check if the current feed is from the DB
-					if (EB2MainActivity.m_webEventsListA.get(mFeedId).isEmpty()) {
+					if (EB2MainActivity.getM_webEventsListA().get(mFeedId).isEmpty()) {
 						Log.i(TAG, "New feed selected: " + mFeedId);
 						bNewFeed = true;
 					} else {
@@ -84,7 +84,7 @@ public class SettingsActivity extends Activity
 		// Preselect the current feed Id
 		//rgFeed.check( mFeedId );
 
-		switch(EB2MainActivity.mFeedId)
+		switch(EB2MainActivity.getFeedId())
 		{
 		case (0):
 			rgFeed.check(R.id.choice1);
@@ -107,12 +107,12 @@ public class SettingsActivity extends Activity
 		}
 
 		// Log the preselected item
-		Log.i(TAG, "button " + EB2MainActivity.mFeedId + " preselected");
+		Log.i(TAG, "button " + EB2MainActivity.getFeedId() + " preselected");
 
 		rgFeed.setOnCheckedChangeListener ( new OnCheckedChangeListener() {
 			public void onCheckedChanged( RadioGroup rg, int checkedId )
 			{
-				if (EB2MainActivity.DEBUG) {
+				if (EB2MainActivity.DEBUG()) {
 					switch( checkedId )
 					{
 					case R.id.choice1:
@@ -154,7 +154,7 @@ public class SettingsActivity extends Activity
 		doneBtn.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View v) {
 				Log.i(TAG, "on Click() - done");
-				if (EB2MainActivity.DEBUG) {
+				if (EB2MainActivity.DEBUG()) {
 					MakeToast.makeToast(getApplicationContext(),
 										"pressed 'Done' -- bye bye",
 										MakeToast.LEVEL_USER);
@@ -163,7 +163,7 @@ public class SettingsActivity extends Activity
 				// Don't reread the current Feed Id
 				if (bNewFeed) {
 					Log.i(TAG, "Reading feed: " + mFeedId);
-					if (EB2MainActivity.DEBUG) {
+					if (EB2MainActivity.DEBUG()) {
 						// EventsListReader(url) will do the reading using the AsyncTask
 						MakeToast.makeToast(getApplicationContext(),
 											"Read feed # " + mFeedId,
@@ -184,7 +184,7 @@ public class SettingsActivity extends Activity
 	public boolean reloadfeed(int whichfeed) {
 		boolean result = false;
 
-		Log.i(TAG, "reloadFeed( " +EB2MainActivity.mRSSString+ " )");
+		Log.i(TAG, "reloadFeed( " +EB2MainActivity.getFeedName()+ " )");
 
 		// Generate and start a new EB2MainActivity
 		Intent intent = new Intent(this, EB2MainActivity.class);
@@ -213,7 +213,6 @@ public class SettingsActivity extends Activity
 		MenuItem search_item = menu.findItem(R.id.action_search);
 		if (search_item != null) {
 			search_item.setVisible(false);
-			this.invalidateOptionsMenu();
 		}
 
 		return true;
@@ -229,7 +228,7 @@ public class SettingsActivity extends Activity
 		
 		case R.id.idDone:
 		Log.i(TAG, "done button");
-		if (EB2MainActivity.DEBUG) {
+		if (EB2MainActivity.DEBUG()) {
 			MakeToast.makeToast(this,
 								"pressed 'Done'",
 								MakeToast.LEVEL_USER);
@@ -238,7 +237,7 @@ public class SettingsActivity extends Activity
 			break;
 		default:
 			Log.e(TAG, "unknown button " + Integer.toHexString(itemId));
-			if (EB2MainActivity.DEBUG) {
+			if (EB2MainActivity.DEBUG()) {
 				MakeToast.makeToast(this,
 									"pressed " + Integer.toHexString(itemId),
 									MakeToast.LEVEL_USER);

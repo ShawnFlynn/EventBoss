@@ -163,7 +163,7 @@ public class EventDetailActivity extends FragmentActivity {
 				//
 				NavUtils.navigateUpTo(this,
 								new Intent(this, EventDetailActivity.class));
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					MakeToast.makeToast(this,
 								"Up Nav - implemented", MakeToast.LEVEL_DEBUG);
 				break;
@@ -172,12 +172,12 @@ public class EventDetailActivity extends FragmentActivity {
 				/* can do this only if in CurrentSectionFragment */
 				Log.d(TAG, "Save Selected - "+CurrentSectionFragment.mId);
 				if(CurrentSectionFragment.mId == 0)  {
-					if (EB2MainActivity.DEBUG)
+					if (EB2MainActivity.DEBUG())
 						Toast.makeText(context,
 									" - Save only from Current Tab",
 									Toast.LENGTH_LONG).show();
 					break;}
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					Toast.makeText(context,
 									" - Save selected event",
 									Toast.LENGTH_LONG).show();
@@ -194,14 +194,14 @@ public class EventDetailActivity extends FragmentActivity {
 			case R.id.idDeleteSelected:
 				/* can do this only if in SavedSectionFragment */
 				if(SavedSectionFragment.mId == 0)  {
-					if (EB2MainActivity.DEBUG)
+					if (EB2MainActivity.DEBUG())
 						Toast.makeText(context,
 										" - Delete only from Saved Tab",
 										Toast.LENGTH_LONG).show();
 					break;
 				}
 				Log.d(TAG, "Delete Selected - " + SavedSectionFragment.mId);
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					Toast.makeText(context,
 									" - Delete Selected Saved",
 									Toast.LENGTH_LONG).show();
@@ -213,7 +213,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 				NavUtils.navigateUpTo(this,
 								new Intent(this, EventDetailActivity.class));
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					MakeToast.makeToast(this,
 										"Up Nav - go back to listview",
 										MakeToast.LEVEL_DEBUG);
@@ -221,7 +221,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 			case R.id.action_calendar:
 				Log.d(TAG, " Calendar" + mDetailFragment.mId);
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					Toast.makeText(context,
 									" Calendar",
 									Toast.LENGTH_SHORT).show();
@@ -235,7 +235,7 @@ public class EventDetailActivity extends FragmentActivity {
 
 			case R.id.action_share:
 				Log.d(TAG, " - idShare pressed");
-				if (EB2MainActivity.DEBUG)
+				if (EB2MainActivity.DEBUG())
 					Toast.makeText(context,
 									"Share",
 									Toast.LENGTH_SHORT).show();
@@ -316,7 +316,7 @@ MenuItem.getActionProvider()
 
  */
 
-		if (EB2MainActivity.DEBUG)
+		if (EB2MainActivity.DEBUG())
 			Toast.makeText(this, "doTheShare" + " ",
 								Toast.LENGTH_SHORT).show();
 

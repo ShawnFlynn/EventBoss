@@ -73,10 +73,10 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 		InputStream inputStream = null;
 
 		// Set tab label to "Stored"
-		String tabLabel = EB2MainActivity.mResources.getString(R.string.Stored);
+		String tabLabel = EB2MainActivity.getmResources().getString(R.string.Stored);
 
 		try {
-			if (EB2MainActivity.readingFromInternalFile){
+			if (EB2MainActivity.isReadingFromInternalFile()){
 				inputStream = readEventsFromFile();
 			}
 			else{
@@ -103,7 +103,7 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 			throw new RuntimeException( message, ste);
 		} catch (FileNotFoundException e) {
 			EB2MainActivity.setTabLabel(tabLabel);
-			String message = "Failed to read events from the file: " + EB2MainActivity.internalFilePath;
+			String message = "Failed to read events from the file: " + EB2MainActivity.getInternalFilePath();
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
 		} catch (IOException e) {
@@ -124,13 +124,13 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 	{
 		BufferedInputStream buf = null;
 		
-		if (EB2MainActivity.internalFilePath != null)
+		if (EB2MainActivity.getInternalFilePath() != null)
 		{
 			try {
-				buf = new BufferedInputStream(new FileInputStream(EB2MainActivity.internalFilePath));
+				buf = new BufferedInputStream(new FileInputStream(EB2MainActivity.getInternalFilePath()));
 			} catch (FileNotFoundException e) {
 				Log.e(TAG, "readEventsFromFile cannot find "
-						+ EB2MainActivity.internalFilePath, e);
+						+ EB2MainActivity.getInternalFilePath(), e);
 				throw e;
 			}
 		}
@@ -174,9 +174,11 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 
 	protected final String TAG = getClass().getSimpleName();
 
-	private EB2MainActivity.ExecFeedReader currentTask = null;
+//	private EB2MainActivity.ExecFeedReader currentTask = null;
+	private RSSFeedReader currentTask = null;
 
-	public BELSourceForEventsImpl(String feedUrl, EB2MainActivity.ExecFeedReader currentTask) {
+//	public BELSourceForEventsImpl(String feedUrl, EB2MainActivity.ExecFeedReader currentTask) {
+	public BELSourceForEventsImpl(String feedUrl, RSSFeedReader currentTask) {
 		super(feedUrl);
 		this.currentTask = currentTask;
 	}
@@ -197,22 +199,23 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 			 * 	else
 			 * 		read from the RSS feed (needs a valid URL)   		
 			 */
-			if( EB2MainActivity.m_mainEventText == null)  {
+			if( EB2MainActivity.getM_mainEventText() == null)  {
 				// for URL source'd Eventlist
 				// the input stream is read in the base class of this.
+				String feedName = EB2MainActivity.getFeedName();
 				Log.d(TAG, "EventSource,"
 						+ " long pause (4 minutes?)"
 						+ " while we get the network feed for "
-						+ EB2MainActivity.mRSSString);
+						+ feedName);
 				inputStream = this.getInputStream();
 				Log.d(TAG, "EventSource, next, parse the network feed for "
-						+ EB2MainActivity.mRSSString); 
+						+ feedName); 
 				messages = pullparse(inputStream);
 				Log.d(TAG, "parsed the feed stream for "
-						+ EB2MainActivity.mRSSString); 
+						+ feedName); 
 			}
 			else {
-				String xml = EB2MainActivity.m_mainEventText;
+				String xml = EB2MainActivity.getM_mainEventText();
 				Log.d(TAG,  "parsing the feed string" );
 				messages = pullparse(xml);
 				Log.d(TAG,  "parsed the feed string" );
