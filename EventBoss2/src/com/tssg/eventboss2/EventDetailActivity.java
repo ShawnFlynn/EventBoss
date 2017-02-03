@@ -2,9 +2,10 @@ package com.tssg.eventboss2;
 
 import com.tssg.datastore.DatabaseHelper;
 import com.tssg.eventboss2.utils.misc.MakeToast;
+import com.tssg.eventsource.BELEvent;
 
 import android.content.Context;
-//import android.content.Intent;
+import android.content.Intent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +20,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.sql.Date;
+import java.util.Date;
 
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
@@ -57,13 +58,6 @@ public class EventDetailActivity extends FragmentActivity {
 		Log.v(TAG, "Fragment = " + mDetailFragment);
 
 		mDbh = new DatabaseHelper(this);
-		
-//		String s = getIntent().getStringExtra(EventDetailFragment.SAVED_KEY); // "C" or "S"
-//		Log.v(TAG, "s = " + s);
-//		boolean savedValue = s.equals("S");
-//		Log.v(TAG, "for current / saved list = " + savedValue);
-///		int s = getIntent().getStringExtra(EventDetailFragment.LIST_TYPE); // 0, 1, 2
-
 		mType = getIntent().getIntExtra(EventDetailFragment.LIST_TYPE, 0); // 0, 1, 2
 		Log.v(TAG, "list type = " + mType);
 		Log.v(TAG, "for current / saved list = " + mType);
@@ -95,14 +89,46 @@ public class EventDetailActivity extends FragmentActivity {
 		}
 	}
 
-    //public void onStart() {
-    //    super.onStart();
-     //   EventDetailFragment:refreshView();
-    //}
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Log.i(TAG, "onStart()");   // Activity starts (after created)
+
+    }   //  end --- onStart
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        Log.i(TAG, "onRestart()");   // Activity re-starts (after it was stopped)
+
+    }   //  end --- onRestart
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause()"); // Activity is paused
+                                 //  (because a higher priority activity needs memory)
+    }   //  end --- onPause
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume()");   // Activity resumes after being paused
+
+    }   //  end --- onResume
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop()");     // Activity is stopped ( it can resume or restart or
+                                    //    it is destroyed
+    }   //  end --- onStop
 
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-    	// inflate menu items for the action bar
+    	// inflate menu items for the action bar (will be called every time the activity starts)
     	MenuInflater inflater= getMenuInflater();
     	if (mType == 0) {
     		inflater.inflate(R.menu.menu_detail_activity_cur, menu);
@@ -116,6 +142,9 @@ public class EventDetailActivity extends FragmentActivity {
 
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+    	// Handle 
+    	String strEvent;
+       	
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			// This ID represents the Home or Up button. In the case of this
@@ -133,10 +162,10 @@ public class EventDetailActivity extends FragmentActivity {
             /* can do this only if in CurrentSectionFragment */
             Log.v(TAG, "Save Selected - "+CurrentSectionFragment.mId);
 			if(CurrentSectionFragment.mId == 0)  {
-				Toast.makeText(context, TAG+" - Save only from currentTab", Toast.LENGTH_LONG).show();
+				Toast.makeText(context, TAG+" - Save only from Current Tab", Toast.LENGTH_LONG).show();
 				break; }
             Toast.makeText(context, TAG+" - Save selected event", Toast.LENGTH_LONG).show();
-            String strEvent = String.format("%d", CurrentSectionFragment.mId); 
+            strEvent = String.format("%d", CurrentSectionFragment.mId); 
             Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ CurrentSectionFragment.mId);
             mDbh.saveEvent(strEvent);
             // 	the CurrentSectionFragment must reload the data table
@@ -144,32 +173,31 @@ public class EventDetailActivity extends FragmentActivity {
             break;
 
 		case R.id.idDeleteSelected:
-            /* ca do this only if in SavedSectionFragment */
+            /* can do this only if in SavedSectionFragment */
 			if(SavedSectionFragment.mId == 0)  {
-				Toast.makeText(context, TAG+" - Save only from SavedTab", Toast.LENGTH_LONG).show();
-				break; }
+				Toast.makeText(context, TAG+" - Delete only from Saved Tab", Toast.LENGTH_LONG).show();
+				break; 
+			}
             Log.v(TAG, "Delete Selected - "+SavedSectionFragment.mId);
             Toast.makeText(context, TAG+" - Delete Selected Saved", Toast.LENGTH_LONG).show();
             strEvent = String.format("%d", SavedSectionFragment.mId); 
             Log.v(TAG, "strEvent: "+strEvent +" from mId :"+ SavedSectionFragment.mId);
             mDbh.deleteSavedEvent(strEvent);
- 			// the SavedSectionFragment must reload the data table
-            Log.v(TAG, "DeleteSelected call  updateList(), after del "+ SavedSectionFragment.mId);
+            
+			NavUtils.navigateUpTo(this, new Intent(this, EventDetailActivity.class));
+			MakeToast.makeToast(this, "Up Nav - go back to listview", MakeToast.LEVEL_DEBUG);
             break;
             
-        case R.id.idCalendar:
-            Log.v(TAG, " Calendar");
+        case R.id.action_calendar:
+            Log.v(TAG, " Calendar"+mDetailFragment.mId);
             Toast.makeText(context, TAG + " Calendar", Toast.LENGTH_SHORT).show();
-            
-            // TODO  code to save in fragment - ... an mId
-            String title = "Boston";						// id.title;
-            String location = "Convention Center";			// id.location;
-            Date start = EB2MainActivity.m_channelDate;	 	// id.start;
-            Date end = EB2MainActivity.m_channelDate;		// id.end;
-            makeAppointment(title, location, start, end );
+ 
+            BELEvent event = mDbh.getEventById(mDetailFragment.mId);
+            Log.v(TAG, " Calendar: event "+event+" -> CalendarAppointment.makeCalendarAppointment");
+            Intent intent = CalendarAppointment.makeCalendarAppointment(event);	// call 'CalendarAppointment' as implemented
+            startActivity(intent);
+            break;
 
-//            EB2MainActivity.makeAppointment(mId); // can only call it if make Appointment is static
-            										// but if it is static, startActivity() does not work
         case R.id.action_share:
             Log.v(TAG, " - idShare pressed");
             Toast.makeText(context,  TAG + " Share", Toast.LENGTH_SHORT).show();
@@ -200,14 +228,10 @@ public class EventDetailActivity extends FragmentActivity {
             intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endL);
         }
         
-		Log.d("makeAppointment", " " + intent);
+		Log.d(TAG, "makeAppointment " + intent);
         startActivity(intent);
 	}	//  end makeAppointment
 
-//	void makeAppointment(long mId2) {
-		// TODO Auto-generated method stub
-		
-//	}
 
 	void ProcessShare(MenuItem item) {
 
@@ -248,11 +272,11 @@ MenuItem.getActionProvider()
 
 		mShareActionProvider.setShareIntent(shareIntent);
 
-		Log.d("ProcessShare", " shareIntent " + shareIntent);
+		Log.d(TAG,"ProcessShare - shareIntent " + shareIntent);
 
 		// send off shared data
 		startActivity(Intent.createChooser(shareIntent, "Events List"));
-		Log.d("ProcessShare", " after chooser " + shareIntent);
+		Log.d(TAG,"ProcessShare: after chooser " + shareIntent);
 
 	}   // end --- ProcessShare
 

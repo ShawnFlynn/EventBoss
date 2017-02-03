@@ -45,9 +45,9 @@ public class EventDetailFragment extends Fragment {
 
 
 //    private boolean m_isSavedEvent; // Current (false)  or  Saved List (true)
-    private int m_isListType; 		// Current (0), Saved List (1), Saved List (2)
-    private DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
-    private String mId;             // use ItemId
+    int m_isListType; 		// Current (0), Saved List (1), Saved List (2)
+    DatabaseHelper mDbh;		// = new DatabaseHelper(getActivity()) EBMainActivity;
+    String mId;             // use ItemId
 
     private BELEvent mEvent;        //
     private TextView mTitleText;	// title
@@ -161,8 +161,8 @@ public class EventDetailFragment extends Fragment {
 
         Log.v(TAG, " text: " +mTitleText);   // (TextView)
         Log.v(TAG, "................");
-//        Log.v(TAG, " star: " +mStartText);
-//        Log.v(TAG, " end: " +mEndText);
+        Log.v(TAG, " star: " +mStartText);
+        Log.v(TAG, " end: " +mEndText);
 //        Log.v(TAG, " type: " +mTypeText);
 //        Log.v(TAG, " link: " +mLinkText);
 //        Log.v(TAG, " org : " +mOrganizerText);
@@ -219,7 +219,7 @@ public class EventDetailFragment extends Fragment {
 
 
 
-    /** make calendar appointment. This should be a controller method.
+// /* make calendar appointment. This should be a controller method.
 
    void makeAppointment(String title, String location, Date start, Date end ) {
         Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
@@ -247,7 +247,7 @@ public class EventDetailFragment extends Fragment {
 
         startActivity(intent);
     }	// ---- makeAppointment
-         */
+//         */
 
 	public int get_isEventType() {
 		return m_isListType;

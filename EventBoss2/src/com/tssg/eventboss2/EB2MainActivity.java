@@ -46,6 +46,7 @@ import android.widget.Toast;
 import com.tssg.datastore.DatabaseHelper;
 import com.tssg.datastore.DatastoreException;
 import com.tssg.eventboss2.utils.misc.MakeToast;
+import com.tssg.eventboss2.CalendarAppointment;
 import com.tssg.eventsource.BELEvent;
 import com.tssg.eventsource.BELEventlist;
 
@@ -1018,20 +1019,33 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
                 mDbh.deleteSavedEvent(strEvent);
                 // TODO the SavedSectionFragment must reload the data table
                 savedData.updateList();   //call SavedSectionFragment.updateList();
-                // should now close the just deleted detail view
+                // should now close the just deleted detail view - since
+                // it is no longer in the list	 
                 break;
                 
             case R.id.action_calendar:
-                Log.v(TAG, " Calendar");
                 strEvent = String.format("%d", CurrentSectionFragment.mId); // number of the id
                 Toast.makeText(context, TAG + " Calendar "+strEvent, Toast.LENGTH_SHORT).show();
                 BELEvent event = mDbh.getEventById(strEvent);
-                String title = event.getTitle();
-                String location = event.getLocation();
-                Date start = (Date) event.getStartDate();
-                Date end = (Date) event.getEndDate();
-                makeAppointment(title, location, start, end );
-                break;
+                Log.v(TAG, " Calendar: event "+event);
+                Intent intent = CalendarAppointment.makeCalendarAppointment(event);					// call 'CalendarAppointment' as implemented
+                startActivity(intent);
+//                CalendarAppointment(event);                // moved to  its own class
+
+//                String title = event.getTitle();
+//                String location = event.getLocation();
+//                Date start = (Date) event.getStartDate();   // event uses java.util.Date !!!
+//               //java.lang.ClassCastException: java.util.Date cannot be cast to java.sql.Date
+//            Log.v(TAG,start.toString()+" "+event.getStartDate());
+//                Date end = (Date) event.getEndDate();
+//                Date start = m_channelDate;		
+//            Log.v(TAG,start.toString());	// 2015-10-30
+//                Date end = m_channelDate;
+//                makeAppointment(title, location, start, end );
+      //        CalendarAppointment(BELEvent event) {
+        		// TODO Auto-generated method stub
+//           	}
+               break;
 
             case R.id.action_share:
                 Log.v(TAG, " - idShare pressed");
@@ -1053,8 +1067,48 @@ public class EB2MainActivity  extends FragmentActivity implements ActionBar.TabL
         return true;
     }   // end --- onOptionsItemSelected
 
-    
-    void ProcessShare(MenuItem item) {
+ 
+/*
+	private void CalendarAppointment(BELEvent event) {
+///		// TODO Auto-generated method stub
+//		CalendarAppointment(event);		// old
+		
+		Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI); // Events is a n import
+
+	     	String title = event.getTitle();
+	     	String location = event.getLocation();
+	     	String start = event.getStartTime();
+	     	String end = event.getEndTime();
+	     	
+//	    	long startL, endL;		/// old code gets the current time (in sql.date), should be util.date //
+//	    	if (null != start) {
+//	        	startL = (long) start.setStartDate();
+//	    	else
+//	        	startL = (long) start;
+//	    	if (null != end) {
+//        		endL = (long) start.setEndDate();
+//	    	else
+//        		endL = (long) start;
+
+
+	        	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start);
+		    	intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end);
+		        intent.putExtra(Events.ALL_DAY, false);
+		        intent.putExtra(Events.TITLE, title);
+		        intent.putExtra(Events.EVENT_LOCATION, location);
+		        
+				Log.d("makeAppointment", " " + intent);
+		        startActivity(intent);
+
+	 }	//end calendar Appointment
+	    	
+//	private void CalendarAppointment(BELEvent event) {
+//		// TODO Auto-generated method stub
+// **********   this should run in its own class for both types of variants (phone and tablet)
+//}
+*/
+
+	void ProcessShare(MenuItem item) {
 		ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
 /*
  * This class is a mediator for accomplishing a given task, for example
@@ -1110,8 +1164,8 @@ MenuItem.getActionProvider()
 
 	}   // end --- ProcessShare
 
-	
-	public void makeAppointment(String title, String location, Date start, Date end ) {
+/*
+    public void makeAppointment(String title, String location, Date start, Date end ) {
      	Intent intent =  new Intent(Intent.ACTION_INSERT, Events.CONTENT_URI);
 
     	long startL, endL;
@@ -1131,8 +1185,10 @@ MenuItem.getActionProvider()
 		Log.d("makeAppointment", " " + intent);
         startActivity(intent);
 	}	//  end
+*/
 
-
+	
+	
     /** ---------------------------------------------------------------------------------
      **      Implements interface {@link EventFragmentCoordinator},
      **                 displays the event details (fragment)

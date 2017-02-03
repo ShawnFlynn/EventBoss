@@ -32,7 +32,7 @@ public class BELEvent  implements Comparable<BELEvent>
 	String m_description = null;
 	String m_longDescription = null;
 	Date  m_startDate = null;
-	Date  m_endDate = null;
+	Date  m_endDate = null;		// = java.util.Date
 
 	/** no-arg constructor uses defaults */
 	public BELEvent() {
