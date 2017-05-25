@@ -25,13 +25,14 @@ import com.tssg.eventsource.BELEvent;
 public class DatabaseHelper extends SQLiteOpenHelper
 {
 
+	static final String LOG_TAG = "DatabaseHelper";
+
+	// Database handle
 	static SQLiteDatabase mDb = null;
 
 	// Version of database structure to force onUpdate() to be called 
 	// when the version is bumped on an "older" database version
 	private static final int DATABASE_VERSION = 3;
-
-	static final String LOG_TAG = "DatabaseHelper";
 
 	// note: this is the key to the database table;
 	// it is distinct from the eventId field.
@@ -53,8 +54,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	/**
 	 * Database creation SQL statement
 	 */
-	static final String DATABASE_WEB   	 = "webEvents";		//m_webEventsList
-	static final String DATABASE_SAVED   = "savedEvents";	//m_savedEventsList
+	static final String DATABASE_WEB	= "webEvents";		//m_webEventsList
+	static final String DATABASE_SAVED	= "savedEvents";	//m_savedEventsList
 
 	// "Search" database name
 	static private String DATABASE_SEARCH = DATABASE_WEB;
@@ -266,37 +267,18 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	void insert( String tableName, ContentValues initialValues ) throws DatastoreException {
 		SQLiteDatabase db = getDatabase();
 
-		long newRowId=77; // why 77
-		Log.i(LOG_TAG,
-				"insert( " 
-					+initialValues.getAsString(DatabaseHelper.KEY_EVENTID)+
-				" )");
+		// Get the event ID
+		long event_ID = initialValues.getAsInteger(DatabaseHelper.KEY_EVENTID);
 
-		List<BELEvent> eventList = getAllStoredEvents();
-		boolean doIt = true;
-		for (BELEvent belEvent: eventList)
-		{
-			Log.d(LOG_TAG, "#######  event Id= " + belEvent.getId());
-			if ( belEvent.getId().equals(initialValues.getAsInteger(DatabaseHelper.KEY_EVENTID)) ) {
-				Log.d(LOG_TAG, ">>>>>> Duplicate event Id = " + belEvent.getId());
-				doIt = false;
-			}
-		}
+		Log.i(LOG_TAG, "insert( " +event_ID+ " )");
 
-		if( doIt ) {
-			// We should always be able to insert so use the throw version to catch errors.
-			try
-			{
-				newRowId = db.insertOrThrow( tableName, null, initialValues);
-			}
-			catch( SQLException exp )
-			{
-				throw new DatastoreException("An unexpected SQLException error occured", exp );
-			}
-			Log.d(LOG_TAG, "$$$ DatabaseHelper.insert  newRowId = " + newRowId);
+		if (db.insert(tableName, null, initialValues) != -1) {
+			Log.d(LOG_TAG, "event " +event_ID+ " inserted");
+		} else {
+			Log.d(LOG_TAG, "event " +event_ID+ " already in Saved table");
 		}
 	}
-	
+
 
 	void delete( String tableName, String eventID ) throws DatastoreException {
 		int numDelRows = -1;
@@ -338,33 +320,57 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		mDb = null; // Required to force open of a new database instance.
 		return;
 	}
-	
+
 	// Copy Event in current list with this id into the saved list
-	public void saveEvent(String id) {
+	public boolean saveEvent(String id) {
 		Log.i(LOG_TAG, "saveEvent( " +id+ " )");
-		
+
+		// Get the current database entry
+		SQLiteDatabase db = null;
 		try {
-			SQLiteDatabase db = getDatabase();
-			Cursor cursor = db.query(DATABASE_WEB,null,KEY_ROWID+" = ?",
-					new String[]{id},null,null,KEY_ROWID+" ASC",null);
-			cursor.moveToFirst();
-			ContentValues values = new ContentValues();
-			Log.d(LOG_TAG,
-				"Saving Event: Database id = " +id+ 
-				":Cursor row count = " +cursor.getCount());
-			DatabaseUtils.cursorRowToContentValues(cursor, values);
-			db.insert(DATABASE_SAVED, null, values);
-			Log.d(LOG_TAG, "Added saved value from Database id = " +id);
-			cursor.close();
+			db = getDatabase();
 		} catch (DatastoreException dataExcp) {
 			Log.e(LOG_TAG,
 					">>>>>  saveEvent: failed to retrieve the database",
 					dataExcp);
+			return false;
 		}
-	}
-	
 
-	// Copy Event in current list with this id into the saved list
+		Cursor cursor = db.query(DATABASE_WEB,null,KEY_ROWID+" = ?",
+				new String[]{id},null,null,KEY_ROWID+" ASC",null);
+
+		cursor.moveToFirst();
+		ContentValues values = new ContentValues();
+		DatabaseUtils.cursorRowToContentValues(cursor, values);
+		Integer currentEventId = values.getAsInteger(KEY_EVENTID);
+		
+		List<BELEvent> eventList = getAllStoredEvents();
+
+		// Check if the event is already in the list
+		if (!eventList.isEmpty()) {
+			for (BELEvent belEvent: eventList) {
+				// Compare with saved db entry
+				if ( belEvent.getId().equals(currentEventId) ) {
+					Log.d(LOG_TAG, ">>>>>> Duplicate event Id = " + currentEventId);
+					return false;
+				}
+			}
+		}
+
+		// Doesn't exist - add it
+		Log.d(LOG_TAG,
+			"Saving Event: Database id = " +currentEventId+ 
+			" :Cursor row count = " +cursor.getCount());
+
+		db.insert(DATABASE_SAVED, null, values);
+
+		cursor.close();
+
+		return true;
+
+	}	// end - saveEvent()
+
+	// Copy event in Current list with this id into the Saved list
 	public void deleteSavedEvent(String id) {
 		Log.i(LOG_TAG, "deleteSavedEvent( " +id+ " )");
 
@@ -465,6 +471,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 	}
 
 	public BELEvent getSavedEventById(String id) {
+
 		Log.i(LOG_TAG, "getSavedEventByID( " +id+ " )");
 	
 		try {

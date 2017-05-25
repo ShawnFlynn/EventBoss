@@ -78,7 +78,7 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 		HttpURLConnection connection = null;
 		InputStream inputStream = null;
 
-		// Set tab label to "Stored"
+		// Get the "Stored" tab label
 		String storedTabLabel = RSSFeedReader.EB2.getEB2Resources().getString(R.string.Stored);
 
 		try {
@@ -103,17 +103,17 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 			}
 			return inputStream;
 		} catch (java.net.SocketTimeoutException ste) {
-			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
+			RSSFeedReader.EB2.setTab0Label(storedTabLabel);
 			String message = "timeout opening URL: " + feedUrl + " (firewall issue?)";
 			Log.e( TAG, message, ste );
 			throw new RuntimeException( message, ste);
 		} catch (FileNotFoundException e) {
-			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
+			RSSFeedReader.EB2.setTab0Label(storedTabLabel);
 			String message = "Failed to read events from the file: " + file_path;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
 		} catch (IOException e) {
-			RSSFeedReader.EB2.setCurrentTabLabel(storedTabLabel);
+			RSSFeedReader.EB2.setTab0Label(storedTabLabel);
 			String message = "Failed to get input stream from URL: " + feedUrl;
 			Log.e( TAG, message, e );
 			throw new RuntimeException( message, e);
@@ -144,18 +144,23 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 		return buf;
 	}
 
-	// for time like 2014-06-06 - 07:30 AM */
+	// for time like 2014-06-06 - 07:30 PM */
 	static final String timepat = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)\\s+-\\s+(\\d\\d):(\\d\\d)\\s([A|P]M)";
-	// format time like 2014-06-06 - 07:30 AM */
-	static final String timeFmt = "yyyy-MM-dd - hh:mm aa"; 
+	static final String timeFmt = "yyyy-MM-dd - hh:mm aa";
 	static final int timeFmtLen = timeFmt.length();
-	// for {@literal yyyy-MM-dd - hh:mm aa} , like 2014-06-06 - 07:30 AM  */
+	// for time like 2014-06-06 19:30:00 */
+	static final String time24pat = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)\\s+(\\d\\d):(\\d\\d):(\\d\\d)";
+	static final String time24Fmt = "yyyy-MM-dd HH:mm:ss";
+	static final int time24FmtLen = time24Fmt.length();
+	// want to match {@literal Time : 2014-06-06 - 07:30 PM} 
 	static final Pattern P_START2 = Pattern.compile(timepat);
-	// want to match {@literal Time : 2014-06-06 - 07:30 AM Ending : 2014-06-06 - 10:30 AM - Eastern Time (US & Canada)} 
 	static final Pattern P_ENDING2 = Pattern.compile(timepat);
+	// want to match {@literal Time : 2014-06-06 19:30:00} 
+	static final Pattern P_24START2 = Pattern.compile(time24pat);
+	static final Pattern P_24ENDING2 = Pattern.compile(time24pat);
 
 	/** parse out Time. Consider a weakhashmap for times already parsed */
-	static java.util.Date parseEventTime(Pattern pat, String xmlString) {
+	static java.util.Date parseEventTime(Pattern pat, String format, String xmlString) {
 		String TAG = "BaseFeedParser";
 
 		Log.d(TAG, "parseEventTime()");
@@ -164,7 +169,7 @@ abstract class BaseFeedParser implements BELSourceForEvents {
 		java.util.Date retval = null;
 		try  {
 			if (matcher.find() ) {
-				java.text.SimpleDateFormat fmt1 = new java.text.SimpleDateFormat(timeFmt);
+				java.text.SimpleDateFormat fmt1 = new java.text.SimpleDateFormat(format);
 				retval = fmt1.parse(matcher.group(0));
 			}
 		} catch (IllegalStateException  excp) {
@@ -335,7 +340,7 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 	/** try using pull parser on string, which is recommended at developer.android.com.
 	 * @see <a href="http://developer.android.com/training/basics/network-ops/xml.html">developer.android.com</a> 
 	 */
-	protected List<BELEvent>  pullparse(String strin) 
+	protected List<BELEvent> pullparse(String strin) 
 			throws XmlPullParserException, IOException {
 		Log.i(TAG, "pullparse(String)");
 
@@ -495,18 +500,36 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 				int endAt   = divContent.indexOf(endLabel);
 				if (-1 < startAt && contentLen >= startAt+startLabelLen) {
 					startSnippet = divContent.substring(startAt+startLabelLen,
-									startAt+startLabelLen + timeFmt.length());
-					eventStartDate = BaseFeedParser.parseEventTime(P_START2, startSnippet);
-					retval.setStartDate(eventStartDate);
-					retval.setStartTime(simpFormat.format(eventStartDate));
+														startAt+startLabelLen +
+														timeFmt.length());
+					eventStartDate = BaseFeedParser.parseEventTime(P_START2, timeFmt, startSnippet);
+					// 12 hour format?
+					if (eventStartDate == null) {
+						// Check for 24 hour format
+						startSnippet = divContent.substring(startAt+startLabelLen,
+															startAt+startLabelLen +
+															time24Fmt.length());
+						eventStartDate = BaseFeedParser.parseEventTime(P_24START2, time24Fmt, startSnippet);
+					}
+					if (eventStartDate != null) {
+						retval.setStartDate(eventStartDate);
+						retval.setStartTime(simpFormat.format(eventStartDate));
+					}
 				}
 				if (-1 < endAt && contentLen >= endAt+endLabelLen) {
 					endSnippet = divContent.substring(endAt + endLabelLen,
-													  endAt + endLabelLen
-													  + timeFmt.length());
-					eventEndDate   = BaseFeedParser.parseEventTime(P_ENDING2,
-																	endSnippet);
-					if (null != eventEndDate ) { 
+													  endAt + endLabelLen +
+													  timeFmt.length());
+					eventEndDate = BaseFeedParser.parseEventTime(P_ENDING2, timeFmt, endSnippet);
+					// 12 hour format?
+					if (eventEndDate == null) {
+						// Check for 24 hour format
+						endSnippet = divContent.substring(endAt + endLabelLen,
+														  endAt + endLabelLen +
+														  time24Fmt.length());
+						eventEndDate = BaseFeedParser.parseEventTime(P_24ENDING2, time24Fmt, endSnippet);
+					}
+					if (eventEndDate != null) { 
 						retval.setEndDate(eventEndDate); 
 						retval.setEndTime(simpFormat.format(eventEndDate));
 					}
@@ -690,6 +713,7 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 
 		String title = null;
 		String linkStr = null;
+		String sGUID = null;
 
 		BELEvent retval = new BELEvent();
 
@@ -711,13 +735,13 @@ public class BELSourceForEventsImpl extends BaseFeedParser {
 					// not sure which of these to use, so use both
 					retval.setLinkToGroup(linkStr);
 				} else if (GUID.equals(name)) {
-					linkStr = readGuidLink(parser);
+					sGUID = readGuidLink(parser);
 				} else {
 					skip(parser);
 				}
 			}
 			parser.require(XmlPullParser.END_TAG, ns, ITEM);
-			retval.setId();	// depends on what precedes
+			retval.setId(sGUID);	// depends on the <guid> data
 		} catch (XmlPullParserException excp) {
 			Log.e(TAG, "Got XmlPullParserException " + excp.getMessage());
 		}

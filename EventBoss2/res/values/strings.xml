@@ -6,8 +6,8 @@
     <string name="Event">Event</string>
     <string name="Events">Events</string>
     <string name="Stored">Stored</string>
-    <string name="Reading">Reading:</string>
-    <string name="From">events from</string>
+    <string name="Reading">Reading event</string>
+    <string name="From">from</string>
     <string name="Feed">feed</string>
     <string name="Storing">Storing:</string>
     <string name="intoDB">events into the database</string>
@@ -47,6 +47,8 @@
     <string name="titleSaved">Saved List</string>
     <string name="saveSelected">Save Selected</string>
     <string name="titleSave">Save Selected</string>
+    <string name="didNotSave">Duplicate event - didn\'t save</string>
+    <string name="didSave">Event stored in Saved list</string>
     <string name="deleteSelected">Delete Selected</string>
     <string name="titleDelete">Delete Selected</string>
     <string name="titleSearch">Search</string>

@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,7 +67,7 @@ public class EB2MainActivity extends FragmentActivity
 	private static Context context;
 
 	// Get current context
-	public static Context getContext() {
+	public Context getContext() {
 		return context;
 	}
 
@@ -142,13 +141,6 @@ public class EB2MainActivity extends FragmentActivity
 	// Set tab 0 label
 	public void setTab0Label(String tabString) {
 		tab0Label = tabString;
-	}
-
-	// Set the Current Tab Label in the action bar
-	public void setCurrentTabLabel(String labelText) {
-		Log.i(TAG, "setTabLabel(" + labelText + ")");
-
-		mActionBar.getSelectedTab().setText(labelText);
 	}
 
 	// Current feed ID
@@ -730,42 +722,6 @@ public class EB2MainActivity extends FragmentActivity
 
 	} // end - AppSectionsPagerAdapter
 
-	// Update the list header
-	// feed name
-	// date
-	// number of events
-
-	public void updateListHeader(int EventCount) {
-
-		Log.i(TAG, "updateListHeader(" + EventCount + " Events)");
-
-		String tempEvents = null;
-
-		// This should be the current date or the date when data was saved into the database
-		SimpleDateFormat simpFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault());
-		String channelDate = currentDate == null ? "--" : simpFormat.format(currentDate);
-
-		// Get "Event" or "Events" based on event count
-		if (EventCount == 1)
-			tempEvents = mResources.getString(R.string.Event);
-		else
-			tempEvents = mResources.getString(R.string.Events);
-
-		// Set Current Events List header string
-		String tempString = mFeedName +
-							" @ " +
-							channelDate + 
-							": " +
-							EventCount +
-							" " + tempEvents;
-
-		// Set the Current list header text
-		CurrentSectionFragment.mListHeader.setText( tempString );
-
-		// Log the modified header string
-		Log.d(TAG, tempString);
-
-	} // end - updateListHeader()
 
 	/**
 	 * Reading a Text-file which is stored in (android) Assets (directory) This
@@ -933,29 +889,38 @@ public class EB2MainActivity extends FragmentActivity
 
 		switch (optionSelected) {
 		case R.id.itemPrefs:
-			Log.d(TAG, "Settings ");
+			Log.d(TAG, " Settings ");
 			startActivity(new Intent(this, SettingsActivity.class));
 			break;
 
 		case R.id.action_save: // idSaveSelected:
 			// Do this only if in CurrentSectionFragment (& dual)
 			Log.d(TAG, " - Save Selected");
-			Toast.makeText(context, "EBMain - Save Selected Current", Toast.LENGTH_LONG).show();
 			String strEvent = String.format(Locale.US, "%d", CurrentSectionFragment.mId);
-			Log.d(TAG, "strEvent: " + strEvent + " from mId: " + CurrentSectionFragment.mId);
-			mDbh.saveEvent(strEvent);
-			// now update the list
+			Log.d(TAG, " Save event Id: " +strEvent);
+
+			// Attempt to store the specified event
+			if (mDbh.saveEvent( strEvent ) == false) {
+				// Didn't save the event
+				Toast.makeText(context, R.string.didNotSave, Toast.LENGTH_LONG).show();
+			} else {
+				// Saved the event
+				Toast.makeText(context, R.string.didSave, Toast.LENGTH_LONG).show();
+			}
+
+			// Update the list
 			savedData.updateList();
 			break;
 
 		case R.id.action_delete: // idDeleteSelected:
 			// Do this only if in SavedSectionFragment (& dual)
 			Log.d(TAG, " - Delete Selected");
-			Toast.makeText(context, "EBMain - Delete Selected Saved", Toast.LENGTH_LONG).show();
 			strEvent = String.format(Locale.US, "%d", SavedSectionFragment.mId);
-			Log.d(TAG, "strEvent: " + strEvent + " from mId :" + SavedSectionFragment.mId);
+			Log.d(TAG, " Delete event: " +strEvent);
+
 			mDbh.deleteSavedEvent(strEvent);
-			// now update the list
+
+			// Update the list
 			savedData.updateList();
 			break;
 

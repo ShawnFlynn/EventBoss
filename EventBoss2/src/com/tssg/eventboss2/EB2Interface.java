@@ -24,8 +24,6 @@ public interface EB2Interface {
 
 	String getFeedName();
 
-	void updateListHeader(int EventCount);
-
 	Date getCurrentDate();
 
 	CurrentSectionFragment getCurrentData();
@@ -41,8 +39,6 @@ public interface EB2Interface {
 	event_list getLastList();
 
 	ActionBar getEB2ActionBar();
-
-	void setCurrentTabLabel(String tabString);
 
 	String getTab0Label();
 	void setTab0Label(String tabString);

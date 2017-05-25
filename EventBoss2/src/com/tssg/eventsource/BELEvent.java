@@ -133,6 +133,23 @@ public class BELEvent  implements Comparable<BELEvent>
 		m_id = id; 
 	}
 
+	BELEvent setId(String key) {
+		this.m_id = keyHash(key);
+		return this;  
+	}
+
+	// Hash function
+	int keyHash(String key) {
+		int k = (int)key.length();
+		int u = 0, n = 0;
+
+		for (int i=0; i<k; i++) {
+			n = (int)key.charAt(i);
+			u += i*n;
+		}
+		return u % Integer.MAX_VALUE;
+	}
+
 	/**
 	 * Gets the feed Id
 	 * @return feed Id

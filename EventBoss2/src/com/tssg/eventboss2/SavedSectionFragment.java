@@ -46,7 +46,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 
 	// Local EB2 resources
 	private Resources mResources = EB2.getEB2Resources();
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -179,10 +179,9 @@ public class SavedSectionFragment extends EventBossListFragment {
 		mEventItemCount = mCursor.getCount();
 
 		Log.d(TAG, "count: " +mEventItemCount);
-		updateListHeader("Saved list ");
+		updateListHeader(mResources.getString(R.string.title_activity_savelist_display));
 
 		setListAdapter(mAdapter);
-
 	}
 
 	void updateListHeader( String extraText )  {
@@ -204,7 +203,7 @@ public class SavedSectionFragment extends EventBossListFragment {
 			tempEvents = mResources.getString(R.string.Events);
 
 		// This should be the current date or the date when data was saved into the database
-		String tempString = extraText + "@ " +
+		String tempString = extraText + " @ " +
 							channelDate + ": " +
 							mEventItemCount +
 							" " + tempEvents;

@@ -174,58 +174,49 @@ public class EventDetailActivity extends FragmentActivity {
 				break;
 
 			case R.id.idSaveSelected:
+				Log.d(TAG, "Save Selected " + mDetailFragment.mId);
 				/* can do this only if in CurrentSectionFragment */
-				Log.d(TAG, "Save Selected - "+CurrentSectionFragment.mId);
 				if(CurrentSectionFragment.mId == 0)  {
 					if (DEBUG)
 						Toast.makeText(context,
 									" - Save only from Current Tab",
 									Toast.LENGTH_LONG).show();
-					break;}
-				if (DEBUG)
-					Toast.makeText(context,
-									" - Save selected event",
-									Toast.LENGTH_LONG).show();
-				strEvent = String.format(Locale.getDefault(),
-											"%d", CurrentSectionFragment.mId);
-				Log.d(TAG, "strEvent: " + strEvent
-							+ " from mId :" + CurrentSectionFragment.mId);
-				mDbh.saveEvent(strEvent);
-				// the CurrentSectionFragment must reload the data table
-				Log.d(TAG, "saveSelected  updateList()" 
-							+ CurrentSectionFragment.mId);
+				} else {
+					strEvent = String.format(Locale.getDefault(),
+												"%d", CurrentSectionFragment.mId);
+					Log.d(TAG, "strEvent: " + strEvent
+								+ " from mId :" + CurrentSectionFragment.mId);
+					mDbh.saveEvent(strEvent);
+				}
 				break;
 
 			case R.id.idDeleteSelected:
+				Log.d(TAG, "Delete Selected " + mDetailFragment.mId);
 				/* can do this only if in SavedSectionFragment */
 				if(SavedSectionFragment.mId == 0)  {
 					if (DEBUG)
 						Toast.makeText(context,
 										" - Delete only from Saved Tab",
 										Toast.LENGTH_LONG).show();
-					break;
-				}
-				Log.d(TAG, "Delete Selected - " + SavedSectionFragment.mId);
-				if (DEBUG)
-					Toast.makeText(context,
-									" - Delete Selected Saved",
-									Toast.LENGTH_LONG).show();
-				strEvent = String.format(Locale.getDefault(),
-											"%d", SavedSectionFragment.mId); 
-				Log.d(TAG, "strEvent: " + strEvent
-							+" from mId :"+ SavedSectionFragment.mId);
-				mDbh.deleteSavedEvent(strEvent);
+				} else {
+					strEvent = String.format(Locale.getDefault(),
+												"%d", SavedSectionFragment.mId); 
+					Log.d(TAG, "strEvent: " + strEvent
+								+" from mId :"+ SavedSectionFragment.mId);
+					mDbh.deleteSavedEvent(strEvent);
 
-				NavUtils.navigateUpTo(this,
-								new Intent(this, EventDetailActivity.class));
-				if (DEBUG)
-					MakeToast.makeToast(this,
-										"Up Nav - go back to listview",
-										MakeToast.LEVEL_DEBUG);
+					// Go back to the Saved list view
+					NavUtils.navigateUpTo(this,
+									new Intent(this, EventDetailActivity.class));
+					if (DEBUG)
+						MakeToast.makeToast(this,
+											"Up Nav - go back to listview",
+											MakeToast.LEVEL_DEBUG);
+				}
 				break;
 
 			case R.id.action_calendar:
-				Log.d(TAG, " Calendar" + mDetailFragment.mId);
+				Log.d(TAG, " Calendar " + mDetailFragment.mId);
 				if (DEBUG)
 					Toast.makeText(context,
 									" Calendar",

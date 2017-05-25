@@ -34,8 +34,8 @@ public class SettingsActivity extends Activity {
 	private final boolean DEBUG = EB2.DEBUG();
 
 	private boolean bNewFeed  = true;
-	private int selectedFeedId;
-	private int currentFeedId = EB2.getFeedId();
+	private int selectedFeedId = EB2.getFeedId();
+	private int currentFeedId  = EB2.getFeedId();
 
 
 	@Override
@@ -46,29 +46,34 @@ public class SettingsActivity extends Activity {
 
 		/** sets outer class members according to which button clicked */
 		class prefclick implements OnClickListener {
-			private int iFeedId = 0;
+			private int clickedFeedId = currentFeedId;
 
 			public prefclick(int feedId) {
-				iFeedId = feedId;
+				clickedFeedId = feedId;
 			}
 
 			public void onClick(View v) {
-				// Save the selected Feed Id
-				selectedFeedId = iFeedId;
+
 				// Check if it is not the current feed
-				if (iFeedId != EB2.getFeedId()) {
-					Log.i(TAG, "New feed selected: " + selectedFeedId);
-						bNewFeed = true;
+				if (clickedFeedId != currentFeedId) {
+					Log.i(TAG, "New feed selected: " + clickedFeedId);
+					bNewFeed = true;
 				} else {
 					// Check if the current feed is from the DB
-					if (EB2.EventsListCacheIsEmpty(selectedFeedId)) {
-						Log.i(TAG, "New feed selected: " + selectedFeedId);
+					if (EB2.EventsListCacheIsEmpty(currentFeedId)) {
+						Log.i(TAG, "New feed selected: " + clickedFeedId);
 						bNewFeed = true;
 					} else {
 						// Same as the current feed
 						bNewFeed = false;
 					}
 				}
+
+				// Set the selected feed ID
+				if (bNewFeed)
+					selectedFeedId = clickedFeedId;
+				else
+					selectedFeedId = currentFeedId;
 			}
 		}
 
@@ -117,7 +122,7 @@ public class SettingsActivity extends Activity {
 		}
 
 		// Log the preselected item
-		Log.i(TAG, "button " + selectedFeedId + " preselected");
+		Log.i(TAG, "button " + currentFeedId + " preselected");
 
 		rgFeed.setOnCheckedChangeListener ( new OnCheckedChangeListener() {
 			public void onCheckedChanged( RadioGroup rg, int checkedId )
@@ -179,8 +184,11 @@ public class SettingsActivity extends Activity {
 											"Read feed # " + selectedFeedId,
 											MakeToast.LEVEL_USER);
 					}
-					// Reload the feed
-					reloadfeed(selectedFeedId);
+					// Set the global feed IDs
+					EB2.setFeedId(selectedFeedId);
+
+					// Load the selected feed
+					loadfeed(selectedFeedId);
 				}
 
 				// Return
@@ -191,17 +199,15 @@ public class SettingsActivity extends Activity {
 	}	// end OnCreate ()
 
 
-	public boolean reloadfeed(int whichfeed) {
-		boolean result = false;
+	public void loadfeed(int whichfeed) {
 
-		Log.i(TAG, "reloadFeed( " +EB2.getFeedName()+ " )");
+		Log.i(TAG, "loadFeed( " +EB2.getFeedName()+ " )");
 
 		// Generate and start a new EB2MainActivity
 		Intent intent = new Intent(this, EB2MainActivity.class);
 		intent.putExtra("feedId", whichfeed);
 		startActivity(intent);
 
-		return result;
 	}
 
 
@@ -234,15 +240,15 @@ public class SettingsActivity extends Activity {
 		Log.i(TAG, "onOptionsItemSelected()");
 
 		final int itemId = item.getItemId();
-		switch (itemId) { 
-		
+
+		switch (itemId) {
 		case R.id.idDone:
-		Log.i(TAG, "done button");
-		if (DEBUG) {
-			MakeToast.makeToast(this,
-								"pressed 'Done'",
-								MakeToast.LEVEL_USER);
-		}
+			Log.i(TAG, "done button");
+			if (DEBUG) {
+				MakeToast.makeToast(this,
+									"pressed 'Done'",
+									MakeToast.LEVEL_USER);
+			}
 			finish();
 			break;
 		default:

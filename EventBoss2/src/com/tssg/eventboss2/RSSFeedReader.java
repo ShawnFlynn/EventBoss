@@ -190,9 +190,6 @@ public class RSSFeedReader extends AsyncTask<URL,
 			// Update the event list
 			EB2.getCurrentData().updateList();
 
-			// Update the event list header
-			EB2.updateListHeader( RSS_List.size() );
-
 		} else {
 			// No events at selected feed
 			Log.e(TAG, "No events at selected feed - so not changing view.");

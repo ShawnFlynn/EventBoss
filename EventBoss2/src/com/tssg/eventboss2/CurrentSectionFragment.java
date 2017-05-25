@@ -7,14 +7,9 @@ import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
-//import android.support.v4.app.Fragment;
-//import android.support.v4.app.FragmentActivity;
-//import android.support.v4.app.FragmentManager;
-//import android.support.v4.app.FragmentPagerAdapter;
-//import android.support.v4.app.FragmentTransaction;
-//import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.tssg.datastore.DatabaseHelper;
 
 /*
@@ -49,6 +43,9 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 	// Get the EB2 Interface
 	EB2Interface EB2 = new EB2MainActivity();
+
+	// Local EB2 resources
+	private Resources mResources = EB2.getEB2Resources();
 
 
 	// also see eventDetailActivity
@@ -154,6 +151,19 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		}
 	}
 
+	// Set the Current Tab Label in the action bar
+	@SuppressWarnings("deprecation")
+	public void setCurrentTabLabel() {
+
+		// Get the selected tab label
+		String currentTab = (String) EB2.getEB2ActionBar().getSelectedTab().getText();
+
+		Log.i(TAG, "setCurrentTabLabel(" +currentTab+ ")");
+
+		// Don't change the "Saved" tab label
+		if (currentTab != mResources.getString(R.string.Saved))
+			EB2.getEB2ActionBar().getSelectedTab().setText(EB2.getTab0Label());
+	}
 
 	@SuppressWarnings("deprecation")
 	public void updateList() {
@@ -162,7 +172,7 @@ public class CurrentSectionFragment extends EventBossListFragment {
 
 		// Set the proper tab label (Current or Stored)
 		if (EB2.getEB2ActionBar().getSelectedTab().getPosition() == 0)
-			EB2.setCurrentTabLabel(EB2.getTab0Label());
+			setCurrentTabLabel();
 
 		mCursor = dbh.getCursorAllEvents();
 		mAdapter.swapCursor(mCursor);
@@ -172,12 +182,13 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		updateListHeader(EB2.getFeedName());
 
 		setListAdapter(mAdapter);
-
 	}
 
-	void updateListHeader( String extraText )  {
+	void updateListHeader( String extraText ) {
 
 		Log.i(TAG, "updateListHeader()");
+
+		String tempEvents = null;
 
 		// Create a list-header (TextView) and add it to the list like this:
 
@@ -187,23 +198,25 @@ public class CurrentSectionFragment extends EventBossListFragment {
 		String channelDate = m_channelDate == null?
 				"--" : simpFormat.format(EB2.getCurrentDate());
 
+		// Get "Event" or "Events" based on event count
+		if (mEventItemCount == 1)
+			tempEvents = mResources.getString(R.string.Event);
+		else
+			tempEvents = mResources.getString(R.string.Events);
+
 		// This should be the current date or the date when data was saved into the database
-		mListHeader.setText(extraText + " @ " +channelDate+ ": "
-									  +mEventItemCount+ " Events");
+		String tempString = extraText + "@ " +
+							channelDate + ": " +
+							mEventItemCount +
+							" " + tempEvents;
 
-		Log.d(TAG, extraText + " "
-				  +channelDate + ","
-				  + " " +mEventItemCount+ " Events");
+		// Set the Current list header text
+		mListHeader.setText( tempString );
+
+		// Set the Current/Stored tab label
+		setCurrentTabLabel();
+
+		Log.d(TAG, tempString);
 	}
 
-	// Save the Event( mId ) into the Saved database
-	public void storeInSaved() {
-
-		Log.i(TAG, "storeInSaved()");
-
-		String strEvent = String.format(Locale.getDefault(), "%d", mId);
-
-		Log.d(TAG, "currentSection strEvent: " +strEvent+ " from mId :" +mId);
-		dbh.saveEvent( strEvent );
-	}
-}
+}	// end - CurrentSectionFragment class
